@@ -1,5 +1,5 @@
 const { json, method, readJson, requireSameOrigin, fail } = require("../server/http");
-const { signedIn, ownedRow } = require("../server/account");
+const { signedIn, ownedRow, requireConfirmedEmail, requireQuota } = require("../server/account");
 const { database, readiness } = require("../server/services");
 
 module.exports = async (req, res) => {
@@ -13,6 +13,7 @@ module.exports = async (req, res) => {
     }
     if (!requireSameOrigin(req, res)) return;
     if (!readiness().mailReady) return json(res, 503, { error: "Email services are not connected yet." });
+    if (!requireConfirmedEmail(user, res)) return;
     const body = await readJson(req);
     const localPart = String(body.localPart || "").trim().toLowerCase();
     if (!/^[a-z0-9](?:[a-z0-9._+-]{0,62}[a-z0-9])?$/.test(localPart) || localPart.includes("..")) {
@@ -21,6 +22,7 @@ module.exports = async (req, res) => {
     const domain = await ownedRow("domains", body.domainId, user.id, "id,domain_name,status");
     if (!domain) return json(res, 404, { error: "Choose a domain connected to your account." });
     if (domain.status !== "verified") return json(res, 409, { error: "Verify your domain before creating mailboxes." });
+    if (!await requireQuota(user.id, "mailbox_create", res)) return;
     const address = `${localPart}@${domain.domain_name}`;
     const saved = await database("mailboxes", {
       method: "POST",

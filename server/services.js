@@ -76,6 +76,15 @@ async function resend(path, options = {}) {
   return data;
 }
 
+async function consumeQuota(ownerId, action) {
+  const result = await database("rpc/consume_openmail_quota", {
+    method: "POST",
+    body: { p_owner: ownerId, p_action: action }
+  });
+  if (typeof result !== "boolean") throw new Error("Usage limit service returned an invalid response.");
+  return result;
+}
+
 function cookieOptions(maxAge = 60 * 60 * 24 * 30) {
   const secure = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
   return `Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure ? "; Secure" : ""}`;
@@ -133,7 +142,12 @@ async function currentUser(req, res) {
   if (!session.access_token) return null;
   try {
     const user = await supabaseAuth("/user", { accessToken: session.access_token });
-    return { id: user.id, email: user.email, accessToken: session.access_token };
+    return {
+      id: user.id,
+      email: user.email,
+      emailConfirmed: Boolean(user.email_confirmed_at || user.confirmed_at),
+      accessToken: session.access_token
+    };
   } catch { return null; }
 }
 
@@ -143,4 +157,4 @@ function rememberAuthResponse(res, auth) {
   return true;
 }
 
-module.exports = { config, readiness, supabaseAuth, database, resend, cookieOptions, currentUser, rememberAuthResponse, clearSession };
+module.exports = { config, readiness, supabaseAuth, database, resend, consumeQuota, cookieOptions, currentUser, rememberAuthResponse, clearSession };

@@ -1,5 +1,5 @@
 const { json, method, readJson, requireSameOrigin, fail } = require("../../server/http");
-const { signedIn, ownedRow } = require("../../server/account");
+const { signedIn, ownedRow, requireConfirmedEmail, requireQuota } = require("../../server/account");
 const { database, resend, readiness } = require("../../server/services");
 
 function validAddress(value) {
@@ -11,6 +11,7 @@ module.exports = async (req, res) => {
   try {
     const user = await signedIn(req, res);
     if (!user) return;
+    if (!requireConfirmedEmail(user, res)) return;
     if (!readiness().mailReady) return json(res, 503, { error: "Email services are not connected yet." });
     const body = await readJson(req);
     const mailbox = await ownedRow("mailboxes", body.mailboxId, user.id, "id,address,domain_id,status");
@@ -30,6 +31,7 @@ module.exports = async (req, res) => {
     let message = rows && rows[0];
     if (message && message.status === "sent") return json(res, 200, { ok: true, message });
     if (message && message.status === "sending") return json(res, 409, { error: "This message is already being sent." });
+    if (!await requireQuota(user.id, "email_send", res)) return;
     if (!message) {
       const inserted = await database("messages", {
         method: "POST",

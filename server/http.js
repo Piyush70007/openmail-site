@@ -34,7 +34,9 @@ async function readJson(req) {
 
 function sameOrigin(req) {
   const origin = req.headers.origin;
-  if (!origin) return true;
+  // Mutating browser requests must identify their origin. The signed session is
+  // carried in a cookie, so accepting origin-less requests weakens CSRF checks.
+  if (!origin) return false;
   const host = req.headers.host;
   const forwardedProto = req.headers["x-forwarded-proto"];
   const protocol = forwardedProto ? forwardedProto.split(",")[0].trim() : (process.env.NODE_ENV === "production" ? "https" : "http");

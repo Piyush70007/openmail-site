@@ -9,20 +9,21 @@ OpenMail is a cinematic public site with a separate, server-backed mailbox app. 
 - Domain registration and DNS status checks through the Resend API, with both sending and receiving enabled. Before setup, OpenMail checks for existing MX mail routes and warns when it finds one. The domain owner must approve any DNS change with their provider.
 - Separate mailboxes such as `support@yourdomain.com`, once the domain is verified.
 - Plain text outbound mail, inbound mail via a signed Resend webhook, and inbox, sent, archive, spam, and trash views.
+- Confirmed-email gating and atomic per-account limits: 30 DNS checks per hour, 2 domain registrations per day, 12 verification attempts per hour, 20 mailbox creations per day, and 10 outbound send requests per day.
 - The actual app lives at `/app.html`. The landing page also contains a separate fictional category interface sample.
 
 ## Before using live mail
 
-The code is in place, but this checkout has no provider credentials or configured database. The live app will not create accounts or send/receive mail until the services below are configured. No service has been purchased, no account has been created, and no DNS record has been changed as part of this build.
+The app is deployed, and the Supabase project and base schema have been created. Production credentials and the additive quota migration still need to be configured before sign-up or mail can work. No service has been purchased and no DNS record has been changed.
 
-This version uses an API and webhook mail transport. OpenMail stores the inbox messages in Supabase; Resend handles email delivery and receives inbound messages. It is a web inbox, not a general-purpose IMAP/POP mailbox for Apple Mail, Outlook, or other mail clients. Attachments are recorded as metadata but cannot yet be downloaded or sent. Automated spam detection, category classification, mailbox quotas, billing, and production abuse controls are not implemented.
+This version uses an API and webhook mail transport. OpenMail stores the inbox messages in Supabase; Resend handles email delivery and receives inbound messages. It is a web inbox, not a general-purpose IMAP/POP mailbox for Apple Mail, Outlook, or other mail clients. Attachments are recorded as metadata but cannot yet be downloaded or sent. Automated spam detection, category classification, billing, and global abuse monitoring are not implemented. Per-account limits are only a first layer of abuse protection, not a guarantee against a compromised server or coordinated account abuse.
 
 ### Required services and configuration
 
-1. Create a Supabase project and run [`supabase/schema.sql`](supabase/schema.sql) in its SQL editor. Copy its project URL, publishable key, and secret key from the Supabase dashboard. The secret key bypasses row-level security and must stay server-side. OpenMail also accepts the legacy `anon` and `service_role` key variable names.
+1. Create a Supabase project and run [`supabase/schema.sql`](supabase/schema.sql) in its SQL editor, then run the additive [`supabase/security-quotas.sql`](supabase/security-quotas.sql) migration. Copy the project URL, publishable key, and secret key from the Supabase dashboard. The secret key bypasses row-level security and must stay server-side. OpenMail also accepts the legacy `anon` and `service_role` key variable names.
 2. In Supabase Auth, enable email/password sign-in, keep email confirmation enabled, and allow `https://openmail-site.vercel.app/app.html` plus the local `/app.html` URL in the redirect list. Hosted Supabase's built-in email sender is limited to organization team addresses and two emails per hour; configure a [custom SMTP sender](https://supabase.com/docs/guides/auth/auth-smtp) for signup confirmations.
-3. Create a Resend account and an API key with domain, sending, and inbound email access. The current [Resend Free tier](https://www.resend.com/pricing?product=transactional) lists 3,000 emails per month and a 100-per-day limit; received messages count against the email quota. No paid plan is selected here.
-4. For Supabase Auth email, configure custom SMTP with host `smtp.resend.com`, port `465`, username `resend`, and the Resend API key as the password ([Resend SMTP details](https://resend.com/changelog/smtp-service)). Use a sender address on a verified sending domain.
+3. Create a Resend API key with **Full access**. Resend currently offers Full access or Sending access; domain creation, verification, and retrieving inbound message contents need Full access. Treat it like a master key for that Resend workspace: use a workspace dedicated to OpenMail, store the key only in Vercel's server-side Production variables, and never return it from an API or put it in browser code. Users can invoke only authenticated, owner-scoped OpenMail actions; they cannot read the key. The key remains available to the deployed server, so a server compromise could expose it. The [Resend Free tier](https://www.resend.com/pricing?product=transactional) has provider-level quotas; no paid plan is selected here.
+4. For Supabase Auth email, configure custom SMTP with host `smtp.resend.com`, port `465`, username `resend`, and a domain-scoped Sending Access key as the password ([Resend SMTP details](https://resend.com/changelog/smtp-service)). Use a sender address on a verified sending domain. Keep this key separate from the Full Access key.
 5. In Resend, add a webhook for `email.received` at `https://openmail-site.vercel.app/api/webhooks/resend`. Copy its signing secret.
 6. Add the variables from [`.env.example`](.env.example) to the Vercel project's Production environment. Set `OPENMAIL_PUBLIC_URL` to `https://openmail-site.vercel.app`. Keep `SUPABASE_SECRET_KEY`, `SESSION_SECRET`, `RESEND_API_KEY`, and `RESEND_WEBHOOK_SECRET` server-only; never prefix them with `NEXT_PUBLIC_` or place them in browser code. Vercel applies environment variable changes to new deployments, so redeploy after saving them.
 7. Sign up at `/app.html`, confirm the account email, and sign in.
@@ -47,7 +48,7 @@ Open [http://localhost:3000](http://localhost:3000). Webhook delivery from Resen
 - `app.html`, `app.css`, `app-ui.js` — signed-in mailbox app, domain onboarding, inbox, and compose flow.
 - `api/` — Vercel Functions for authentication, domains, mailboxes, message actions, send, and inbound webhooks.
 - `server/` — server-only session, provider, database, and ownership helpers.
-- `supabase/schema.sql` — tables, indexes, and row-level security policies.
+- `supabase/schema.sql`, `supabase/security-quotas.sql` — tables, indexes, row-level security policies, and atomic per-account usage limits.
 - `.env.example` — required server configuration names (no secrets).
 
 ## GitHub and Vercel
