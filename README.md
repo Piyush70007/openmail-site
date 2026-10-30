@@ -19,11 +19,11 @@ This version uses an API and webhook mail transport. OpenMail stores the inbox m
 
 ### Required services and configuration
 
-1. Create a Supabase project and run [`supabase/schema.sql`](supabase/schema.sql) in its SQL editor.
+1. Create a Supabase project and run [`supabase/schema.sql`](supabase/schema.sql) in its SQL editor. Copy its project URL, publishable key, and secret key from the Supabase dashboard. The secret key bypasses row-level security and must stay server-side. OpenMail also accepts the legacy `anon` and `service_role` key variable names.
 2. In Supabase Auth, enable email/password sign-in, keep email confirmation enabled, add the production and local `/app.html` URLs to the redirect allowlist, and configure SMTP for confirmation mail.
 3. Create a Resend account and an API key with domain, sending, and inbound email access. No paid plan is selected here.
 4. In the Resend dashboard, add a webhook for `email.received` at `https://YOUR-VERCEL-DOMAIN/api/webhooks/resend`. Copy its signing secret.
-5. Add the variables from [`.env.example`](.env.example) to the Vercel project. Set `OPENMAIL_PUBLIC_URL` to the deployed OpenMail origin. Keep `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET`, `RESEND_API_KEY`, and `RESEND_WEBHOOK_SECRET` server-only; never prefix them with `NEXT_PUBLIC_` or place them in browser code.
+5. Add the variables from [`.env.example`](.env.example) to the Vercel project's Production environment. Set `OPENMAIL_PUBLIC_URL` to `https://openmail-site.vercel.app`. Keep `SUPABASE_SECRET_KEY`, `SESSION_SECRET`, `RESEND_API_KEY`, and `RESEND_WEBHOOK_SECRET` server-only; never prefix them with `NEXT_PUBLIC_` or place them in browser code. Vercel applies environment variable changes to new deployments, so redeploy after saving them.
 6. Deploy the project. Sign up at `/app.html`, confirm the account email, and sign in.
 7. In the app, connect a domain you control. OpenMail asks Resend for the required records and shows them for review. Add records manually with the domain's DNS provider, then use **Check DNS records** in OpenMail. Creating a mailbox becomes available when the provider reports the domain as verified.
 8. Create the address (for example, `support`) and use that mailbox in OpenMail.

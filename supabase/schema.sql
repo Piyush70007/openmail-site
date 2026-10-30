@@ -60,6 +60,11 @@ alter table public.domains enable row level security;
 alter table public.mailboxes enable row level security;
 alter table public.messages enable row level security;
 
+-- The Vercel Functions use Supabase's server-only secret/service-role key.
+-- RLS is bypassed for that role, but PostgreSQL table grants are still required.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.domains, public.mailboxes, public.messages to service_role;
+
 drop policy if exists "Owners can read their domains" on public.domains;
 create policy "Owners can read their domains" on public.domains
   for select to authenticated using (owner_id = auth.uid());

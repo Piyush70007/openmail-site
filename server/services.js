@@ -4,8 +4,8 @@ function config() {
   const url = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
   return {
     supabaseUrl: url,
-    anonKey: process.env.SUPABASE_ANON_KEY || "",
-    serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || "",
+    secretKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "",
     sessionSecret: process.env.SESSION_SECRET || "",
     resendKey: process.env.RESEND_API_KEY || "",
     resendWebhookSecret: process.env.RESEND_WEBHOOK_SECRET || ""
@@ -16,8 +16,8 @@ function readiness() {
   const c = config();
   const authMissing = [];
   if (!c.supabaseUrl) authMissing.push("SUPABASE_URL");
-  if (!c.anonKey) authMissing.push("SUPABASE_ANON_KEY");
-  if (!c.serviceKey) authMissing.push("SUPABASE_SERVICE_ROLE_KEY");
+  if (!c.publishableKey) authMissing.push("SUPABASE_PUBLISHABLE_KEY");
+  if (!c.secretKey) authMissing.push("SUPABASE_SECRET_KEY");
   if (c.sessionSecret.length < 32) authMissing.push("SESSION_SECRET (32+ characters)");
   const mailMissing = [];
   if (!c.resendKey) mailMissing.push("RESEND_API_KEY");
@@ -27,10 +27,10 @@ function readiness() {
 
 async function supabaseAuth(path, options = {}) {
   const c = config();
-  if (!c.supabaseUrl || !c.anonKey) throw Object.assign(new Error("Account services are not configured yet."), { status: 503 });
+  if (!c.supabaseUrl || !c.publishableKey) throw Object.assign(new Error("Account services are not configured yet."), { status: 503 });
   const response = await fetch(`${c.supabaseUrl}/auth/v1${path}`, {
     method: options.method || "GET",
-    headers: { apikey: c.anonKey, "Content-Type": "application/json", ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}) },
+    headers: { apikey: c.publishableKey, "Content-Type": "application/json", ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}) },
     body: options.body ? JSON.stringify(options.body) : undefined
   });
   const data = await response.json().catch(() => ({}));
@@ -40,10 +40,10 @@ async function supabaseAuth(path, options = {}) {
 
 async function database(path, options = {}) {
   const c = config();
-  if (!c.supabaseUrl || !c.serviceKey) throw Object.assign(new Error("Secure storage is not configured yet."), { status: 503 });
+  if (!c.supabaseUrl || !c.secretKey) throw Object.assign(new Error("Secure storage is not configured yet."), { status: 503 });
   const headers = {
-    apikey: c.serviceKey,
-    Authorization: `Bearer ${c.serviceKey}`,
+    apikey: c.secretKey,
+    ...(c.secretKey.startsWith("sb_secret_") ? {} : { Authorization: `Bearer ${c.secretKey}` }),
     "Content-Type": "application/json",
     ...(options.prefer ? { Prefer: options.prefer } : {}),
     ...(options.headers || {})
