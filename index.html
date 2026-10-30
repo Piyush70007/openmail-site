@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
-    <script defer src="script.js"></script>
+    <script defer src="app.js"></script>
   </head>
   <body>
     <div class="scroll-track" aria-hidden="true"><span id="scrollProgress"></span></div>
@@ -109,46 +109,70 @@
       <section class="inbox-section" id="inbox">
         <div class="section-heading reveal">
           <div><p class="eyebrow"><span class="live-dot"></span> OPENMAIL / PRODUCT PREVIEW</p><h2>One inbox.<br /><span>Six ways to focus.</span></h2></div>
-          <div class="section-note"><span class="status-chip">INTERACTIVE DEMO</span><p>Sample messages only. Switch views, search, star and open a message. Nothing is connected or sent.</p></div>
+          <div class="section-note"><span class="status-chip">INTERACTIVE DEMO</span><p>Try the whole inbox flow. Demo changes save in this browser; no message is delivered or stored on a mail server.</p></div>
         </div>
         <article class="panel inbox-panel reveal" aria-label="Interactive OpenMail inbox preview">
-          <div class="inbox-window-bar"><div class="window-lights" aria-hidden="true"><i></i><i></i><i></i></div><span>OPENMAIL <b>/</b> INBOX PREVIEW</span><span class="window-state"><i></i> LOCAL SAMPLE</span></div>
-          <div class="mail-app">
+          <div class="inbox-window-bar"><div class="window-lights" aria-hidden="true"><i></i><i></i><i></i></div><span>OPENMAIL <b>/</b> INBOX PREVIEW</span><span class="window-state"><i></i> SAVED IN THIS BROWSER</span></div>
+          <div class="mail-app" id="mailApp">
             <aside class="mail-sidebar" aria-label="Preview mailbox navigation">
               <div class="mail-brand"><span class="brand-mark mini" aria-hidden="true"><i></i><i></i><i></i></span><span>openmail<span class="brand-period">.</span></span></div>
               <button class="compose-button" id="composeButton"><span>＋</span> Compose <kbd>C</kbd></button>
-              <p class="mail-nav-label">MAILBOX</p>
+              <p class="mail-nav-label">INBOX VIEWS</p>
               <button class="mail-side-link active" data-view="all"><span class="side-icon">▤</span> All mail <b id="allCount">06</b></button>
-              <button class="mail-side-link" data-view="primary"><span class="side-icon">⌂</span> Primary</button>
-              <button class="mail-side-link" data-view="social"><span class="side-icon">◎</span> Social</button>
-              <button class="mail-side-link" data-view="promotions"><span class="side-icon">◇</span> Promotions</button>
-              <button class="mail-side-link" data-view="updates"><span class="side-icon">↻</span> Updates</button>
-              <button class="mail-side-link" data-view="spam"><span class="side-icon">⊘</span> Spam</button>
+              <button class="mail-side-link" data-view="primary"><span class="side-icon">⌂</span> Primary <b id="primaryCount">03</b></button>
+              <button class="mail-side-link" data-view="social"><span class="side-icon">◎</span> Social <b id="socialCount">01</b></button>
+              <button class="mail-side-link" data-view="promotions"><span class="side-icon">◇</span> Promotions <b id="promotionsCount">01</b></button>
+              <button class="mail-side-link" data-view="updates"><span class="side-icon">↻</span> Updates <b id="updatesCount">01</b></button>
+              <button class="mail-side-link" data-view="spam"><span class="side-icon">⊘</span> Spam <b id="spamCount">01</b></button>
+              <p class="mail-nav-label mailbox-label">YOUR FOLDERS</p>
+              <button class="mail-side-link" data-view="starred"><span class="side-icon">★</span> Starred</button>
+              <button class="mail-side-link" data-view="sent"><span class="side-icon">↗</span> Sent <b id="sentCount">00</b></button>
+              <button class="mail-side-link" data-view="drafts"><span class="side-icon">✎</span> Drafts <b id="draftCount">00</b></button>
+              <button class="mail-side-link" data-view="archive"><span class="side-icon">▱</span> Archive</button>
+              <button class="mail-side-link" data-view="trash"><span class="side-icon">⌫</span> Trash <b id="trashCount">00</b></button>
               <div class="sidebar-bottom"><span class="sidebar-avatar">OM</span><span><b>Sample account</b><small>PREVIEW ONLY</small></span><span class="more-dots">···</span></div>
             </aside>
             <div class="mail-main">
               <div class="mail-toolbar">
                 <div class="mail-breadcrumb"><span>Inbox</span><span>/</span><b id="currentViewLabel">All mail</b></div>
                 <label class="search-box"><span aria-hidden="true">⌕</span><input id="mailSearch" type="search" placeholder="Search sample mail" aria-label="Search sample mail" /><kbd>⌘ K</kbd></label>
-                <button class="icon-button refresh-button" id="refreshButton" aria-label="Reset preview controls" title="Reset preview controls">↻</button>
+                <button class="icon-button refresh-button" id="refreshButton" aria-label="Refresh preview" title="Refresh preview">↻</button>
                 <button class="icon-button settings-button" id="settingsButton" aria-label="Preview settings" title="Preview settings">⚙</button>
               </div>
-              <div class="mail-tabs" role="tablist" aria-label="Inbox categories">
-                <button class="mail-tab active" role="tab" aria-selected="true" data-view="all">All mail <span>06</span></button>
-                <button class="mail-tab" role="tab" aria-selected="false" data-view="primary">Primary <span>03</span></button>
-                <button class="mail-tab" role="tab" aria-selected="false" data-view="social">Social <span>01</span></button>
-                <button class="mail-tab" role="tab" aria-selected="false" data-view="promotions">Promotions <span>01</span></button>
-                <button class="mail-tab" role="tab" aria-selected="false" data-view="updates">Updates <span>01</span></button>
-                <button class="mail-tab" role="tab" aria-selected="false" data-view="spam">Spam <span>01</span></button>
+              <div class="mobile-mail-nav" aria-label="Mailbox folders">
+                <div class="mobile-folder-scroll">
+                  <button type="button" data-view="starred">Starred</button>
+                  <button type="button" data-view="sent">Sent</button>
+                  <button type="button" data-view="drafts">Drafts</button>
+                  <button type="button" data-view="archive">Archive</button>
+                  <button type="button" data-view="trash">Trash</button>
+                </div>
+                <button type="button" class="mobile-compose" id="mobileComposeButton">＋ Compose</button>
               </div>
-              <div class="mail-list-header"><label class="select-all"><input id="selectAll" type="checkbox" aria-label="Select all visible sample messages" /><span></span></label><button id="unreadFilter" class="unread-filter">Unread first <span>⌄</span></button><span class="list-count" id="listCount">1–6 of 6</span></div>
+              <div class="mail-tabs" role="tablist" aria-label="Inbox categories">
+                <button class="mail-tab active" role="tab" aria-selected="true" data-view="all">All mail <span id="allTabCount">06</span></button>
+                <button class="mail-tab" role="tab" aria-selected="false" data-view="primary">Primary <span id="primaryTabCount">03</span></button>
+                <button class="mail-tab" role="tab" aria-selected="false" data-view="social">Social <span id="socialTabCount">01</span></button>
+                <button class="mail-tab" role="tab" aria-selected="false" data-view="promotions">Promotions <span id="promotionsTabCount">01</span></button>
+                <button class="mail-tab" role="tab" aria-selected="false" data-view="updates">Updates <span id="updatesTabCount">01</span></button>
+                <button class="mail-tab" role="tab" aria-selected="false" data-view="spam">Spam <span id="spamTabCount">01</span></button>
+              </div>
+              <div class="mail-actionbar" id="mailActionbar" hidden>
+                <span class="selection-summary" id="selectionSummary">0 selected</span>
+                <button type="button" id="markReadAction">Mark read</button>
+                <button type="button" id="archiveAction">Archive</button>
+                <button type="button" id="spamAction">Move to spam</button>
+                <button type="button" id="trashAction">Move to trash</button>
+                <button type="button" id="clearSelection" aria-label="Clear selection">×</button>
+              </div>
+              <div class="mail-list-header"><label class="select-all"><input id="selectAll" type="checkbox" aria-label="Select all visible inbox messages" /><span></span></label><button id="unreadFilter" class="unread-filter">Newest first <span>⌄</span></button><span class="list-count" id="listCount">1–6 of 6</span></div>
               <div class="message-list" id="messageList" aria-live="polite"></div>
               <div class="empty-state" id="emptyState" hidden><span>⌕</span><b>No messages found</b><p>Try a different search or choose another view.</p></div>
-              <div class="mail-app-note"><span class="note-dot"></span> Illustrative inbox · your mail is not connected</div>
+              <div class="mail-app-note"><span class="note-dot"></span> Demo actions save in this browser · no mail is sent</div>
             </div>
           </div>
         </article>
-        <p class="inbox-disclaimer"><span>NOTE</span> This is a front-end product preview with fictional sample messages. It does not connect to mailboxes, store email, or send messages.</p>
+        <p class="inbox-disclaimer"><span>DEMO BOUNDARY</span> Sample content and your demo changes stay in this browser. No account connects to a mailbox, and no email is sent or saved on a server.</p>
       </section>
 
       <section class="lower-grid" id="roadmap" aria-label="OpenMail plans and safeguards">

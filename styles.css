@@ -189,6 +189,7 @@ kbd { border: 1px solid rgba(128, 151, 149, .2); border-radius: 3px; padding: 2p
 .more-dots { margin-left: auto; color: #7b8887; letter-spacing: 1px; }
 .mail-main { min-width: 0; padding: 0 18px; }
 .mail-toolbar { min-height: 59px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line-soft); }
+.mobile-mail-nav { display: none; }
 .mail-breadcrumb { display: flex; align-items: center; gap: 7px; margin-right: auto; white-space: nowrap; color: #71807f; font-size: 9px; }
 .mail-breadcrumb > span:nth-child(2) { color: #46504f; }
 .mail-breadcrumb b { color: #d6e0dc; font-weight: 600; }
@@ -206,6 +207,12 @@ kbd { border: 1px solid rgba(128, 151, 149, .2); border-radius: 3px; padding: 2p
 .mail-tab span { font: 7px var(--mono); color: #606e6b; margin-left: 3px; }
 .mail-tab.active { color: #cfe5df; }
 .mail-tab.active::after { content: ""; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px; background: #9ee8d9; box-shadow: 0 -2px 9px rgba(158,232,217,.3); }
+.mail-actionbar { min-height: 37px; display: flex; align-items: center; gap: 6px; overflow-x: auto; border-bottom: 1px solid var(--line-soft); scrollbar-width: thin; scrollbar-color: #344542 transparent; }
+.mail-actionbar[hidden] { display: none; }
+.selection-summary { flex: 0 0 auto; margin-right: 5px; color: #a9c9c1; font: 7px var(--mono); white-space: nowrap; }
+.mail-actionbar button { flex: 0 0 auto; min-height: 23px; padding: 0 8px; border: 1px solid rgba(164,245,230,.13); border-radius: 4px; background: rgba(164,245,230,.035); color: #aab8b3; font-size: 7px; cursor: pointer; white-space: nowrap; }
+.mail-actionbar button:hover { border-color: rgba(164,245,230,.38); color: #e0f0eb; }
+.mail-actionbar #clearSelection { width: 23px; padding: 0; color: #83928e; font-size: 14px; }
 .mail-list-header { height: 34px; display: flex; align-items: center; border-bottom: 1px solid var(--line-soft); gap: 12px; color: #75817e; }
 .select-all { display: inline-flex; width: 14px; height: 14px; position: relative; }
 .select-all input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
@@ -223,7 +230,9 @@ kbd { border: 1px solid rgba(128, 151, 149, .2); border-radius: 3px; padding: 2p
 .message-check input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
 .message-check span { border: 1px solid #53615e; border-radius: 3px; width: 12px; height: 12px; pointer-events: none; }
 .message-check input:checked + span { background: var(--cyan); border-color: var(--cyan); box-shadow: inset 0 0 0 3px #132321; }
+.message-check-spacer { width: 14px; height: 14px; }
 .sender-avatar { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: #dbedeb; font-size: 7px; font-weight: 700; }
+.tone-sand { background: #55473c; }.tone-violet { background: #403b59; }.tone-sage { background: #344d47; }.tone-blue { background: #354b60; }.tone-amber { background: #5b4d34; }.tone-teal { background: #234b49; }.tone-rose { background: #5a383b; }.tone-self { background: #24483f; }.tone-draft { background: #3b4341; }
 .message-meta { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .message-sender, .message-subject { color: #a9b4b0; font-size: 8px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .message-preview { min-width: 0; overflow: hidden; color: #6f7b78; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
@@ -287,13 +296,27 @@ kbd { border: 1px solid rgba(128, 151, 149, .2); border-radius: 3px; padding: 2p
 .dialog-eyebrow { margin: 0 0 16px; color: #8bcabd; font: 8px var(--mono); letter-spacing: .1em; }
 .dialog-title { margin: 0 32px 10px 0; font-size: 22px; letter-spacing: -.05em; font-weight: 500; }
 .dialog-text { color: #a3aeaa; font-size: 10px; line-height: 1.8; }
+.message-body { margin-top: 22px; color: #bdc7c2; font-size: 11px; white-space: normal; }
 .dialog-meta { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--line-soft); color: #70807c; font: 7px var(--mono); letter-spacing: .07em; }
+.dialog-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.dialog-actions button, .settings-reset { border: 1px solid rgba(164,245,230,.15); border-radius: 99px; background: rgba(164,245,230,.035); color: #aebdb7; padding: 8px 11px; font-size: 8px; cursor: pointer; }
+.dialog-actions button:hover, .settings-reset:hover { border-color: rgba(164,245,230,.4); color: #e3efeb; }
 .compose-form { display: grid; gap: 10px; margin-top: 15px; }
 .compose-form label { display: grid; gap: 5px; color: #83908c; font: 7px var(--mono); letter-spacing: .08em; }
 .compose-form input, .compose-form textarea { width: 100%; min-height: 34px; resize: vertical; border: 1px solid var(--line); border-radius: 5px; background: #0a0f10; color: #e5edeb; padding: 8px; font: 9px var(--sans); outline: none; }
 .compose-form input:focus, .compose-form textarea:focus { border-color: rgba(164,245,230,.5); }
 .compose-form textarea { min-height: 95px; }
 .compose-form button { justify-self: start; border: 0; border-radius: 99px; background: #d5e5e1; color: #15201e; padding: 10px 16px; font-size: 9px; font-weight: 700; cursor: pointer; }
+.compose-form button.secondary-button { border: 1px solid var(--line); background: transparent; color: #b0bfba; font-weight: 500; }
+.compose-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 2px; }
+.settings-option { display: flex; align-items: center; gap: 10px; margin: 23px 0 5px; padding: 13px; border: 1px solid var(--line); border-radius: 7px; color: #c6d3ce; cursor: pointer; }
+.settings-option input { accent-color: #9ee8d9; }
+.settings-option span { display: grid; gap: 5px; }
+.settings-option b { font-size: 9px; font-weight: 500; }
+.settings-option small { color: #798681; font-size: 8px; }
+.settings-reset { margin-top: 15px; }
+.mail-app.is-compact .message-row { min-height: 39px; }
+.mail-app.is-compact .message-list { min-height: 220px; }
 .dialog-disclaimer { margin: 10px 0 0; color: #73817d; font-size: 8px; line-height: 1.7; }
 .toast { position: fixed; z-index: 60; left: 50%; bottom: 25px; transform: translate(-50%, 14px); border: 1px solid rgba(164,245,230,.25); border-radius: 99px; background: rgba(12,19,19,.96); box-shadow: 0 10px 38px rgba(0,0,0,.4); color: #c3d4cf; padding: 11px 15px; font-size: 9px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; white-space: nowrap; }
 .toast.visible { opacity: 1; transform: translate(-50%, 0); }
@@ -357,10 +380,18 @@ kbd { border: 1px solid rgba(128, 151, 149, .2); border-radius: 3px; padding: 2p
   .mail-sidebar { display: none; }
   .mail-main { padding: 0 12px; }
   .mail-toolbar { min-height: 53px; gap: 6px; }
-  .search-box { width: min(190px, 43%); }
+  .mail-breadcrumb { display: none; }
+  .search-box { width: min(220px, 55%); margin-right: auto; }
   .search-box kbd { display: none; }
-  .settings-button { display: none; }
   .mail-tabs { gap: 17px; }
+  .mobile-mail-nav { min-height: 38px; display: flex; align-items: center; gap: 7px; border-bottom: 1px solid var(--line-soft); }
+  .mobile-folder-scroll { min-width: 0; flex: 1; display: flex; align-items: center; gap: 5px; overflow-x: auto; scrollbar-width: none; }
+  .mobile-folder-scroll::-webkit-scrollbar { display: none; }
+  .mobile-folder-scroll button { flex: 0 0 auto; min-height: 24px; padding: 0 7px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: #7f8d89; font-size: 7px; cursor: pointer; }
+  .mobile-folder-scroll button:hover, .mobile-folder-scroll button.active { border-color: rgba(164,245,230,.16); background: rgba(164,245,230,.07); color: #cfe5df; }
+  .mobile-compose { flex: 0 0 auto; min-height: 27px; padding: 0 8px; border: 0; border-radius: 4px; background: #d5e5e1; color: #15201e; font-size: 8px; font-weight: 700; cursor: pointer; }
+  .mail-actionbar { min-height: 35px; }
+  .mail-actionbar button { min-height: 22px; padding-inline: 7px; }
   .message-list { min-height: 272px; }
   .message-row { grid-template-columns: 12px 22px minmax(62px, 1fr) minmax(62px, 1fr) 32px 12px; gap: 5px; padding-inline: 0; }
   .message-check { visibility: visible; }
