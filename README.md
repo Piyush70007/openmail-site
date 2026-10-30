@@ -22,14 +22,10 @@ Then visit [http://localhost:4173](http://localhost:4173). Stop the server with 
 
 The page honors the system's reduced-motion setting. Google Fonts are loaded remotely when available and have system font fallbacks.
 
-## Publish with GitHub and Vercel
+## GitHub and Vercel
 
-This folder is a standalone site, and no GitHub repository or deployment is currently connected. To publish it:
+The site is connected to [Piyush70007/openmail-site](https://github.com/Piyush70007/openmail-site) and deployed at [openmail-site.vercel.app](https://openmail-site.vercel.app/). Commits pushed to `main` trigger a Vercel production deployment. This is a static marketing site; it does not provision mailboxes or run an email server.
 
-1. Create a GitHub repository and place the contents of `outputs/openmail-site` at its root, or commit this parent project and keep this subfolder.
-2. Import that repository into Vercel.
-3. If the repository contains the parent project, set Vercel's Root Directory to `outputs/openmail-site`. If this folder is the repository root, use `.`.
-4. Select **Other** as the framework preset. Leave the build command empty and set the output directory to `.`.
-5. Deploy. The result is a static marketing site; it does not provision mailboxes or run an email server.
+Vercel serves the repository root directly: the framework preset is **Other**, with no build command and `.` as the output directory.
 
 Before presenting the concept as a live email service, the product still needs its mail transport, domain setup, account and message storage, spam controls, security implementation, and operational support. This website labels these items as planned and does not claim they are already available.
