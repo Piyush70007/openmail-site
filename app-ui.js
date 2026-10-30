@@ -165,8 +165,8 @@ authForm.addEventListener("submit", async (event) => {
   button.disabled = true;
   setStatus(authMessage, authMode === "login" ? "Signing in…" : "Creating your account…");
   try {
-    const result = await api(`/api/auth/${authMode === "login" ? "login" : "signup"}`, {
-      method: "POST", body: { email: form.get("email"), password: form.get("password") }
+    const result = await api("/api/auth", {
+      method: "POST", body: { action: authMode, email: form.get("email"), password: form.get("password") }
     });
     if (result.signedIn || authMode === "login") {
       const session = await api("/api/auth/session");
