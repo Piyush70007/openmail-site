@@ -26,6 +26,8 @@
 }
 
 #mailView .mail-sidebar {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -86,6 +88,8 @@
 #mailView .sidebar-bottom button { margin-left: auto; border: 0; background: transparent; color: #87938f; cursor: pointer; }
 
 #mailView .mail-main {
+  grid-column: 2;
+  grid-row: 1;
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -137,7 +141,7 @@
   #mailView .window-state { display: none; }
   #mailView .mail-app { min-height: 0; grid-template-columns: 1fr; }
   #mailView .mail-sidebar { display: none; }
-  #mailView .mail-main { padding: 0 12px; }
+  #mailView .mail-main { grid-column: 1; grid-row: 1; padding: 0 12px; }
   #mailView .mail-toolbar { min-height: 53px; gap: 6px; }
   #mailView .mail-breadcrumb { display: none; }
   #mailView .search-box { width: min(220px, 55%); margin-right: auto; }
