@@ -6,7 +6,7 @@ OpenMail is a cinematic public site with a separate, server-backed mailbox app. 
 
 - Email and password account sign-up, sign-in, session refresh, and sign-out through Supabase Auth. Browser sessions use signed, HTTP-only cookies.
 - Owner-scoped domains, mailboxes, and messages stored in Supabase. The included schema enables row-level security.
-- Domain registration and DNS status checks through the Resend API. OpenMail displays the records; a person must add them at the DNS provider.
+- Domain registration and DNS status checks through the Resend API, with both sending and receiving enabled. Before setup, OpenMail checks for existing MX mail routes and warns when it finds one. The domain owner must approve any DNS change with their provider.
 - Separate mailboxes such as `support@yourdomain.com`, once the domain is verified.
 - Plain text outbound mail, inbound mail via a signed Resend webhook, and inbox, sent, archive, spam, and trash views.
 - The actual app lives at `/app.html`. The landing page also contains a separate fictional category interface sample.
@@ -26,10 +26,10 @@ This version uses an API and webhook mail transport. OpenMail stores the inbox m
 5. In Resend, add a webhook for `email.received` at `https://openmail-site.vercel.app/api/webhooks/resend`. Copy its signing secret.
 6. Add the variables from [`.env.example`](.env.example) to the Vercel project's Production environment. Set `OPENMAIL_PUBLIC_URL` to `https://openmail-site.vercel.app`. Keep `SUPABASE_SECRET_KEY`, `SESSION_SECRET`, `RESEND_API_KEY`, and `RESEND_WEBHOOK_SECRET` server-only; never prefix them with `NEXT_PUBLIC_` or place them in browser code. Vercel applies environment variable changes to new deployments, so redeploy after saving them.
 7. Sign up at `/app.html`, confirm the account email, and sign in.
-8. In the app, connect a domain you control. OpenMail asks Resend for the required records and shows them for review. Add records manually with the domain's DNS provider, then use **Check DNS records** in OpenMail. Creating a mailbox becomes available when the provider reports the domain as verified.
+8. In the app, connect a domain you control. OpenMail checks whether it already has a mail route, then asks Resend for the records needed to send and receive. A domain owner must approve those records with the DNS provider; OpenMail does not make DNS changes. Use **Check DNS records** after approval. Creating a mailbox becomes available when the provider reports the domain as verified.
 9. Create the address (for example, `support`) and use that mailbox in OpenMail.
 
-**Check existing email first.** DNS changes can change where a domain's mail is delivered. In particular, changing its MX records may move delivery away from an existing mail provider. Review the complete records with the domain administrator before applying them. OpenMail never edits DNS automatically.
+**Check existing email first.** The app checks whether the domain currently has MX records and warns before preparing setup. DNS tells other mail services where to deliver messages. Changing the main MX record can move new mail away from an existing provider. Review the complete changes with the domain administrator before applying them. OpenMail never edits DNS automatically. One-click DNS setup is not currently implemented; it requires onboarding OpenMail as a Domain Connect service and approval from supported DNS providers.
 
 ## Run locally
 

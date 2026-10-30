@@ -329,19 +329,19 @@ function renderDomains() {
       const table = document.createElement("table");
       table.className = "dns-table";
       const header = document.createElement("tr");
-      ["TYPE", "NAME", "VALUE"].forEach((label) => { const th = document.createElement("th"); th.textContent = label; header.append(th); });
+      ["TYPE", "NAME / HOST", "VALUE", "PRIORITY"].forEach((label) => { const th = document.createElement("th"); th.textContent = label; header.append(th); });
       const thead = document.createElement("thead"); thead.append(header); table.append(thead);
       const tbody = document.createElement("tbody");
       records.forEach((record) => {
         const tr = document.createElement("tr");
-        [record.type || record.record || "—", record.name || "@", record.value || "—"].forEach((value) => { const td = document.createElement("td"); td.textContent = String(value); tr.append(td); });
+        [record.type || record.record || "—", record.name || "@", record.value || "—", record.priority ?? "—"].forEach((value) => { const td = document.createElement("td"); td.textContent = String(value); tr.append(td); });
         tbody.append(tr);
       });
       table.append(tbody);
       details.append(table);
       const note = document.createElement("p");
       note.className = "dns-note";
-      note.textContent = "Copy these records to your DNS provider yourself. Changing MX records may move delivery away from an existing email host.";
+      note.textContent = "These are the settings your domain provider needs to connect this address to OpenMail. Nothing has been changed yet. Review each record with your domain provider before approving it.";
       details.append(note);
     } else {
       const note = document.createElement("p");
@@ -371,13 +371,34 @@ $("#domainForm").addEventListener("submit", async (event) => {
   const input = $("#domainInput");
   const button = event.submitter;
   button.disabled = true;
-  setStatus($("#domainMessage"), "Requesting domain records…");
+  setStatus($("#domainMessage"), "Checking whether this domain already receives email…");
   try {
+    const check = await api(`/api/domains?check=${encodeURIComponent(input.value)}`);
+    if (check.existingMailRoute === true) {
+      const routes = check.mx.map((item) => `${item.host} (priority ${item.priority})`).join("\n");
+      const proceed = window.confirm(
+        `This domain already has an email route:\n\n${routes}\n\nOpenMail will not change it. To receive mail here, a domain owner may later need to approve a new mail route, which could affect the current inbox. Continue and prepare the OpenMail setup?`
+      );
+      if (!proceed) {
+        setStatus($("#domainMessage"), "No settings were changed. Ask the domain owner to review the current email service first.");
+        return;
+      }
+    } else if (check.existingMailRoute === false) {
+      setStatus($("#domainMessage"), "No MX mail route was found. Preparing the OpenMail setup…");
+    } else {
+      const proceed = window.confirm(
+        "OpenMail could not check this domain's current mail route. This step will not change DNS, but adding the later mail settings may affect an existing inbox. Continue to prepare setup instructions?"
+      );
+      if (!proceed) {
+        setStatus($("#domainMessage"), "No settings were changed. Check with the domain owner before continuing.");
+        return;
+      }
+    }
     const result = await api("/api/domains", { method: "POST", body: { domain: input.value } });
     domains.unshift(result.domain);
     input.value = "";
     renderDomains();
-    setStatus($("#domainMessage"), "Domain added. Review the records below and add them with your DNS provider.");
+    setStatus($("#domainMessage"), "OpenMail has not changed your settings. Review the setup with your domain provider before approving it.");
   } catch (error) { setStatus($("#domainMessage"), error.message, true); }
   finally { button.disabled = false; }
 });

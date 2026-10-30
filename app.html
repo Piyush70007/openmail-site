@@ -95,12 +95,12 @@
           </article>
           <section class="domains-panel" id="domainsPanel" hidden>
             <div class="domains-panel-head"><button class="quiet-button" id="backToInbox" type="button">← Back to inbox</button><span class="eyebrow">DOMAIN CONTROL / PRIVATE TO YOUR ACCOUNT</span></div>
-            <div class="domains-title"><div><p class="eyebrow">OPENMAIL / SETUP</p><h2>Your domains<br /><span>and mailboxes.</span></h2></div><p>Connect a domain you control, review the mail records OpenMail needs, then create the addresses you want.</p></div>
+            <div class="domains-title"><div><p class="eyebrow">OPENMAIL / SETUP</p><h2>Your domains<br /><span>and mailboxes.</span></h2></div><p>Enter a domain you own. OpenMail checks whether it already receives email, then prepares the setup for addresses like support@yourdomain.com.</p></div>
             <div class="setup-notice app-service-notice" id="mailServiceNotice" hidden><span class="notice-mark">!</span><div><b>Email services need configuration.</b><p>The database can be reached, but mailbox setup and mail delivery wait for the provider settings below.</p><code id="mailMissingConfig"></code></div></div>
             <div class="domain-workspace">
               <div class="domain-card add-domain-card">
-                <div class="domain-card-heading"><span class="domain-icon">＋</span><div><b>Connect a domain</b><small>Only add domains you own or administer.</small></div></div>
-                <form id="domainForm" class="inline-form"><label for="domainInput">DOMAIN NAME</label><div class="input-row"><input id="domainInput" name="domain" type="text" placeholder="yourdomain.com" autocomplete="url" required /><button class="button button-solid" type="submit">Connect <span>↗</span></button></div></form>
+                <div class="domain-card-heading"><span class="domain-icon">＋</span><div><b>Connect a domain</b><small>Use a domain you own or manage.</small></div></div>
+                <form id="domainForm" class="inline-form"><label for="domainInput">YOUR DOMAIN</label><div class="input-row"><input id="domainInput" name="domain" type="text" placeholder="yourdomain.com" autocomplete="url" required /><button class="button button-solid" type="submit">Check domain <span>↗</span></button></div></form>
                 <p class="form-inline-message" id="domainMessage" role="status"></p>
               </div>
               <div class="domain-card mailbox-create-card">
@@ -109,8 +109,8 @@
                 <p class="form-inline-message" id="mailboxMessage" role="status"></p>
               </div>
             </div>
-            <div class="domain-list-wrap"><div class="domain-list-heading"><h3>Connected domains</h3><span id="domainCount">0 domains</span></div><div class="domain-list" id="domainList"></div><div class="domain-empty" id="domainEmpty"><span>◇</span><b>No domain connected yet.</b><p>Add a domain above to begin. OpenMail will show the DNS records; you add them with your DNS provider.</p></div></div>
-            <div class="setup-footnote"><span>DNS CHANGE REQUIRED</span><p>OpenMail will never change your DNS automatically. Review every record with your current email provider in mind: changing MX records can move mail delivery away from existing inboxes.</p></div>
+            <div class="domain-list-wrap"><div class="domain-list-heading"><h3>Connected domains</h3><span id="domainCount">0 domains</span></div><div class="domain-list" id="domainList"></div><div class="domain-empty" id="domainEmpty"><span>◇</span><b>No domain connected yet.</b><p>Enter your domain above. OpenMail will check its current email route before preparing setup.</p></div></div>
+            <div class="setup-footnote"><span>YOUR APPROVAL IS REQUIRED</span><p>Email addresses use your domain, so its provider must point incoming mail to OpenMail. We check for existing email first. OpenMail never changes these settings for you; review and approve any changes with your domain provider. Changing the main mail route can affect an existing inbox.</p></div>
           </section>
           <footer class="mail-footer"><span>OPENMAIL / PRIVATE MAIL SPACE</span><span>Mail is stored for your account only</span></footer>
         </section>
