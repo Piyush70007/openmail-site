@@ -221,13 +221,15 @@ async function loadDomainsAndMailboxes() {
   domainsPanel.hidden = true;
   inboxPane.hidden = false;
   messageDetail.hidden = true;
+  $("#mobileMailNav").hidden = false;
   $("#composeButton").disabled = !systemStatus.mailReady;
   $("#headingCompose").disabled = !systemStatus.mailReady;
-  $("#sidebarSignalText").textContent = systemStatus.mailReady ? "CONNECTED" : "SETUP REQUIRED";
+  $("#mobileComposeButton").disabled = !systemStatus.mailReady;
   const prior = selectedMailbox && mailboxes.find((item) => item.id === selectedMailbox.id);
   const chosen = prior || mailboxes[0];
   selectedMailbox = chosen;
   $("#mailboxPicker").value = chosen.id;
+  $("#mobileMailboxPicker").value = chosen.id;
   $("#currentMailboxHeading").textContent = chosen.address.toUpperCase();
   await loadMessages();
 }
@@ -236,10 +238,12 @@ function openDomains() {
   domainsPanel.hidden = false;
   inboxPane.hidden = true;
   messageDetail.hidden = true;
+  $("#mobileMailNav").hidden = true;
   $("#currentViewHeading").textContent = "Domains & mailboxes";
   $("#currentMailboxHeading").textContent = "SETUP";
   $("#composeButton").disabled = true;
   $("#headingCompose").disabled = true;
+  $("#mobileComposeButton").disabled = true;
   $("#domainForm").querySelector("button[type=submit]").disabled = !systemStatus.mailReady;
   $("#mailboxForm").querySelector("button[type=submit]").disabled = !systemStatus.mailReady || !verifiedDomainsReady();
   renderDomains();
@@ -249,10 +253,12 @@ function openInbox() {
   selectedView = "inbox";
   syncViewControls();
   domainsPanel.hidden = true;
+  $("#mobileMailNav").hidden = false;
   inboxPane.hidden = false;
   messageDetail.hidden = true;
   $("#composeButton").disabled = !selectedMailbox || !systemStatus.mailReady;
   $("#headingCompose").disabled = !selectedMailbox || !systemStatus.mailReady;
+  $("#mobileComposeButton").disabled = !selectedMailbox || !systemStatus.mailReady;
   $("#currentMailboxHeading").textContent = selectedMailbox ? selectedMailbox.address.toUpperCase() : "INBOX";
   loadMessages().catch((error) => toast(error.message));
 }
@@ -367,15 +373,16 @@ function renderDomains() {
 }
 
 function renderMailboxChoices() {
-  const picker = $("#mailboxPicker");
-  picker.replaceChildren();
-  mailboxes.forEach((mailbox) => {
-    const option = document.createElement("option");
-    option.value = mailbox.id;
-    option.textContent = mailbox.address;
-    picker.append(option);
+  [$("#mailboxPicker"), $("#mobileMailboxPicker")].forEach((picker) => {
+    picker.replaceChildren();
+    mailboxes.forEach((mailbox) => {
+      const option = document.createElement("option");
+      option.value = mailbox.id;
+      option.textContent = mailbox.address;
+      picker.append(option);
+    });
+    picker.disabled = mailboxes.length === 0;
   });
-  picker.disabled = mailboxes.length === 0;
 }
 
 $("#domainForm").addEventListener("submit", async (event) => {
@@ -427,6 +434,7 @@ $("#mailboxForm").addEventListener("submit", async (event) => {
     mailboxes.unshift(result.mailbox);
     renderMailboxChoices();
     $("#mailboxPicker").value = result.mailbox.id;
+    $("#mobileMailboxPicker").value = result.mailbox.id;
     selectedMailbox = result.mailbox;
     $("#localPartInput").value = "";
     renderDomains();
@@ -439,16 +447,22 @@ $("#mailboxForm").addEventListener("submit", async (event) => {
 
 function verifiedDomainsReady() { return domains.some((item) => item.status === "verified"); }
 
-$("#mailboxPicker").addEventListener("change", async () => {
-  selectedMailbox = mailboxes.find((item) => item.id === $("#mailboxPicker").value) || null;
+async function selectMailbox(id) {
+  selectedMailbox = mailboxes.find((item) => item.id === id) || null;
+  if (!selectedMailbox) return;
+  $("#mailboxPicker").value = selectedMailbox.id;
+  $("#mobileMailboxPicker").value = selectedMailbox.id;
   selectedView = "inbox";
   syncViewControls();
-  if (selectedMailbox) openInbox();
-});
+  openInbox();
+}
+
+$("#mailboxPicker").addEventListener("change", () => selectMailbox($("#mailboxPicker").value));
+$("#mobileMailboxPicker").addEventListener("change", () => selectMailbox($("#mobileMailboxPicker").value));
 
 function syncViewControls() {
-  document.querySelectorAll(".mail-nav-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === selectedView));
-  document.querySelectorAll(".live-category[data-view]").forEach((item) => {
+  document.querySelectorAll(".mail-side-link[data-view], .mobile-folder-scroll [data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === selectedView));
+  document.querySelectorAll(".mail-tab[data-view]").forEach((item) => {
     const active = item.dataset.view === selectedView;
     item.classList.toggle("active", active);
     item.setAttribute("aria-selected", String(active));
@@ -465,6 +479,7 @@ async function loadMessages() {
   $("#currentViewHeading").textContent = viewLabels[selectedView] || "All mail";
   const unread = currentMessages.filter((item) => !item.read_at && item.direction === "inbound").length;
   $("#inboxCount").textContent = selectedView === "inbox" && unread ? String(unread).padStart(2, "0") : "—";
+  $("#allTabCount").textContent = selectedView === "inbox" ? String(currentMessages.length).padStart(2, "0") : "—";
   renderMessages();
 }
 
@@ -475,33 +490,92 @@ function renderMessages() {
     message.from_address, ...(message.to_addresses || []), message.subject, message.preview, message.text_body
   ].join(" ").toLocaleLowerCase().includes(query)) : currentMessages;
   $("#messageSummary").textContent = query
-    ? `${visibleMessages.length} ${visibleMessages.length === 1 ? "match" : "matches"} · ${currentMessages.length} loaded`
-    : `${currentMessages.length} ${currentMessages.length === 1 ? "message" : "messages"}`;
-  visibleMessages.forEach((message) => {
-    const label = message.direction === "outbound" ? (message.to_addresses || []).join(", ") : message.from_address;
-    const row = document.createElement("button");
-    row.type = "button";
-    row.className = `live-row${!message.read_at && message.direction === "inbound" ? " unread" : ""}`;
+    ? `${visibleMessages.length} ${visibleMessages.length === 1 ? "match" : "matches"}`
+    : visibleMessages.length ? `1–${visibleMessages.length} of ${visibleMessages.length}` : "0 messages";
+  const tones = ["sand", "violet", "sage", "blue", "amber", "teal", "rose"];
+  visibleMessages.forEach((message, index) => {
+    const senderLabel = message.direction === "outbound" ? (message.to_addresses || []).join(", ") : message.from_address;
+    const sender = senderLabel || "Unknown sender";
+    const title = message.subject || "(no subject)";
+    const row = document.createElement("article");
+    row.className = `message-row${!message.read_at && message.direction === "inbound" ? " unread" : ""}`;
+    row.tabIndex = 0;
     row.dataset.messageId = message.id;
-    const avatar = document.createElement("span"); avatar.className = "live-avatar"; avatar.textContent = initials(label);
-    const senderWrap = document.createElement("span"); senderWrap.className = "live-meta";
-    const sender = document.createElement("span"); sender.className = "live-sender"; sender.textContent = label || "Unknown sender";
-    senderWrap.append(sender);
-    const subjectWrap = document.createElement("span"); subjectWrap.className = "live-meta";
-    const subject = document.createElement("span"); subject.className = "live-subject"; subject.textContent = message.subject || "(no subject)";
-    const preview = document.createElement("span"); preview.className = "live-preview"; preview.textContent = message.preview || "";
-    subjectWrap.append(subject, preview);
-    const time = document.createElement("time"); time.className = "live-time"; time.textContent = displayTime(message.created_at); time.dateTime = message.created_at || "";
-    row.append(avatar, senderWrap, subjectWrap, time);
+    row.setAttribute("aria-label", `Open email from ${sender}: ${title}`);
+
+    const selection = document.createElement("label");
+    selection.className = "message-check";
+    selection.title = "Bulk actions are planned";
+    selection.setAttribute("aria-label", "Bulk selection is planned");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.disabled = true;
+    checkbox.tabIndex = -1;
+    const checkboxMark = document.createElement("span");
+    selection.append(checkbox, checkboxMark);
+
+    const avatar = document.createElement("span");
+    avatar.className = `sender-avatar tone-${tones[index % tones.length]}`;
+    avatar.textContent = initials(sender);
+    avatar.setAttribute("aria-hidden", "true");
+
+    const senderWrap = document.createElement("span");
+    senderWrap.className = "message-meta";
+    const senderName = document.createElement("span");
+    senderName.className = "message-sender";
+    senderName.textContent = sender;
+    const category = document.createElement("span");
+    category.className = "category-label";
+    category.textContent = message.folder === "spam" ? "Spam"
+      : message.folder === "archive" ? "Archive"
+      : message.folder === "trash" ? "Trash"
+      : selectedView === "sent" ? "Sent" : "Inbox";
+    senderWrap.append(senderName, category);
+
+    const subject = document.createElement("span");
+    subject.className = "message-subject";
+    subject.textContent = title;
+    const preview = document.createElement("span");
+    preview.className = "message-preview";
+    preview.textContent = `— ${message.preview || message.text_body || ""}`;
+    const time = document.createElement("time");
+    time.className = "message-time";
+    time.textContent = displayTime(message.created_at);
+    time.dateTime = message.created_at || "";
+    const star = document.createElement("button");
+    star.type = "button";
+    star.className = `star-button${message.starred ? " starred" : ""}`;
+    star.textContent = "★";
+    star.setAttribute("aria-label", `${message.starred ? "Unstar" : "Star"} ${title}`);
+    star.setAttribute("aria-pressed", String(Boolean(message.starred)));
+    star.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      try {
+        const result = await api(`/api/messages/${encodeURIComponent(message.id)}`, {
+          method: "PATCH", body: { action: "star", starred: !message.starred }
+        });
+        message.starred = result.message.starred;
+        if (currentMessage && currentMessage.id === message.id) {
+          currentMessage.starred = message.starred;
+          $("#detailStar").textContent = message.starred ? "★ Starred" : "☆ Star";
+        }
+        renderMessages();
+      } catch (error) { toast(error.message); }
+    });
+
+    row.append(selection, avatar, senderWrap, subject, preview, time, star);
     row.addEventListener("click", () => openMessage(message));
+    row.addEventListener("keydown", (event) => {
+      if (event.target === row && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); openMessage(message); }
+    });
     liveList.append(row);
   });
   const empty = visibleMessages.length === 0;
   $("#emptyMail").hidden = !empty;
   if (empty) {
     const labels = { inbox: ["Your inbox is clear.", "New mail sent to this address will appear here."], sent: ["Nothing sent yet.", "Messages you send from this mailbox appear here."], archive: ["Nothing archived.", "Archive a message to move it here."], spam: ["No spam.", "Messages marked as spam will appear here."], trash: ["Nothing in the trash.", "Deleted messages will appear here."] };
-    $("#emptyTitle").textContent = query ? "No matching messages." : labels[selectedView][0];
-    $("#emptyCopy").textContent = query ? "Try another sender, subject or phrase." : labels[selectedView][1];
+    $("#emptyTitle").textContent = query ? "No messages found" : labels[selectedView][0];
+    $("#emptyCopy").textContent = query ? "Try a different sender, subject or phrase." : labels[selectedView][1];
   }
 }
 
@@ -577,6 +651,7 @@ function openCompose({ to = "", subject = "" } = {}) {
 
 $("#composeButton").addEventListener("click", () => openCompose());
 $("#headingCompose").addEventListener("click", () => openCompose());
+$("#mobileComposeButton").addEventListener("click", () => openCompose());
 $("#emptyCompose").addEventListener("click", () => openCompose());
 $("#closeCompose").addEventListener("click", () => composeDialog.close());
 $("#replyButton").addEventListener("click", () => {
@@ -608,15 +683,18 @@ $("#composeForm").addEventListener("submit", async (event) => {
   finally { button.disabled = false; }
 });
 
-document.querySelectorAll(".mail-nav-item[data-view], .live-category[data-view]").forEach((button) => button.addEventListener("click", () => {
+document.querySelectorAll(".mail-side-link[data-view], .mail-tab[data-view], .mobile-folder-scroll [data-view]").forEach((button) => button.addEventListener("click", () => {
   selectedView = button.dataset.view;
   syncViewControls();
+  domainsPanel.hidden = true;
+  $("#mobileMailNav").hidden = false;
   messageDetail.hidden = true;
   inboxPane.hidden = false;
   loadMessages().catch((error) => toast(error.message));
 }));
 
 $("#messageSearch").addEventListener("input", renderMessages);
+$("#mobileManageDomain").addEventListener("click", openDomains);
 
 $("#refreshMessages").addEventListener("click", async () => {
   try { await loadDomainsAndMailboxes(); toast("Mailbox refreshed."); }
