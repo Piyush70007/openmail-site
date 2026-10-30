@@ -256,17 +256,17 @@ const orbCanvas = document.getElementById("signalOrb");
 const orbStage = document.getElementById("orbStage");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const orbContext = orbCanvas.getContext("2d", { alpha: true });
-const pointCount = 172;
+const pointCount = 186;
 const points = Array.from({ length: pointCount }, (_, index) => {
   const y = 1 - (index / (pointCount - 1)) * 2;
-  const radius = Math.sqrt(1 - y * y);
+  const radius = Math.sqrt(1 - y * y) * (.91 + .11 * Math.sin(index * 2.399));
   const theta = Math.PI * (3 - Math.sqrt(5)) * index;
   return { x: Math.cos(theta) * radius, y, z: Math.sin(theta) * radius };
 });
 const edges = [];
 for (let a = 0; a < points.length; a++) for (let b = a + 1; b < points.length; b++) {
   const dx = points[a].x - points[b].x, dy = points[a].y - points[b].y, dz = points[a].z - points[b].z;
-  if (dx * dx + dy * dy + dz * dz < .16) edges.push([a, b]);
+  if (dx * dx + dy * dy + dz * dz < .09 && (a + b) % 3 !== 0) edges.push([a, b]);
 }
 let orbWidth = 0, orbHeight = 0, orbFrame = 0, pointerX = 0, pointerY = 0, pointerTargetX = 0, pointerTargetY = 0;
 function resizeOrb() {
@@ -304,16 +304,23 @@ function drawOrb(time) {
   for (const [a, b] of edges) {
     const p = projected[a], q = projected[b];
     if (p.depth + q.depth < .94) continue;
-    ctx.strokeStyle = `rgba(105, 224, 208, ${Math.min(.29, ((p.depth + q.depth) / 2 - .25) * .28)})`;
+    ctx.strokeStyle = `rgba(105, 224, 208, ${Math.min(.19, ((p.depth + q.depth) / 2 - .25) * .21)})`;
     ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
   }
   projected.forEach((point) => {
-    const radius = .55 + point.depth * 1.25;
-    const alpha = .2 + point.depth * .65;
+    const radius = .45 + point.depth * .78;
+    const alpha = .16 + point.depth * .58;
     ctx.fillStyle = `rgba(${point.depth > .72 ? "176, 255, 234" : "93, 209, 195"}, ${alpha})`;
     ctx.beginPath(); ctx.arc(point.x, point.y, radius, 0, Math.PI * 2); ctx.fill();
   });
   const orbitAngle = time * .00035;
+  for (let trail = 6; trail > 0; trail--) {
+    const angle = orbitAngle - trail * .075;
+    const trailX = cx + Math.cos(angle) * size * .94;
+    const trailY = cy + Math.sin(angle) * size * .31;
+    ctx.fillStyle = `rgba(132, 241, 218, ${(1 - trail / 7) * .48})`;
+    ctx.beginPath(); ctx.arc(trailX, trailY, .7 + (1 - trail / 7) * .6, 0, Math.PI * 2); ctx.fill();
+  }
   const pulseX = cx + Math.cos(orbitAngle) * size * .94;
   const pulseY = cy + Math.sin(orbitAngle) * size * .31;
   const pulse = ctx.createRadialGradient(pulseX, pulseY, 0, pulseX, pulseY, 7);
