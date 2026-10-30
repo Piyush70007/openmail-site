@@ -1,0 +1,9 @@
+{
+  "name": "openmail-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OpenMail hosted mailbox web app",
+  "scripts": {
+    "dev": "npx vercel dev"
+  }
+}

@@ -1,43 +1,57 @@
 # OpenMail
 
-OpenMail is a responsive product concept website with a cinematic, animated visual system and a usable in-browser inbox prototype. It is built with plain HTML, CSS, and JavaScript: no build step, framework, or package install is required.
+OpenMail is a cinematic public site with a separate, server-backed mailbox app. A signed-in account owner can connect a domain, review the mail provider's DNS records, create addresses on a verified domain, and use an inbox in OpenMail.
+
+## What is implemented
+
+- Email and password account sign-up, sign-in, session refresh, and sign-out through Supabase Auth. Browser sessions use signed, HTTP-only cookies.
+- Owner-scoped domains, mailboxes, and messages stored in Supabase. The included schema enables row-level security.
+- Domain registration and DNS status checks through the Resend API. OpenMail displays the records; a person must add them at the DNS provider.
+- Separate mailboxes such as `support@yourdomain.com`, once the domain is verified.
+- Plain text outbound mail, inbound mail via a signed Resend webhook, and inbox, sent, archive, spam, and trash views.
+- The actual app lives at `/app.html`. The landing page also contains a separate fictional category interface sample.
+
+## Before using live mail
+
+The code is in place, but this checkout has no provider credentials or configured database. The live app will not create accounts or send/receive mail until the services below are configured. No service has been purchased, no account has been created, and no DNS record has been changed as part of this build.
+
+This version uses an API and webhook mail transport. OpenMail stores the inbox messages in Supabase; Resend handles email delivery and receives inbound messages. It is a web inbox, not a general-purpose IMAP/POP mailbox for Apple Mail, Outlook, or other mail clients. Attachments are recorded as metadata but cannot yet be downloaded or sent. Automated spam detection, category classification, mailbox quotas, billing, and production abuse controls are not implemented.
+
+### Required services and configuration
+
+1. Create a Supabase project and run [`supabase/schema.sql`](supabase/schema.sql) in its SQL editor.
+2. In Supabase Auth, enable email/password sign-in, keep email confirmation enabled, add the production and local `/app.html` URLs to the redirect allowlist, and configure SMTP for confirmation mail.
+3. Create a Resend account and an API key with domain, sending, and inbound email access. No paid plan is selected here.
+4. In the Resend dashboard, add a webhook for `email.received` at `https://YOUR-VERCEL-DOMAIN/api/webhooks/resend`. Copy its signing secret.
+5. Add the variables from [`.env.example`](.env.example) to the Vercel project. Set `OPENMAIL_PUBLIC_URL` to the deployed OpenMail origin. Keep `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET`, `RESEND_API_KEY`, and `RESEND_WEBHOOK_SECRET` server-only; never prefix them with `NEXT_PUBLIC_` or place them in browser code.
+6. Deploy the project. Sign up at `/app.html`, confirm the account email, and sign in.
+7. In the app, connect a domain you control. OpenMail asks Resend for the required records and shows them for review. Add records manually with the domain's DNS provider, then use **Check DNS records** in OpenMail. Creating a mailbox becomes available when the provider reports the domain as verified.
+8. Create the address (for example, `support`) and use that mailbox in OpenMail.
+
+**Check existing email first.** DNS changes can change where a domain's mail is delivered. In particular, changing its MX records may move delivery away from an existing mail provider. Review the complete records with the domain administrator before applying them. OpenMail never edits DNS automatically.
 
 ## Run locally
 
-From this directory, start a local web server:
+Use Node.js and the Vercel CLI because the account and mail APIs run as Vercel Functions. Create `.env.local` from [`.env.example`](.env.example), fill in development credentials, and allow `http://localhost:3000/app.html` in Supabase Auth redirects.
 
 ```sh
-python3 -m http.server 4173
+npx vercel dev
 ```
 
-Open [http://localhost:4173](http://localhost:4173) and stop the server with `Ctrl+C`.
+Open [http://localhost:3000](http://localhost:3000). Webhook delivery from Resend needs a publicly reachable HTTPS URL; use a deployed preview URL for inbound testing.
 
-## What the preview does
+## Project structure
 
-- Browse All Mail, Primary, Social, Promotions, Updates, Spam, Starred, Sent, Drafts, Archive, and Trash.
-- Search fictional sample content, change the sort order, open messages, mark them unread, and star them.
-- Select multiple messages to mark read or unread, archive, move to Spam, or move to Trash. Archived, spam, and trashed samples can be moved back to the inbox.
-- Compose, autosave and edit local drafts, reply to a sample message, and add a message to the local Sent view.
-- Adjust compact row preferences and reset the sample inbox from Preview settings.
-- Keep demo changes in this browser using local storage. They do not leave the device. “Preview send” never delivers an email.
-- Explore the animated signal globe, layered system diagram, scroll reveals, responsive navigation, and reduced-motion support.
-
-Every inbox message and address is fictional. This is a front-end product preview, not a live mail client. It does not connect to accounts, deliver or receive email, or save data on a server. The mailbox, identity, storage, domain connection, message transport, spam controls, security, and operations shown on the website are concept and roadmap items.
-
-## Project files
-
-- `index.html` — page structure, content, and inbox preview shell.
-- `styles.css` — responsive visual design, motion, and inbox/dialog styling.
-- `app.js` — interactive inbox demo, local persistence, navigation, and animations.
-- `favicon.svg` — OpenMail mark.
-
-Google Fonts load from Google when a connection is available; system font fallbacks are included.
+- `index.html`, `styles.css`, `app.js` — cinematic public site and the clearly labeled, fictional category interface sample.
+- `app.html`, `app.css`, `app-ui.js` — signed-in mailbox app, domain onboarding, inbox, and compose flow.
+- `api/` — Vercel Functions for authentication, domains, mailboxes, message actions, send, and inbound webhooks.
+- `server/` — server-only session, provider, database, and ownership helpers.
+- `supabase/schema.sql` — tables, indexes, and row-level security policies.
+- `.env.example` — required server configuration names (no secrets).
 
 ## GitHub and Vercel
 
 - GitHub repository: [Piyush70007/openmail-site](https://github.com/Piyush70007/openmail-site)
-- Live preview: [openmail-site.vercel.app](https://openmail-site.vercel.app/)
+- Vercel site: [openmail-site.vercel.app](https://openmail-site.vercel.app/)
 
-The repository is connected to Vercel. The site is served from the repository root with the **Other** framework preset, no build command, and `.` as the output directory. Pushing to `main` triggers a production deployment.
-
-Launching a real email service is a separate engineering phase. It requires choosing a mail transport and storage architecture, implementing authentication and mailbox integrations, setting up and verifying a domain, and building abuse prevention, security, backups, and operations. Do not add credentials or private email data to this static project.
+The repository is connected to Vercel and deploys from `main`. Add the services and environment variables above in Vercel before expecting the account app to accept sign-ups or handle mail. Configure a webhook against the final HTTPS deployment URL after the API routes are deployed.

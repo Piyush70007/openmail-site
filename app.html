@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#090d10" />
+    <meta name="description" content="Create and manage mailboxes on a domain you own with OpenMail." />
+    <title>OpenMail — Your mail, in its own space</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="app.css" />
+    <script defer src="app-ui.js"></script>
+  </head>
+  <body>
+    <div class="ambient-grid" aria-hidden="true"></div>
+    <header class="app-topbar">
+      <a class="brand" href="index.html" aria-label="OpenMail home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>openmail<span class="brand-period">.</span></span>
+      </a>
+      <div class="topbar-right"><span class="topbar-status"><i></i><span id="topbarState">PRIVATE MAIL SPACE</span></span><a href="index.html">About OpenMail <span aria-hidden="true">↗</span></a></div>
+    </header>
+
+    <main>
+      <section class="auth-screen" id="authView" aria-labelledby="authTitle">
+        <div class="auth-intro">
+          <p class="eyebrow"><span class="live-dot"></span> OPENMAIL / YOUR DOMAIN</p>
+          <h1 id="authTitle">Your address.<br /><span>Your own space.</span></h1>
+          <p class="auth-lede">Create a real mailbox on a domain you own. Add your domain, confirm its mail records, then make addresses like <b>support@yourdomain.com</b>.</p>
+          <div class="signal-card" aria-hidden="true">
+            <div class="signal-orbit orbit-a"></div><div class="signal-orbit orbit-b"></div><div class="signal-core"><span class="brand-mark"><i></i><i></i><i></i></span></div>
+            <div class="signal-label label-a"><small>DOMAIN</small><b>OWNED BY YOU</b></div>
+            <div class="signal-label label-b"><small>MAILBOX</small><b>PRIVATE TO YOUR ACCOUNT</b></div>
+            <span class="signal-coordinate">MX / DKIM / SPF</span>
+          </div>
+          <div class="auth-footnotes"><span><i>01</i> Connect a domain you control</span><span><i>02</i> Create a mailbox address</span><span><i>03</i> Read and send mail in OpenMail</span></div>
+        </div>
+        <div class="auth-card">
+          <div class="auth-card-heading"><span class="eyebrow">PRIVATE ACCOUNT</span><span class="auth-index">OM—01</span></div>
+          <div class="auth-tabs" role="tablist" aria-label="Account access">
+            <button class="auth-tab active" id="signInTab" type="button" role="tab" aria-selected="true">Sign in</button>
+            <button class="auth-tab" id="signUpTab" type="button" role="tab" aria-selected="false">Create account</button>
+          </div>
+          <form id="authForm" class="auth-form">
+            <label>Email address<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+            <label>Password<input name="password" type="password" autocomplete="current-password" minlength="12" placeholder="At least 12 characters" required /></label>
+            <p class="auth-hint" id="passwordHint">Use your OpenMail account email and password.</p>
+            <button class="button button-solid auth-submit" id="authSubmit" type="submit">Sign in <span aria-hidden="true">↗</span></button>
+          </form>
+          <div class="form-message" id="authMessage" role="status" aria-live="polite"></div>
+          <div class="setup-notice" id="setupNotice" hidden>
+            <span class="notice-mark">!</span><div><b>Mail services are not connected yet.</b><p>Finish the one-time Vercel and Supabase setup in the project README before creating an account.</p><code id="missingConfig"></code></div>
+          </div>
+          <p class="auth-privacy">Your password is handled by the account service. OpenMail never stores it in this app.</p>
+        </div>
+      </section>
+
+      <section class="mail-screen" id="mailView" hidden aria-label="OpenMail mailbox app">
+        <aside class="mail-sidebar">
+          <div class="sidebar-topline"><span class="eyebrow">YOUR MAIL</span><span class="sidebar-signal"><i></i> CONNECTED</span></div>
+          <label class="mailbox-picker-label" for="mailboxPicker">CURRENT MAILBOX</label>
+          <select id="mailboxPicker" class="mailbox-picker" aria-label="Choose a mailbox"></select>
+          <button class="compose-button" id="composeButton" type="button"><span>＋</span> Compose</button>
+          <p class="mail-nav-label">MAIL</p>
+          <nav class="mail-nav" aria-label="Mailbox folders">
+            <button class="mail-nav-item active" type="button" data-view="inbox"><span>↙</span> Inbox <b id="inboxCount">—</b></button>
+            <button class="mail-nav-item" type="button" data-view="sent"><span>↗</span> Sent</button>
+            <button class="mail-nav-item" type="button" data-view="archive"><span>▱</span> Archive</button>
+            <button class="mail-nav-item" type="button" data-view="spam"><span>⊘</span> Spam</button>
+            <button class="mail-nav-item" type="button" data-view="trash"><span>⌫</span> Trash</button>
+          </nav>
+          <div class="sidebar-spacer"></div>
+          <button class="sidebar-action" id="manageDomainButton" type="button"><span>⌘</span> Domains &amp; mailboxes <i>↗</i></button>
+          <div class="account-chip"><span class="account-avatar" id="accountInitials">OM</span><span class="account-email" id="accountEmail">Your account</span><button id="signOutButton" type="button" aria-label="Sign out" title="Sign out">↪</button></div>
+        </aside>
+        <section class="mail-content">
+          <header class="mail-heading">
+            <div><p class="eyebrow"><span class="live-dot"></span> OPENMAIL / <span id="currentMailboxHeading">INBOX</span></p><h1 id="currentViewHeading">Inbox</h1></div>
+            <div class="mail-heading-actions"><button class="quiet-button" id="refreshMessages" type="button" title="Refresh mail">↻ <span>Refresh</span></button><button class="button button-solid heading-compose" id="headingCompose" type="button">＋ Compose</button></div>
+          </header>
+          <div class="inbox-pane" id="inboxPane">
+            <div class="inbox-toolbar"><div class="inbox-toolbar-label"><span class="signal-dot"></span><span id="messageSummary">Your mail, just for you.</span></div><button class="quiet-button" id="sortMessages" type="button">Newest first <span>⌄</span></button></div>
+            <div class="message-list-live" id="liveMessageList" aria-live="polite"></div>
+            <div class="empty-mail" id="emptyMail" hidden><div class="empty-orbit"><i></i><i></i><span></span></div><b id="emptyTitle">Your inbox is clear.</b><p id="emptyCopy">New mail sent to this address will appear here.</p><button class="button button-outline" id="emptyCompose" type="button">Compose a message <span>↗</span></button></div>
+          </div>
+          <article class="message-detail" id="messageDetail" hidden>
+            <div class="detail-top"><button class="quiet-button" id="backToList" type="button">← Back to inbox</button><div class="detail-actions"><button class="quiet-button" id="detailStar" type="button">☆ Star</button><button class="quiet-button" id="detailSpam" type="button">Mark spam</button><button class="quiet-button" id="detailArchive" type="button">Archive ↗</button><button class="quiet-button" id="detailTrash" type="button">Move to trash</button></div></div>
+            <h2 id="detailSubject"></h2>
+            <div class="detail-sender"><span class="detail-avatar" id="detailAvatar">OM</span><div><b id="detailFrom"></b><small id="detailTo"></small></div><time id="detailTime"></time></div>
+            <div class="detail-body" id="detailBody"></div>
+            <div class="attachment-note" id="attachmentNote" hidden></div>
+            <button class="button button-outline reply-button" id="replyButton" type="button">Reply <span>↗</span></button>
+          </article>
+          <section class="domains-panel" id="domainsPanel" hidden>
+            <div class="domains-panel-head"><button class="quiet-button" id="backToInbox" type="button">← Back to inbox</button><span class="eyebrow">DOMAIN CONTROL / PRIVATE TO YOUR ACCOUNT</span></div>
+            <div class="domains-title"><div><p class="eyebrow">OPENMAIL / SETUP</p><h2>Your domains<br /><span>and mailboxes.</span></h2></div><p>Connect a domain you control, review the mail records OpenMail needs, then create the addresses you want.</p></div>
+            <div class="setup-notice app-service-notice" id="mailServiceNotice" hidden><span class="notice-mark">!</span><div><b>Email services need configuration.</b><p>The database can be reached, but mailbox setup and mail delivery wait for the provider settings below.</p><code id="mailMissingConfig"></code></div></div>
+            <div class="domain-workspace">
+              <div class="domain-card add-domain-card">
+                <div class="domain-card-heading"><span class="domain-icon">＋</span><div><b>Connect a domain</b><small>Only add domains you own or administer.</small></div></div>
+                <form id="domainForm" class="inline-form"><label for="domainInput">DOMAIN NAME</label><div class="input-row"><input id="domainInput" name="domain" type="text" placeholder="yourdomain.com" autocomplete="url" required /><button class="button button-solid" type="submit">Connect <span>↗</span></button></div></form>
+                <p class="form-inline-message" id="domainMessage" role="status"></p>
+              </div>
+              <div class="domain-card mailbox-create-card">
+                <div class="domain-card-heading"><span class="domain-icon">＠</span><div><b>Create a mailbox</b><small>Each address gets an OpenMail inbox.</small></div></div>
+                <form id="mailboxForm" class="inline-form"><label>NEW ADDRESS</label><div class="address-composer"><input id="localPartInput" name="localPart" type="text" placeholder="support" autocomplete="off" required /><span>@</span><select id="domainPicker" name="domainId" aria-label="Domain for new mailbox" required></select></div><button class="button button-solid" type="submit">Create mailbox <span>↗</span></button></form>
+                <p class="form-inline-message" id="mailboxMessage" role="status"></p>
+              </div>
+            </div>
+            <div class="domain-list-wrap"><div class="domain-list-heading"><h3>Connected domains</h3><span id="domainCount">0 domains</span></div><div class="domain-list" id="domainList"></div><div class="domain-empty" id="domainEmpty"><span>◇</span><b>No domain connected yet.</b><p>Add a domain above to begin. OpenMail will show the DNS records; you add them with your DNS provider.</p></div></div>
+            <div class="setup-footnote"><span>DNS CHANGE REQUIRED</span><p>OpenMail will never change your DNS automatically. Review every record with your current email provider in mind: changing MX records can move mail delivery away from existing inboxes.</p></div>
+          </section>
+          <footer class="mail-footer"><span>OPENMAIL / PRIVATE MAIL SPACE</span><span>Mail is stored for your account only</span></footer>
+        </section>
+      </section>
+    </main>
+
+    <dialog class="compose-dialog" id="composeDialog" aria-labelledby="composeTitle">
+      <form id="composeForm" class="compose-form">
+        <div class="compose-header"><div><p class="eyebrow">NEW MESSAGE / <span id="composeFromLabel"></span></p><h2 id="composeTitle">Compose</h2></div><button class="dialog-close" id="closeCompose" type="button" aria-label="Close compose">×</button></div>
+        <label>To<input id="composeTo" name="to" type="text" inputmode="email" placeholder="name@example.com" required /></label>
+        <label>Subject<input id="composeSubject" name="subject" type="text" maxlength="200" placeholder="A clear subject" required /></label>
+        <label class="body-label">Message<textarea id="composeBody" name="text" rows="10" maxlength="100000" placeholder="Write your message…" required></textarea></label>
+        <div class="compose-footer"><span id="composeStatus" role="status"></span><button class="button button-solid" id="sendMessageButton" type="submit">Send message <span>↗</span></button></div>
+      </form>
+    </dialog>
+    <div class="toast" id="appToast" role="status" aria-live="polite"></div>
+  </body>
+</html>

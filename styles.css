@@ -158,6 +158,7 @@ main { padding-top: 22px; }
 .section-note { width: min(310px, 36%); padding-bottom: 2px; }
 .section-note .status-chip { display: inline-block; }
 .section-note p { max-width: 300px; color: #899494; font-size: 10px; line-height: 1.75; margin: 11px 0 0; }
+.section-note .text-link { display: inline-block; margin-top: 9px; font-size: 9px; }
 .inbox-panel { border-radius: 12px; background: #0c1012; box-shadow: 0 26px 70px rgba(0, 0, 0, .22); }
 .inbox-window-bar { height: 34px; padding: 0 15px; display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; border-bottom: 1px solid var(--line-soft); color: #778282; font-size: 7px; }
 .window-lights { display: flex; gap: 5px; }
@@ -248,8 +249,11 @@ kbd { border: 1px solid rgba(128, 151, 149, .2); border-radius: 3px; padding: 2p
 .empty-state p { font-size: 8px; }
 .mail-app-note { min-height: 39px; border-top: 1px solid var(--line-soft); display: flex; align-items: center; color: #687572; font-size: 7px; }
 .mail-app-note .note-dot { width: 5px; height: 5px; }
-.inbox-disclaimer { margin: 12px 3px 0; color: #657171; font-size: 7px; line-height: 1.8; }
-.inbox-disclaimer span { color: #a5c7bf; margin-right: 7px; }
+.inbox-disclaimer { margin: 12px 3px 0; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 14px; color: #657171; font-size: 7px; line-height: 1.8; }
+.inbox-disclaimer > span { color: #a5c7bf; white-space: nowrap; }
+.inbox-disclaimer p { margin: 0; color: #82908f; font: 10px/1.65 var(--sans); letter-spacing: 0; text-transform: none; }
+.inbox-disclaimer a { color: #a7d8d0; font: 9px var(--sans); text-decoration: none; white-space: nowrap; }
+.inbox-disclaimer a b { margin-left: 4px; color: var(--cyan-soft); font-weight: 400; }
 
 .lower-grid { margin-bottom: 74px; }
 .roadmap-panel { min-height: 348px; padding: 28px 26px 0; display: flex; flex-direction: column; }
@@ -373,6 +377,9 @@ kbd { border: 1px solid rgba(128, 151, 149, .2); border-radius: 3px; padding: 2p
   .section-heading h2 { font-size: clamp(43px, 10vw, 60px); }
   .section-note { width: 100%; display: flex; align-items: center; gap: 11px; }
   .section-note p { margin: 0; max-width: 340px; }
+  .section-note .text-link { margin: 0 0 0 auto; white-space: nowrap; }
+  .inbox-disclaimer { grid-template-columns: 1fr; gap: 5px; }
+  .inbox-disclaimer a { justify-self: start; }
   .inbox-window-bar { grid-template-columns: 1fr auto; }
   .inbox-window-bar > span:nth-child(2) { justify-self: end; }
   .window-state { display: none; }
