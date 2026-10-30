@@ -1,6 +1,7 @@
 const $ = (selector) => document.querySelector(selector);
 const authView = $("#authView");
 const mailView = $("#mailView");
+const sessionLoading = $("#sessionLoading");
 const authForm = $("#authForm");
 const authMessage = $("#authMessage");
 const setupNotice = $("#setupNotice");
@@ -76,14 +77,21 @@ function displayTime(value) {
 }
 
 function showAuth(message = "") {
+  sessionLoading.hidden = true;
   authView.hidden = false;
   mailView.hidden = true;
   setStatus(authMessage, message);
 }
 
 function showMail() {
+  sessionLoading.hidden = true;
   authView.hidden = true;
   mailView.hidden = false;
+}
+
+function setTopbarState(message) {
+  $("#topbarState").textContent = message;
+  $("#topbarStateChrome").textContent = message;
 }
 
 function setAuthMode(mode) {
@@ -120,7 +128,7 @@ async function loadInitialState() {
       }
     }
     systemStatus = await api("/api/status");
-    $("#topbarState").textContent = systemStatus.mailReady ? "MAIL SERVICES READY" : "MAIL SETUP REQUIRED";
+    setTopbarState(systemStatus.mailReady ? "MAIL SERVICES READY" : "MAIL SETUP REQUIRED");
     if (systemStatus.authReady) {
       if (confirmationUser) {
         await loadDashboard(confirmationUser);
@@ -142,7 +150,9 @@ async function loadInitialState() {
       $("#setupNotice p").textContent = "You can sign in, but domains and mailboxes become available after the mail transport is configured.";
       $("#missingConfig").textContent = systemStatus.mailMissing.join(" · ");
     }
+    showAuth();
   } catch (error) {
+    showAuth();
     setupNotice.hidden = false;
     if (error.message && !/failed \(\d+\)/.test(error.message)) {
       $("#setupNotice b").textContent = "Email confirmation needs attention.";
@@ -183,11 +193,10 @@ $("#signInTab").addEventListener("click", () => setAuthMode("login"));
 $("#signUpTab").addEventListener("click", () => setAuthMode("signup"));
 
 async function loadDashboard(user) {
-  showMail();
   const email = user && user.email || "Your account";
   $("#accountEmail").textContent = email;
   $("#accountInitials").textContent = initials(email);
-  $("#topbarState").textContent = systemStatus.mailReady ? "SIGNED IN / PRIVATE SPACE" : "SIGNED IN / SETUP REQUIRED";
+  setTopbarState(systemStatus.mailReady ? "SIGNED IN / PRIVATE SPACE" : "SIGNED IN / SETUP REQUIRED");
   $("#mailServiceNotice").hidden = systemStatus.mailReady;
   $("#mailMissingConfig").textContent = systemStatus.mailMissing.join(" · ");
   try {
@@ -196,6 +205,7 @@ async function loadDashboard(user) {
     toast(error.message);
     openDomains();
   }
+  showMail();
 }
 
 async function loadDomainsAndMailboxes() {
@@ -213,7 +223,7 @@ async function loadDomainsAndMailboxes() {
   messageDetail.hidden = true;
   $("#composeButton").disabled = !systemStatus.mailReady;
   $("#headingCompose").disabled = !systemStatus.mailReady;
-  $(".sidebar-signal").innerHTML = `<i></i>${systemStatus.mailReady ? "CONNECTED" : "SETUP REQUIRED"}`;
+  $("#sidebarSignalText").textContent = systemStatus.mailReady ? "CONNECTED" : "SETUP REQUIRED";
   const prior = selectedMailbox && mailboxes.find((item) => item.id === selectedMailbox.id);
   const chosen = prior || mailboxes[0];
   selectedMailbox = chosen;
@@ -236,6 +246,8 @@ function openDomains() {
 }
 
 function openInbox() {
+  selectedView = "inbox";
+  syncViewControls();
   domainsPanel.hidden = true;
   inboxPane.hidden = false;
   messageDetail.hidden = true;
@@ -419,7 +431,7 @@ $("#mailboxForm").addEventListener("submit", async (event) => {
     $("#localPartInput").value = "";
     renderDomains();
     setStatus($("#mailboxMessage"), `${result.mailbox.address} is ready in OpenMail.`);
-    $("#topbarState").textContent = "SIGNED IN / PRIVATE SPACE";
+    setTopbarState("SIGNED IN / PRIVATE SPACE");
     setTimeout(openInbox, 550);
   } catch (error) { setStatus($("#mailboxMessage"), error.message, true); }
   finally { button.disabled = verifiedDomainsReady() ? false : true; }
@@ -430,9 +442,18 @@ function verifiedDomainsReady() { return domains.some((item) => item.status === 
 $("#mailboxPicker").addEventListener("change", async () => {
   selectedMailbox = mailboxes.find((item) => item.id === $("#mailboxPicker").value) || null;
   selectedView = "inbox";
-  document.querySelectorAll(".mail-nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === "inbox"));
+  syncViewControls();
   if (selectedMailbox) openInbox();
 });
+
+function syncViewControls() {
+  document.querySelectorAll(".mail-nav-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === selectedView));
+  document.querySelectorAll(".live-category[data-view]").forEach((item) => {
+    const active = item.dataset.view === selectedView;
+    item.classList.toggle("active", active);
+    item.setAttribute("aria-selected", String(active));
+  });
+}
 
 async function loadMessages() {
   if (!selectedMailbox || domainsPanel.hidden === false) return;
@@ -440,8 +461,8 @@ async function loadMessages() {
   const result = await api(`/api/messages?${params}`);
   currentMessages = result.messages || [];
   $("#currentMailboxHeading").textContent = selectedMailbox.address.toUpperCase();
-  $("#currentViewHeading").textContent = selectedView[0].toUpperCase() + selectedView.slice(1);
-  $("#messageSummary").textContent = `${currentMessages.length} ${currentMessages.length === 1 ? "message" : "messages"}`;
+  const viewLabels = { inbox: "All mail", sent: "Sent", archive: "Archive", spam: "Spam", trash: "Trash" };
+  $("#currentViewHeading").textContent = viewLabels[selectedView] || "All mail";
   const unread = currentMessages.filter((item) => !item.read_at && item.direction === "inbound").length;
   $("#inboxCount").textContent = selectedView === "inbox" && unread ? String(unread).padStart(2, "0") : "—";
   renderMessages();
@@ -449,7 +470,14 @@ async function loadMessages() {
 
 function renderMessages() {
   liveList.replaceChildren();
-  currentMessages.forEach((message) => {
+  const query = $("#messageSearch").value.trim().toLocaleLowerCase();
+  const visibleMessages = query ? currentMessages.filter((message) => [
+    message.from_address, ...(message.to_addresses || []), message.subject, message.preview, message.text_body
+  ].join(" ").toLocaleLowerCase().includes(query)) : currentMessages;
+  $("#messageSummary").textContent = query
+    ? `${visibleMessages.length} ${visibleMessages.length === 1 ? "match" : "matches"} · ${currentMessages.length} loaded`
+    : `${currentMessages.length} ${currentMessages.length === 1 ? "message" : "messages"}`;
+  visibleMessages.forEach((message) => {
     const label = message.direction === "outbound" ? (message.to_addresses || []).join(", ") : message.from_address;
     const row = document.createElement("button");
     row.type = "button";
@@ -468,12 +496,12 @@ function renderMessages() {
     row.addEventListener("click", () => openMessage(message));
     liveList.append(row);
   });
-  const empty = currentMessages.length === 0;
+  const empty = visibleMessages.length === 0;
   $("#emptyMail").hidden = !empty;
   if (empty) {
     const labels = { inbox: ["Your inbox is clear.", "New mail sent to this address will appear here."], sent: ["Nothing sent yet.", "Messages you send from this mailbox appear here."], archive: ["Nothing archived.", "Archive a message to move it here."], spam: ["No spam.", "Messages marked as spam will appear here."], trash: ["Nothing in the trash.", "Deleted messages will appear here."] };
-    $("#emptyTitle").textContent = labels[selectedView][0];
-    $("#emptyCopy").textContent = labels[selectedView][1];
+    $("#emptyTitle").textContent = query ? "No matching messages." : labels[selectedView][0];
+    $("#emptyCopy").textContent = query ? "Try another sender, subject or phrase." : labels[selectedView][1];
   }
 }
 
@@ -580,13 +608,15 @@ $("#composeForm").addEventListener("submit", async (event) => {
   finally { button.disabled = false; }
 });
 
-document.querySelectorAll(".mail-nav-item").forEach((button) => button.addEventListener("click", () => {
+document.querySelectorAll(".mail-nav-item[data-view], .live-category[data-view]").forEach((button) => button.addEventListener("click", () => {
   selectedView = button.dataset.view;
-  document.querySelectorAll(".mail-nav-item").forEach((item) => item.classList.toggle("active", item === button));
+  syncViewControls();
   messageDetail.hidden = true;
   inboxPane.hidden = false;
   loadMessages().catch((error) => toast(error.message));
 }));
+
+$("#messageSearch").addEventListener("input", renderMessages);
 
 $("#refreshMessages").addEventListener("click", async () => {
   try { await loadDomainsAndMailboxes(); toast("Mailbox refreshed."); }
@@ -610,7 +640,7 @@ $("#signOutButton").addEventListener("click", async () => {
   mailView.hidden = true;
   authForm.reset();
   setAuthMode("login");
-  $("#topbarState").textContent = "PRIVATE MAIL SPACE";
+  setTopbarState("PRIVATE MAIL SPACE");
   showAuth("You are signed out.");
 });
 

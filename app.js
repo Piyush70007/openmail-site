@@ -768,3 +768,21 @@ if (stackWrap && window.matchMedia("(hover: hover)").matches && !reducedMotion) 
 
 mailApp.classList.toggle("is-compact", preferences.compact);
 renderMessages();
+
+async function updateMailboxCallsToAction() {
+  const links = document.querySelectorAll('a[href="app.html"]');
+  if (!links.length) return;
+  try {
+    const response = await fetch("/api/auth/session", { credentials: "same-origin" });
+    if (!response.ok) return;
+    const session = await response.json();
+    if (!session.signedIn) return;
+    links.forEach((link) => {
+      const label = [...link.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+      if (label) label.textContent = "Open your mailbox ";
+      link.setAttribute("aria-label", "Open your mailbox");
+    });
+  } catch {}
+}
+
+updateMailboxCallsToAction();

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#090d10" />
+    <meta name="theme-color" content="#111517" />
     <meta name="description" content="Create and manage mailboxes on a domain you own with OpenMail." />
     <title>OpenMail — Your mail, in its own space</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -24,7 +24,13 @@
     </header>
 
     <main>
-      <section class="auth-screen" id="authView" aria-labelledby="authTitle">
+      <section class="session-loading" id="sessionLoading" role="status" aria-live="polite">
+        <span class="session-loader" aria-hidden="true"><i></i><i></i><i></i></span>
+        <p class="eyebrow"><span class="live-dot"></span> OPENMAIL / PRIVATE MAIL SPACE</p>
+        <b>Restoring your mailbox…</b>
+        <span class="session-loading-note">Checking your saved sign-in</span>
+      </section>
+      <section class="auth-screen" id="authView" aria-labelledby="authTitle" hidden>
         <div class="auth-intro">
           <p class="eyebrow"><span class="live-dot"></span> OPENMAIL / YOUR DOMAIN</p>
           <h1 id="authTitle">Your address.<br /><span>Your own space.</span></h1>
@@ -58,17 +64,25 @@
       </section>
 
       <section class="mail-screen" id="mailView" hidden aria-label="OpenMail mailbox app">
+        <div class="workspace-chrome"><div class="workspace-lights" aria-hidden="true"><i></i><i></i><i></i></div><span>OPENMAIL <b>/</b> PRIVATE MAIL SPACE</span><span class="workspace-state"><i></i><span id="topbarStateChrome">CONNECTING</span></span></div>
         <aside class="mail-sidebar">
-          <div class="sidebar-topline"><span class="eyebrow">YOUR MAIL</span><span class="sidebar-signal"><i></i> CONNECTED</span></div>
+          <div class="mail-brand"><span class="brand-mark mini" aria-hidden="true"><i></i><i></i><i></i></span><span>openmail<span class="brand-period">.</span></span><span class="sidebar-signal"><i></i><span id="sidebarSignalText">CONNECTED</span></span></div>
           <label class="mailbox-picker-label" for="mailboxPicker">CURRENT MAILBOX</label>
           <select id="mailboxPicker" class="mailbox-picker" aria-label="Choose a mailbox"></select>
           <button class="compose-button" id="composeButton" type="button"><span>＋</span> Compose</button>
-          <p class="mail-nav-label">MAIL</p>
+          <p class="mail-nav-label">INBOX VIEWS</p>
           <nav class="mail-nav" aria-label="Mailbox folders">
-            <button class="mail-nav-item active" type="button" data-view="inbox"><span>↙</span> Inbox <b id="inboxCount">—</b></button>
+            <button class="mail-nav-item active" type="button" data-view="inbox"><span>▤</span> All mail <b id="inboxCount">—</b></button>
+            <button class="mail-nav-item category-planned" type="button" disabled aria-label="Primary category filter planned"><span>⌂</span> Primary <small>PLANNED</small></button>
+            <button class="mail-nav-item category-planned" type="button" disabled aria-label="Social category filter planned"><span>◎</span> Social <small>PLANNED</small></button>
+            <button class="mail-nav-item category-planned" type="button" disabled aria-label="Promotions category filter planned"><span>◇</span> Promotions <small>PLANNED</small></button>
+            <button class="mail-nav-item category-planned" type="button" disabled aria-label="Updates category filter planned"><span>↻</span> Updates <small>PLANNED</small></button>
+            <button class="mail-nav-item" type="button" data-view="spam"><span>⊘</span> Spam</button>
+          </nav>
+          <p class="mail-nav-label folders-label">YOUR FOLDERS</p>
+          <nav class="mail-nav folder-nav" aria-label="Other mailbox folders">
             <button class="mail-nav-item" type="button" data-view="sent"><span>↗</span> Sent</button>
             <button class="mail-nav-item" type="button" data-view="archive"><span>▱</span> Archive</button>
-            <button class="mail-nav-item" type="button" data-view="spam"><span>⊘</span> Spam</button>
             <button class="mail-nav-item" type="button" data-view="trash"><span>⌫</span> Trash</button>
           </nav>
           <div class="sidebar-spacer"></div>
@@ -77,11 +91,20 @@
         </aside>
         <section class="mail-content">
           <header class="mail-heading">
-            <div><p class="eyebrow"><span class="live-dot"></span> OPENMAIL / <span id="currentMailboxHeading">INBOX</span></p><h1 id="currentViewHeading">Inbox</h1></div>
+            <div><p class="eyebrow"><span class="live-dot"></span> OPENMAIL / <span id="currentMailboxHeading">INBOX</span></p><h1 id="currentViewHeading">All mail</h1></div>
             <div class="mail-heading-actions"><button class="quiet-button" id="refreshMessages" type="button" title="Refresh mail">↻ <span>Refresh</span></button><button class="button button-solid heading-compose" id="headingCompose" type="button">＋ Compose</button></div>
           </header>
           <div class="inbox-pane" id="inboxPane">
-            <div class="inbox-toolbar"><div class="inbox-toolbar-label"><span class="signal-dot"></span><span id="messageSummary">Your mail, just for you.</span></div><button class="quiet-button" id="sortMessages" type="button">Newest first <span>⌄</span></button></div>
+            <div class="live-category-tabs" role="tablist" aria-label="Inbox categories">
+              <button class="live-category active" type="button" role="tab" aria-selected="true" data-view="inbox">All mail</button>
+              <button class="live-category" type="button" role="tab" aria-selected="false" disabled>Primary <small>PLANNED</small></button>
+              <button class="live-category" type="button" role="tab" aria-selected="false" disabled>Social <small>PLANNED</small></button>
+              <button class="live-category" type="button" role="tab" aria-selected="false" disabled>Promotions <small>PLANNED</small></button>
+              <button class="live-category" type="button" role="tab" aria-selected="false" disabled>Updates <small>PLANNED</small></button>
+              <button class="live-category" type="button" role="tab" aria-selected="false" data-view="spam">Spam</button>
+            </div>
+            <p class="category-status"><span class="signal-dot"></span> All mail and Spam use your real mailbox. Other category filters are planned.</p>
+            <div class="inbox-toolbar"><div class="inbox-toolbar-label"><span class="signal-dot"></span><span id="messageSummary">Your mail, just for you.</span></div><label class="live-search"><span aria-hidden="true">⌕</span><input id="messageSearch" type="search" placeholder="Search loaded mail" aria-label="Search the latest loaded messages" /></label><button class="quiet-button" id="sortMessages" type="button">Newest first <span>⌄</span></button></div>
             <div class="message-list-live" id="liveMessageList" aria-live="polite"></div>
             <div class="empty-mail" id="emptyMail" hidden><div class="empty-orbit"><i></i><i></i><span></span></div><b id="emptyTitle">Your inbox is clear.</b><p id="emptyCopy">New mail sent to this address will appear here.</p><button class="button button-outline" id="emptyCompose" type="button">Compose a message <span>↗</span></button></div>
           </div>
