@@ -42,14 +42,14 @@ body:has(#mailView:not([hidden])) .app-topbar {
   min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
-  padding: 24px 17px 0;
+  padding: 20px 17px 0;
   border-right: 1px solid var(--line-soft);
   background: transparent;
 }
 
 #mailView .mail-brand {
   gap: 9px;
-  padding: 0 7px 27px;
+  padding: 0 7px 20px;
   font-size: 16px;
 }
 
@@ -64,8 +64,8 @@ body:has(#mailView:not([hidden])) .app-topbar {
 
 #mailView .mailbox-picker {
   width: 100%;
-  height: 42px;
-  margin-bottom: 13px;
+  height: 40px;
+  margin-bottom: 11px;
   padding: 0 10px;
   border: 1px solid var(--line-soft);
   border-radius: 6px;
@@ -76,8 +76,8 @@ body:has(#mailView:not([hidden])) .app-topbar {
 
 #mailView .compose-button {
   width: 100%;
-  min-height: 48px;
-  height: 48px;
+  min-height: 44px;
+  height: 44px;
   margin: 0;
   padding: 0 13px;
   border: 0;
@@ -92,8 +92,8 @@ body:has(#mailView:not([hidden])) .app-topbar {
 
 #mailView .compose-button:hover { background: #b7f2e7; color: #15201e; }
 #mailView .compose-button > span { margin-right: 8px; color: #378b80; font-size: 20px; }
-#mailView .mail-nav-label { margin: 25px 0 10px 6px; font-size: 9px; color: #71807f; }
-#mailView .mail-side-link { width: 100%; min-height: 34px; gap: 11px; padding-inline: 9px; justify-content: flex-start; text-align: left; font-size: 12px; }
+#mailView .mail-nav-label { margin: 14px 0 7px 6px; font-size: 9px; color: #71807f; }
+#mailView .mail-side-link { width: 100%; min-height: 29px; gap: 11px; padding-inline: 9px; justify-content: flex-start; text-align: left; font-size: 12px; }
 #mailView .mail-side-link .side-icon { width: 17px; font-size: 15px; }
 #mailView .mail-side-link b { font-size: 10px; }
 #mailView .mail-side-link.category-planned { cursor: default; opacity: .68; }
@@ -103,7 +103,7 @@ body:has(#mailView:not([hidden])) .app-topbar {
 #mailView .mail-side-link.active .side-icon { color: #a4f5e6; }
 #mailView .mail-side-link.manage-domain-link { margin-top: auto; border-top: 1px solid var(--line-soft); border-radius: 0; padding-top: 12px; color: #a0adaa; }
 #mailView .manage-domain-link b { color: #8a9a97; font: 12px var(--sans); }
-#mailView .sidebar-bottom { flex: 0 0 64px; gap: 10px; margin-top: 0; }
+#mailView .sidebar-bottom { flex: 0 0 56px; gap: 10px; margin-top: 0; }
 #mailView .sidebar-avatar { width: 30px; height: 30px; font-size: 9px; }
 #mailView .sidebar-bottom b { font-size: 10px; }
 #mailView .sidebar-bottom small { font-size: 8px; }
