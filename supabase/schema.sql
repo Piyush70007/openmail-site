@@ -35,8 +35,8 @@ create table if not exists public.messages (
   subject text not null default '',
   preview text not null default '',
   text_body text not null default '',
-  folder text not null default 'inbox' check (folder in ('inbox', 'sent', 'archive', 'spam', 'trash')),
-  status text not null default 'received' check (status in ('received', 'sending', 'sent', 'failed')),
+  folder text not null default 'inbox' check (folder in ('inbox', 'sent', 'archive', 'spam', 'trash', 'drafts')),
+  status text not null default 'received' check (status in ('received', 'sending', 'sent', 'failed', 'draft')),
   provider_email_id text,
   client_request_id uuid,
   attachment_metadata jsonb not null default '[]'::jsonb,
@@ -55,6 +55,10 @@ create unique index if not exists messages_provider_inbound_unique
 
 create index if not exists messages_mailbox_folder_created_idx
   on public.messages (mailbox_id, folder, created_at desc);
+
+create index if not exists messages_starred_mailbox_created_idx
+  on public.messages (mailbox_id, created_at desc)
+  where starred = true and folder <> 'trash';
 
 alter table public.domains enable row level security;
 alter table public.mailboxes enable row level security;

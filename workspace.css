@@ -149,15 +149,17 @@ body:has(#mailView:not([hidden])) main {
 #mailView .mail-tab.active span { color: #91cbbd; }
 #mailView .inbox-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 #mailView .mail-list-header { flex: 0 0 46px; gap: 14px; }
-#mailView .select-all { width: 17px; height: 17px; opacity: .55; cursor: not-allowed; }
+#mailView .select-all { width: 17px; height: 17px; opacity: 1; cursor: pointer; }
 #mailView .select-all span { width: 15px; height: 15px; }
-#mailView .select-all input { cursor: not-allowed; }
+#mailView .select-all input { cursor: pointer; }
+#mailView .mail-actionbar { flex: 0 0 auto; min-height: 42px; }
+#mailView .message-row .message-check, #mailView .message-row .message-check input { cursor: pointer; }
 #mailView .unread-filter { font-size: 11px; }
 #mailView .list-count { font-size: 9px; }
 #mailView .message-list { flex: 1; min-height: 0; }
 #mailView .message-row { grid-template-columns: 17px 34px minmax(150px, .95fr) minmax(180px, 1.2fr) minmax(220px, 2fr) 64px 20px; gap: 12px; min-height: 76px; padding: 8px 3px; }
-#mailView .message-row .message-check { width: 16px; height: 16px; cursor: not-allowed; }
-#mailView .message-row .message-check input { cursor: not-allowed; }
+#mailView .message-row .message-check { width: 16px; height: 16px; cursor: pointer; }
+#mailView .message-row .message-check input { cursor: pointer; }
 #mailView .message-row .message-check span { width: 15px; height: 15px; border-color: #3d4946; }
 #mailView .sender-avatar { width: 34px; height: 34px; font-size: 10px; }
 #mailView .message-meta { gap: 6px; }
@@ -174,6 +176,8 @@ body:has(#mailView:not([hidden])) main {
 #mailView .mail-app-note .note-dot { display: inline-block; flex: 0 0 6px; width: 6px; height: 6px; }
 #mailView .mail-footer { display: none; }
 #mailView .mobile-mail-nav { display: none; }
+#mailView .compose-actions { display: flex; gap: 8px; }
+#mailView .compose-actions .button { min-height: 36px; font-size: 9px; }
 #mailView .mobile-mailbox-picker { display: none; }
 
 @media (max-width: 1100px) {

@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="workspace.css" />
-    <script defer src="app-ui.js?v=20261031-live-categories"></script>
+    <script defer src="app-ui.js?v=20261031-live-mail-actions"></script>
   </head>
   <body>
     <div class="ambient-grid" aria-hidden="true"></div>
@@ -81,9 +81,9 @@
             <button class="mail-side-link" type="button" data-view="updates"><span class="side-icon">↻</span> Updates <b id="updatesCount">00</b></button>
             <button class="mail-side-link" type="button" data-view="spam"><span class="side-icon">⊘</span> Spam <b id="spamCount">00</b></button>
             <p class="mail-nav-label mailbox-label">YOUR FOLDERS</p>
-            <button class="mail-side-link category-planned" type="button" disabled aria-label="Starred folder is planned"><span class="side-icon">★</span> Starred <small>PLANNED</small></button>
+            <button class="mail-side-link" type="button" data-view="starred"><span class="side-icon">★</span> Starred <b id="starredCount">00</b></button>
             <button class="mail-side-link" type="button" data-view="sent"><span class="side-icon">↗</span> Sent</button>
-            <button class="mail-side-link category-planned" type="button" disabled aria-label="Drafts are planned"><span class="side-icon">✎</span> Drafts <small>PLANNED</small></button>
+            <button class="mail-side-link" type="button" data-view="drafts"><span class="side-icon">✎</span> Drafts <b id="draftsCount">00</b></button>
             <button class="mail-side-link" type="button" data-view="archive"><span class="side-icon">▱</span> Archive</button>
             <button class="mail-side-link" type="button" data-view="trash"><span class="side-icon">⌫</span> Trash</button>
             <button class="mail-side-link manage-domain-link" id="manageDomainButton" type="button"><span class="side-icon">⌘</span> Domains &amp; mailboxes <b>↗</b></button>
@@ -97,7 +97,7 @@
               <button class="icon-button settings-button" id="headingCompose" type="button" aria-label="Compose a message" title="Compose a message">＋</button>
             </div>
             <div class="mobile-mail-nav" id="mobileMailNav" aria-label="Mailbox tools">
-              <div class="mobile-folder-scroll"><select id="mobileMailboxPicker" class="mobile-mailbox-picker" aria-label="Choose a mailbox"></select><button type="button" data-view="sent">Sent</button><button type="button" data-view="archive">Archive</button><button type="button" data-view="trash">Trash</button><button type="button" id="mobileManageDomain">Domains</button></div>
+              <div class="mobile-folder-scroll"><select id="mobileMailboxPicker" class="mobile-mailbox-picker" aria-label="Choose a mailbox"></select><button type="button" data-view="starred">Starred</button><button type="button" data-view="sent">Sent</button><button type="button" data-view="drafts">Drafts</button><button type="button" data-view="archive">Archive</button><button type="button" data-view="trash">Trash</button><button type="button" id="mobileManageDomain">Domains</button></div>
               <button type="button" class="mobile-compose" id="mobileComposeButton">＋ Compose</button>
             </div>
             <div class="inbox-pane" id="inboxPane">
@@ -109,10 +109,11 @@
                 <button class="mail-tab" type="button" role="tab" aria-selected="false" data-view="updates">Updates <span id="updatesTabCount">00</span></button>
                 <button class="mail-tab" type="button" role="tab" aria-selected="false" data-view="spam">Spam <span id="spamTabCount">00</span></button>
               </div>
-              <div class="mail-list-header"><label class="select-all" title="Bulk actions are planned"><input id="selectAll" type="checkbox" aria-label="Bulk selection is planned" disabled /><span></span></label><button id="sortMessages" class="unread-filter" type="button">Newest first <span>⌄</span></button><span class="list-count" id="messageSummary">0 messages</span></div>
+              <div class="mail-list-header"><label class="select-all" title="Select all visible messages"><input id="selectAll" type="checkbox" aria-label="Select all visible messages" /><span></span></label><button id="sortMessages" class="unread-filter" type="button">Newest first <span>⌄</span></button><span class="list-count" id="messageSummary">0 messages</span></div>
+              <div class="mail-actionbar" id="mailActionbar" hidden aria-live="polite"><span class="selection-summary" id="selectionSummary">0 selected</span><button type="button" id="bulkArchive">Archive</button><button type="button" id="bulkSpam">Mark spam</button><button type="button" id="bulkTrash">Move to trash</button><button type="button" id="clearSelection" aria-label="Clear selection" title="Clear selection">×</button></div>
               <div class="message-list" id="liveMessageList" aria-live="polite"></div>
               <div class="empty-state" id="emptyMail" hidden><span>⌕</span><b id="emptyTitle">Your inbox is clear.</b><p id="emptyCopy">New mail sent to this address will appear here.</p><button class="button button-solid" id="emptyCompose" type="button">Compose a message <span>↗</span></button></div>
-              <div class="mail-app-note"><span class="note-dot"></span> Auto-sorted by sender and content · Spam is filed manually</div>
+              <div class="mail-app-note"><span class="note-dot"></span> Starred, Drafts, bulk actions and Archive are available · Spam is filed manually</div>
             </div>
           <article class="message-detail" id="messageDetail" hidden>
             <div class="detail-top"><button class="quiet-button" id="backToList" type="button">← Back to inbox</button><div class="detail-actions"><button class="quiet-button" id="detailStar" type="button">☆ Star</button><button class="quiet-button" id="detailSpam" type="button">Mark spam</button><button class="quiet-button" id="detailArchive" type="button">Archive ↗</button><button class="quiet-button" id="detailTrash" type="button">Move to trash</button></div></div>
@@ -149,11 +150,11 @@
 
     <dialog class="compose-dialog" id="composeDialog" aria-labelledby="composeTitle">
       <form id="composeForm" class="compose-form">
-        <div class="compose-header"><div><p class="eyebrow">NEW MESSAGE / <span id="composeFromLabel"></span></p><h2 id="composeTitle">Compose</h2></div><button class="dialog-close" id="closeCompose" type="button" aria-label="Close compose">×</button></div>
+        <div class="compose-header"><div><p class="eyebrow"><span id="composeModeLabel">NEW MESSAGE</span> / <span id="composeFromLabel"></span></p><h2 id="composeTitle">Compose</h2></div><button class="dialog-close" id="closeCompose" type="button" aria-label="Close compose">×</button></div>
         <label>To<input id="composeTo" name="to" type="text" inputmode="email" placeholder="name@example.com" required /></label>
         <label>Subject<input id="composeSubject" name="subject" type="text" maxlength="200" placeholder="A clear subject" required /></label>
         <label class="body-label">Message<textarea id="composeBody" name="text" rows="10" maxlength="100000" placeholder="Write your message…" required></textarea></label>
-        <div class="compose-footer"><span id="composeStatus" role="status"></span><button class="button button-solid" id="sendMessageButton" type="submit">Send message <span>↗</span></button></div>
+        <div class="compose-footer"><span id="composeStatus" role="status"></span><div class="compose-actions"><button class="button button-outline" id="saveDraftButton" type="button">Save draft</button><button class="button button-solid" id="sendMessageButton" type="submit">Send message <span>↗</span></button></div></div>
       </form>
     </dialog>
     <div class="toast" id="appToast" role="status" aria-live="polite"></div>

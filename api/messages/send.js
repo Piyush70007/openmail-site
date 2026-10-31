@@ -22,13 +22,31 @@ module.exports = async (req, res) => {
     const subject = String(body.subject || "").trim();
     const text = String(body.text || "").trim();
     const requestId = String(body.requestId || "");
+    const draftId = String(body.draftId || "");
     if (!to.length || to.length > 10 || to.some((address) => !validAddress(address))) return json(res, 400, { error: "Enter between 1 and 10 valid recipient email addresses." });
     if (!subject || subject.length > 200 || !text || text.length > 100000) return json(res, 400, { error: "Add a subject and message (up to 100,000 characters)." });
     if (!/^[0-9a-f-]{36}$/i.test(requestId)) return json(res, 400, { error: "Refresh the compose window and try again." });
+    if (draftId && !/^[0-9a-f-]{36}$/i.test(draftId)) return json(res, 404, { error: "Draft not found." });
 
     const existingQuery = new URLSearchParams({ select: "id,status,provider_email_id,created_at", owner_id: `eq.${user.id}`, client_request_id: `eq.${requestId}`, limit: "1" });
     let rows = await database(`messages?${existingQuery}`);
     let message = rows && rows[0];
+    if (draftId) {
+      const draftQuery = new URLSearchParams({
+        select: "id,status,provider_email_id,created_at",
+        id: `eq.${draftId}`,
+        owner_id: `eq.${user.id}`,
+        mailbox_id: `eq.${mailbox.id}`,
+        folder: "eq.drafts",
+        limit: "1"
+      });
+      const drafts = await database(`messages?${draftQuery}`);
+      if (!drafts || !drafts.length) {
+        if (message && message.id === draftId && message.status === "sent") return json(res, 200, { ok: true, message });
+        return json(res, 404, { error: "Draft not found in this mailbox." });
+      }
+      message = drafts[0];
+    }
     if (message && message.status === "sent") return json(res, 200, { ok: true, message });
     if (message && message.status === "sending") return json(res, 409, { error: "This message is already being sent." });
     if (!await requireQuota(user.id, "email_send", res)) return;
@@ -44,7 +62,15 @@ module.exports = async (req, res) => {
       });
       message = Array.isArray(inserted) ? inserted[0] : inserted;
     } else {
-      await database(`messages?id=eq.${encodeURIComponent(message.id)}&owner_id=eq.${encodeURIComponent(user.id)}`, { method: "PATCH", body: { status: "sending" } });
+      const sendingUpdate = { status: "sending" };
+      if (draftId) Object.assign(sendingUpdate, {
+        to_addresses: to,
+        subject,
+        preview: text.slice(0, 180),
+        text_body: text,
+        client_request_id: requestId
+      });
+      await database(`messages?id=eq.${encodeURIComponent(message.id)}&owner_id=eq.${encodeURIComponent(user.id)}`, { method: "PATCH", body: sendingUpdate });
     }
 
     try {
@@ -54,11 +80,13 @@ module.exports = async (req, res) => {
         body: { from: mailbox.address, to, subject, text }
       });
       const updated = await database(`messages?id=eq.${encodeURIComponent(message.id)}&owner_id=eq.${encodeURIComponent(user.id)}`, {
-        method: "PATCH", body: { status: "sent", provider_email_id: sent.id || null }, prefer: "return=representation"
+        method: "PATCH", body: { status: "sent", folder: "sent", provider_email_id: sent.id || null }, prefer: "return=representation"
       });
       json(res, 200, { ok: true, message: Array.isArray(updated) ? updated[0] : message });
     } catch (error) {
-      await database(`messages?id=eq.${encodeURIComponent(message.id)}&owner_id=eq.${encodeURIComponent(user.id)}`, { method: "PATCH", body: { status: "failed" } }).catch(() => {});
+      await database(`messages?id=eq.${encodeURIComponent(message.id)}&owner_id=eq.${encodeURIComponent(user.id)}`, {
+        method: "PATCH", body: draftId ? { status: "draft", folder: "drafts" } : { status: "failed" }
+      }).catch(() => {});
       throw error;
     }
   } catch (error) {
