@@ -93,7 +93,7 @@ body:has(#mailView:not([hidden])) .app-topbar {
 #mailView .compose-button:hover { background: #b7f2e7; color: #15201e; }
 #mailView .compose-button > span { margin-right: 8px; color: #378b80; font-size: 20px; }
 #mailView .mail-nav-label { margin: 25px 0 10px 6px; font-size: 9px; color: #71807f; }
-#mailView .mail-side-link { width: 100%; min-height: 42px; gap: 11px; padding-inline: 9px; justify-content: flex-start; text-align: left; font-size: 12px; }
+#mailView .mail-side-link { width: 100%; min-height: 34px; gap: 11px; padding-inline: 9px; justify-content: flex-start; text-align: left; font-size: 12px; }
 #mailView .mail-side-link .side-icon { width: 17px; font-size: 15px; }
 #mailView .mail-side-link b { font-size: 10px; }
 #mailView .mail-side-link.category-planned { cursor: default; opacity: .68; }
