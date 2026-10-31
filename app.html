@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="workspace.css" />
-    <script defer src="app-ui.js?v=20261031-inbox-match"></script>
+    <script defer src="app-ui.js?v=20261031-live-categories"></script>
   </head>
   <body>
     <div class="ambient-grid" aria-hidden="true"></div>
@@ -75,11 +75,11 @@
             <button class="compose-button" id="composeButton" type="button"><span>＋</span> Compose</button>
             <p class="mail-nav-label">INBOX VIEWS</p>
             <button class="mail-side-link active" type="button" data-view="inbox"><span class="side-icon">▤</span> All mail <b id="inboxCount">—</b></button>
-            <button class="mail-side-link category-planned" type="button" disabled aria-label="Primary category filter planned"><span class="side-icon">⌂</span> Primary <small>PLANNED</small></button>
-            <button class="mail-side-link category-planned" type="button" disabled aria-label="Social category filter planned"><span class="side-icon">◎</span> Social <small>PLANNED</small></button>
-            <button class="mail-side-link category-planned" type="button" disabled aria-label="Promotions category filter planned"><span class="side-icon">◇</span> Promotions <small>PLANNED</small></button>
-            <button class="mail-side-link category-planned" type="button" disabled aria-label="Updates category filter planned"><span class="side-icon">↻</span> Updates <small>PLANNED</small></button>
-            <button class="mail-side-link" type="button" data-view="spam"><span class="side-icon">⊘</span> Spam</button>
+            <button class="mail-side-link" type="button" data-view="primary"><span class="side-icon">⌂</span> Primary <b id="primaryCount">00</b></button>
+            <button class="mail-side-link" type="button" data-view="social"><span class="side-icon">◎</span> Social <b id="socialCount">00</b></button>
+            <button class="mail-side-link" type="button" data-view="promotions"><span class="side-icon">◇</span> Promotions <b id="promotionsCount">00</b></button>
+            <button class="mail-side-link" type="button" data-view="updates"><span class="side-icon">↻</span> Updates <b id="updatesCount">00</b></button>
+            <button class="mail-side-link" type="button" data-view="spam"><span class="side-icon">⊘</span> Spam <b id="spamCount">00</b></button>
             <p class="mail-nav-label mailbox-label">YOUR FOLDERS</p>
             <button class="mail-side-link category-planned" type="button" disabled aria-label="Starred folder is planned"><span class="side-icon">★</span> Starred <small>PLANNED</small></button>
             <button class="mail-side-link" type="button" data-view="sent"><span class="side-icon">↗</span> Sent</button>
@@ -103,16 +103,16 @@
             <div class="inbox-pane" id="inboxPane">
               <div class="mail-tabs" role="tablist" aria-label="Inbox categories">
                 <button class="mail-tab active" type="button" role="tab" aria-selected="true" data-view="inbox">All mail <span id="allTabCount">—</span></button>
-                <button class="mail-tab category-planned" type="button" role="tab" aria-selected="false" disabled>Primary <small>PLANNED</small></button>
-                <button class="mail-tab category-planned" type="button" role="tab" aria-selected="false" disabled>Social <small>PLANNED</small></button>
-                <button class="mail-tab category-planned" type="button" role="tab" aria-selected="false" disabled>Promotions <small>PLANNED</small></button>
-                <button class="mail-tab category-planned" type="button" role="tab" aria-selected="false" disabled>Updates <small>PLANNED</small></button>
-                <button class="mail-tab" type="button" role="tab" aria-selected="false" data-view="spam">Spam</button>
+                <button class="mail-tab" type="button" role="tab" aria-selected="false" data-view="primary">Primary <span id="primaryTabCount">00</span></button>
+                <button class="mail-tab" type="button" role="tab" aria-selected="false" data-view="social">Social <span id="socialTabCount">00</span></button>
+                <button class="mail-tab" type="button" role="tab" aria-selected="false" data-view="promotions">Promotions <span id="promotionsTabCount">00</span></button>
+                <button class="mail-tab" type="button" role="tab" aria-selected="false" data-view="updates">Updates <span id="updatesTabCount">00</span></button>
+                <button class="mail-tab" type="button" role="tab" aria-selected="false" data-view="spam">Spam <span id="spamTabCount">00</span></button>
               </div>
               <div class="mail-list-header"><label class="select-all" title="Bulk actions are planned"><input id="selectAll" type="checkbox" aria-label="Bulk selection is planned" disabled /><span></span></label><button id="sortMessages" class="unread-filter" type="button">Newest first <span>⌄</span></button><span class="list-count" id="messageSummary">0 messages</span></div>
               <div class="message-list" id="liveMessageList" aria-live="polite"></div>
               <div class="empty-state" id="emptyMail" hidden><span>⌕</span><b id="emptyTitle">Your inbox is clear.</b><p id="emptyCopy">New mail sent to this address will appear here.</p><button class="button button-solid" id="emptyCompose" type="button">Compose a message <span>↗</span></button></div>
-              <div class="mail-app-note"><span class="note-dot"></span> Live account mail · Category filters, drafts and bulk actions are planned</div>
+              <div class="mail-app-note"><span class="note-dot"></span> Auto-sorted by sender and content · Spam is filed manually</div>
             </div>
           <article class="message-detail" id="messageDetail" hidden>
             <div class="detail-top"><button class="quiet-button" id="backToList" type="button">← Back to inbox</button><div class="detail-actions"><button class="quiet-button" id="detailStar" type="button">☆ Star</button><button class="quiet-button" id="detailSpam" type="button">Mark spam</button><button class="quiet-button" id="detailArchive" type="button">Archive ↗</button><button class="quiet-button" id="detailTrash" type="button">Move to trash</button></div></div>

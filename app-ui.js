@@ -19,6 +19,7 @@ let selectedMailbox = null;
 let selectedView = "inbox";
 let currentMessages = [];
 let currentMessage = null;
+let categoryCounts = { all: 0, primary: 0, social: 0, promotions: 0, updates: 0, spam: 0, unread: 0 };
 let toastTimer;
 let sentSort = "newest";
 let composeRequestId = null;
@@ -74,6 +75,44 @@ function displayTime(value) {
   const today = new Date();
   if (date.toDateString() === today.toDateString()) return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(date);
+}
+
+const inboxCategoryNames = { primary: "Primary", social: "Social", promotions: "Promotions", updates: "Updates" };
+
+function categorizeMessage(message) {
+  if (message.folder === "spam") return "spam";
+  if (Object.prototype.hasOwnProperty.call(inboxCategoryNames, message.category)) return message.category;
+  const sender = String(message.from_address || "").toLowerCase();
+  const address = (sender.match(/[^\s<>@]+@[^\s<>@]+/) || [sender])[0];
+  const domain = (address.split("@").pop() || "").replace(/[>\s].*$/, "");
+  const content = [message.subject, message.preview, message.text_body].join(" ").slice(0, 12000).toLocaleLowerCase();
+  const socialDomains = ["facebook.com", "facebookmail.com", "instagram.com", "linkedin.com", "twitter.com", "x.com", "tiktok.com", "reddit.com", "discord.com", "slack.com", "pinterest.com", "snapchat.com", "youtube.com", "twitch.tv", "whatsapp.com", "telegram.org", "threads.net"];
+  const socialSource = socialDomains.some((item) => domain === item || domain.endsWith(`.${item}`));
+  const socialActivity = /\b(new follower|started following|followed you|friend request|connection request|mentioned you|tagged you|liked your|commented on your|replied to your|new message from|sent you a message|invited you to|shared a post|posted in your|joined your group|reacted to your)\b/i.test(content);
+  const transactional = /\b(order confirmation|receipt|invoice|payment (?:received|confirmed|failed)|charged your|refund (?:issued|processed)|shipping confirmation|order shipped|out for delivery|delivery update|tracking number|password reset|verification code|security alert|sign-in code|login code|reservation confirmed|booking confirmation|appointment reminder|subscription renewal|statement is ready|bill is ready|account update|support ticket|confirm your email|email address confirmed)\b/i.test(content);
+  const promotional = /\b(sale|discount|coupon|promo code|limited.time offer|special offer|shop now|free shipping|\d{1,2}% off|save \d{1,2}%|new collection|flash sale|clearance|exclusive offer|newsletter)\b/i.test(content)
+    || /^(offers?|deals?|promotions?|newsletter|marketing|campaigns?)\b/i.test(address.split("@")[0] || "");
+
+  if ((socialSource && !transactional) || socialActivity) return "social";
+  if (transactional) return "updates";
+  if (promotional) return "promotions";
+  return "primary";
+}
+
+function renderCategoryCounts() {
+  const targets = {
+    primary: ["primaryCount", "primaryTabCount"],
+    social: ["socialCount", "socialTabCount"],
+    promotions: ["promotionsCount", "promotionsTabCount"],
+    updates: ["updatesCount", "updatesTabCount"],
+    spam: ["spamCount", "spamTabCount"]
+  };
+  Object.entries(targets).forEach(([view, ids]) => ids.forEach((id) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = String(categoryCounts[view] || 0).padStart(2, "0");
+  }));
+  $("#allTabCount").textContent = String(categoryCounts.all).padStart(2, "0");
+  $("#inboxCount").textContent = categoryCounts.unread ? String(categoryCounts.unread).padStart(2, "0") : "—";
 }
 
 function showAuth(message = "") {
@@ -450,6 +489,8 @@ function verifiedDomainsReady() { return domains.some((item) => item.status === 
 async function selectMailbox(id) {
   selectedMailbox = mailboxes.find((item) => item.id === id) || null;
   if (!selectedMailbox) return;
+  categoryCounts = { all: 0, primary: 0, social: 0, promotions: 0, updates: 0, spam: 0, unread: 0 };
+  renderCategoryCounts();
   $("#mailboxPicker").value = selectedMailbox.id;
   $("#mobileMailboxPicker").value = selectedMailbox.id;
   selectedView = "inbox";
@@ -471,24 +512,33 @@ function syncViewControls() {
 
 async function loadMessages() {
   if (!selectedMailbox || domainsPanel.hidden === false) return;
-  const params = new URLSearchParams({ mailboxId: selectedMailbox.id, view: selectedView });
+  const sourceView = Object.prototype.hasOwnProperty.call(inboxCategoryNames, selectedView) ? "inbox" : selectedView;
+  const params = new URLSearchParams({ mailboxId: selectedMailbox.id, view: sourceView });
   const result = await api(`/api/messages?${params}`);
   currentMessages = result.messages || [];
+  if (sourceView === "inbox") {
+    categoryCounts.all = currentMessages.length;
+    categoryCounts.unread = currentMessages.filter((item) => !item.read_at && item.direction === "inbound").length;
+    for (const view of Object.keys(inboxCategoryNames)) categoryCounts[view] = currentMessages.filter((item) => categorizeMessage(item) === view).length;
+  } else if (sourceView === "spam") {
+    categoryCounts.spam = currentMessages.length;
+  }
   $("#currentMailboxHeading").textContent = selectedMailbox.address.toUpperCase();
-  const viewLabels = { inbox: "All mail", sent: "Sent", archive: "Archive", spam: "Spam", trash: "Trash" };
+  const viewLabels = { inbox: "All mail", ...inboxCategoryNames, sent: "Sent", archive: "Archive", spam: "Spam", trash: "Trash" };
   $("#currentViewHeading").textContent = viewLabels[selectedView] || "All mail";
-  const unread = currentMessages.filter((item) => !item.read_at && item.direction === "inbound").length;
-  $("#inboxCount").textContent = selectedView === "inbox" && unread ? String(unread).padStart(2, "0") : "—";
-  $("#allTabCount").textContent = selectedView === "inbox" ? String(currentMessages.length).padStart(2, "0") : "—";
+  renderCategoryCounts();
   renderMessages();
 }
 
 function renderMessages() {
   liveList.replaceChildren();
   const query = $("#messageSearch").value.trim().toLocaleLowerCase();
-  const visibleMessages = query ? currentMessages.filter((message) => [
+  const viewMessages = Object.prototype.hasOwnProperty.call(inboxCategoryNames, selectedView)
+    ? currentMessages.filter((message) => categorizeMessage(message) === selectedView)
+    : currentMessages;
+  const visibleMessages = query ? viewMessages.filter((message) => [
     message.from_address, ...(message.to_addresses || []), message.subject, message.preview, message.text_body
-  ].join(" ").toLocaleLowerCase().includes(query)) : currentMessages;
+  ].join(" ").toLocaleLowerCase().includes(query)) : viewMessages;
   $("#messageSummary").textContent = query
     ? `${visibleMessages.length} ${visibleMessages.length === 1 ? "match" : "matches"}`
     : visibleMessages.length ? `1–${visibleMessages.length} of ${visibleMessages.length}` : "0 messages";
@@ -529,7 +579,8 @@ function renderMessages() {
     category.textContent = message.folder === "spam" ? "Spam"
       : message.folder === "archive" ? "Archive"
       : message.folder === "trash" ? "Trash"
-      : selectedView === "sent" ? "Sent" : "Inbox";
+      : selectedView === "sent" ? "Sent"
+      : inboxCategoryNames[categorizeMessage(message)] || "Inbox";
     senderWrap.append(senderName, category);
 
     const subject = document.createElement("span");
@@ -573,7 +624,17 @@ function renderMessages() {
   const empty = visibleMessages.length === 0;
   $("#emptyMail").hidden = !empty;
   if (empty) {
-    const labels = { inbox: ["Your inbox is clear.", "New mail sent to this address will appear here."], sent: ["Nothing sent yet.", "Messages you send from this mailbox appear here."], archive: ["Nothing archived.", "Archive a message to move it here."], spam: ["No spam.", "Messages marked as spam will appear here."], trash: ["Nothing in the trash.", "Deleted messages will appear here."] };
+    const labels = {
+      inbox: ["Your inbox is clear.", "New mail sent to this address will appear here."],
+      primary: ["No primary messages yet.", "Personal conversations that do not match another category appear here."],
+      social: ["No social messages yet.", "Notifications from social and community services appear here."],
+      promotions: ["No promotions yet.", "Offers and marketing messages appear here."],
+      updates: ["No updates yet.", "Receipts, account notices and other transactional messages appear here."],
+      sent: ["Nothing sent yet.", "Messages you send from this mailbox appear here."],
+      archive: ["Nothing archived.", "Archive a message to move it here."],
+      spam: ["No spam.", "Messages you mark as spam appear here."],
+      trash: ["Nothing in the trash.", "Deleted messages will appear here."]
+    };
     $("#emptyTitle").textContent = query ? "No messages found" : labels[selectedView][0];
     $("#emptyCopy").textContent = query ? "Try a different sender, subject or phrase." : labels[selectedView][1];
   }
