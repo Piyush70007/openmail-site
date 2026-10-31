@@ -5,7 +5,12 @@ body:has(#mailView:not([hidden])) .app-topbar {
 }
 
 body:has(#mailView:not([hidden])) { overflow-x: hidden; }
-body:has(#mailView:not([hidden])) main { padding-top: 0; }
+body:has(#mailView:not([hidden])) main {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-top: 0;
+}
 
 #mailView.inbox-panel {
   width: 100%;
