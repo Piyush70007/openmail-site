@@ -1,8 +1,14 @@
 {
   "rewrites": [
     { "source": "/api/ai/profile", "destination": "/api/messages?aiResource=profile" },
-    { "source": "/api/ai/knowledge", "destination": "/api/messages?aiResource=knowledge" }
+    { "source": "/api/ai/knowledge", "destination": "/api/messages?aiResource=knowledge" },
+    { "source": "/api/ai/documents", "destination": "/api/messages?aiResource=documents" },
+    { "source": "/api/ai/mailbox-settings", "destination": "/api/messages?aiResource=mailbox-settings" }
   ],
+  "functions": {
+    "api/webhooks/resend.js": { "maxDuration": 60 },
+    "api/messages.js": { "maxDuration": 30 }
+  },
   "headers": [
     {
       "source": "/(.*)",

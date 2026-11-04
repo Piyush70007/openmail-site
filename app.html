@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="workspace.css?v=20261104-groq-ai-phase1" />
-    <script defer src="app-ui.js?v=20261104-groq-ai-phase1"></script>
+    <script defer src="app-ui.js?v=20261104-ai-phase1"></script>
   </head>
   <body>
     <div class="ambient-grid" aria-hidden="true"></div>
@@ -83,6 +83,8 @@
             <p class="mail-nav-label mailbox-label">YOUR FOLDERS</p>
             <button class="mail-side-link" type="button" data-view="starred"><span class="side-icon">★</span> Starred <b id="starredCount">00</b></button>
             <button class="mail-side-link" type="button" data-view="sent"><span class="side-icon">↗</span> Sent</button>
+            <button class="mail-side-link" type="button" data-view="ai_sent"><span class="side-icon">✧</span> AI Sent <b id="aiSentCount">00</b></button>
+            <button class="mail-side-link" type="button" data-view="needs_review"><span class="side-icon">◌</span> Needs human <b id="aiHandoffCount">00</b></button>
             <button class="mail-side-link" type="button" data-view="drafts"><span class="side-icon">✎</span> Drafts <b id="draftsCount">00</b></button>
             <button class="mail-side-link" type="button" data-view="archive"><span class="side-icon">▱</span> Archive</button>
             <button class="mail-side-link" type="button" data-view="trash"><span class="side-icon">⌫</span> Trash</button>
@@ -98,7 +100,7 @@
               <button class="icon-button settings-button" id="headingCompose" type="button" aria-label="Compose a message" title="Compose a message">＋</button>
             </div>
             <div class="mobile-mail-nav" id="mobileMailNav" aria-label="Mailbox tools">
-              <div class="mobile-folder-scroll"><select id="mobileMailboxPicker" class="mobile-mailbox-picker" aria-label="Choose a mailbox"></select><button type="button" data-view="starred">Starred</button><button type="button" data-view="sent">Sent</button><button type="button" data-view="drafts">Drafts</button><button type="button" data-view="archive">Archive</button><button type="button" data-view="trash">Trash</button><button type="button" id="mobileMyAIButton">My AI</button><button type="button" id="mobileManageDomain">Domains</button></div>
+              <div class="mobile-folder-scroll"><select id="mobileMailboxPicker" class="mobile-mailbox-picker" aria-label="Choose a mailbox"></select><button type="button" data-view="starred">Starred</button><button type="button" data-view="sent">Sent</button><button type="button" data-view="ai_sent">AI Sent</button><button type="button" data-view="needs_review">Needs human</button><button type="button" data-view="drafts">Drafts</button><button type="button" data-view="archive">Archive</button><button type="button" data-view="trash">Trash</button><button type="button" id="mobileMyAIButton">My AI</button><button type="button" id="mobileManageDomain">Domains</button></div>
               <button type="button" class="mobile-compose" id="mobileComposeButton">＋ Compose</button>
             </div>
             <div class="inbox-pane" id="inboxPane">
@@ -121,6 +123,8 @@
             <h2 id="detailSubject"></h2>
             <div class="detail-sender"><span class="detail-avatar" id="detailAvatar">OM</span><div><b id="detailFrom"></b><small id="detailTo"></small></div><time id="detailTime"></time></div>
             <div class="detail-body" id="detailBody"></div>
+            <div class="ai-handoff-banner" id="aiHandoffBanner" hidden role="status"><div><b>Human review needed</b><p id="aiHandoffReason"></p></div><button class="button button-outline" id="resolveHandoffButton" type="button">Mark reviewed</button></div>
+            <div class="ai-sent-banner" id="aiSentBanner" hidden>Automatically sent by your OpenMail AI representative.</div>
             <div class="attachment-note" id="attachmentNote" hidden></div>
             <button class="button button-outline reply-button" id="replyButton" type="button">Reply <span>↗</span></button>
             <button class="button button-outline reply-button" id="aiDraftButton" type="button" hidden>Generate AI draft <span>✧</span></button>
@@ -146,8 +150,9 @@
           </section>
           <section class="ai-panel" id="aiPanel" hidden aria-labelledby="aiPanelTitle">
             <div class="ai-panel-head"><button class="quiet-button" id="aiBackToInbox" type="button">← Back to inbox</button><span class="eyebrow">OPENMAIL / AI REPRESENTATIVE SETUP</span></div>
-            <div class="ai-panel-title"><div><p class="eyebrow">MY AI / PHASE 1</p><h2 id="aiPanelTitle">Teach your<br /><span>AI representative.</span></h2></div><p>Save the facts your representative may use. When enabled, it can draft a reply to a selected inbound email after you click Generate. Sending always stays manual.</p></div>
-            <div class="ai-safety-notice" role="status"><span class="notice-mark">i</span><div><b id="aiSafetyTitle">Groq status is loading…</b><p id="aiSafetyCopy">An email is sent to Groq only when you enable this feature and click Generate AI draft. The generated reply opens in the normal editable compose window and is never sent automatically.</p></div></div>
+            <div class="ai-panel-title"><div><p class="eyebrow">MY AI / PHASE 1</p><h2 id="aiPanelTitle">Teach your<br /><span>AI representative.</span></h2></div><p>Give your representative approved company facts and documents. Keep replies as editable drafts, or separately opt in to automatic replies for one verified mailbox. Uncertain messages go to Needs human.</p></div>
+            <div class="ai-safety-notice" role="status"><span class="notice-mark">i</span><div><b id="aiSafetyTitle">Groq status is loading…</b><p id="aiSafetyCopy">Your email content goes to Groq only when an enabled AI representative processes it. Automatic replies are off by default and can be enabled for each mailbox separately.</p></div></div>
+            <p class="ai-data-disclosure">When drafting or processing an automatic reply, OpenMail can send eligible email subject/body text and your approved profile, notes, and extracted document text to Groq. Email attachments and original uploaded files are not sent. Groq says inference inputs and outputs are not retained by default, but may be retained up to 30 days for reliability or abuse investigations. <a href="https://console.groq.com/docs/your-data" target="_blank" rel="noopener noreferrer">Review Groq data controls ↗</a> Do not add passwords or unnecessary sensitive customer data.</p>
             <div class="ai-workspace">
               <section class="ai-card" aria-labelledby="aiCompanyTitle">
                 <div class="domain-card-heading"><span class="domain-icon">⌂</span><div><b id="aiCompanyTitle">Company profile</b><small>The approved facts your AI can rely on later.</small></div></div>
@@ -158,12 +163,12 @@
                   <label>PRICING<textarea id="aiPricing" name="pricing" rows="3" maxlength="4000" placeholder="Add confirmed prices, currencies, and conditions. Leave blank if pricing needs a human quote."></textarea></label>
                   <label>BUSINESS HOURS<textarea id="aiBusinessHours" name="businessHours" rows="2" maxlength="1200" placeholder="Include timezone and days of operation."></textarea></label>
                   <label>POLICIES AND ESCALATION RULES<textarea id="aiPolicies" name="policies" rows="4" maxlength="5000" placeholder="Describe refunds, complaints, legal matters, custom quotes, and when a person must take over."></textarea></label>
-                  <label class="ai-consent-toggle"><input id="aiEnableDrafts" name="enabled" type="checkbox" /><span><b>Enable Groq AI reply drafts</b><small>The selected email's subject and plain-text body, plus these saved company details/notes, go to Groq only when you click Generate draft. Attachments are not sent. Review every reply yourself; OpenMail never sends one automatically.</small></span></label>
+                  <label class="ai-consent-toggle"><input id="aiEnableDrafts" name="enabled" type="checkbox" /><span><b>Enable the AI representative</b><small>When enabled, selected inbound emails and approved knowledge can be sent to Groq to create drafts or, only for mailboxes you separately opt in, automatic replies. Email attachments are never sent to Groq.</small></span></label>
                   <div class="ai-form-footer"><span id="aiProfileStatus" role="status" aria-live="polite"></span><button class="button button-solid" type="submit">Save company profile <span>↗</span></button></div>
                 </form>
               </section>
               <section class="ai-card ai-knowledge-card" aria-labelledby="aiKnowledgeTitle">
-                <div class="domain-card-heading"><span class="domain-icon">⌘</span><div><b id="aiKnowledgeTitle">Knowledge notes</b><small>Drafts use your 20 newest notes, up to 5,000 characters total.</small></div></div>
+                  <div class="domain-card-heading"><span class="domain-icon">⌘</span><div><b id="aiKnowledgeTitle">Knowledge notes</b><small>Replies use your approved notes and newest document text, within a fixed context limit.</small></div></div>
                 <form id="aiKnowledgeForm" class="ai-form">
                   <label>NOTE TITLE<input id="aiKnowledgeTitleInput" name="title" type="text" maxlength="120" placeholder="Website development pricing" required /></label>
                   <label>TYPE<select id="aiKnowledgeType" name="type"><option value="faq">FAQ / answer</option><option value="service">Service</option><option value="pricing">Pricing</option><option value="policy">Policy</option></select></label>
@@ -171,9 +176,21 @@
                   <div class="ai-form-footer"><span id="aiKnowledgeStatus" role="status" aria-live="polite"></span><button class="button button-outline" type="submit">Add knowledge <span>＋</span></button></div>
                 </form>
                 <div class="ai-knowledge-list" id="aiKnowledgeList" aria-live="polite"><p class="ai-empty-note">Loading your saved knowledge…</p></div>
+                <section class="ai-documents-section" aria-labelledby="aiDocumentsTitle">
+                  <div class="ai-documents-heading"><div><b id="aiDocumentsTitle">Company documents</b><small>PDF, DOCX, TXT, Markdown or CSV · 10 files · 40,000 text characters each</small></div></div>
+                  <p class="ai-document-privacy">Files are read in this browser. OpenMail stores extracted text in your account; the original file is not uploaded. Text can be sent to Groq while your AI representative is enabled.</p>
+                  <form id="aiDocumentForm" class="ai-document-form"><input id="aiDocumentFile" type="file" accept=".pdf,.docx,.txt,.md,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/csv" required /><button class="button button-outline" type="submit">Add document <span>＋</span></button><span id="aiDocumentStatus" role="status" aria-live="polite"></span></form>
+                  <div id="aiDocumentList" class="ai-document-list" aria-live="polite"><p class="ai-empty-note">Loading your documents…</p></div>
+                </section>
               </section>
             </div>
-            <p class="ai-phase-note"><span>PHASE 1</span> Manual Groq reply drafts are available after the server key is configured, your company profile is saved, and you enable the feature above. Draft generation is limited to 10 per account per day and 25 across OpenMail per day. Groq may apply a lower request or token limit. Document uploads, automated classification, and automatic replies are not part of this phase.</p>
+            <section class="ai-card ai-automation-card" aria-labelledby="aiAutoReplyTitle">
+              <div class="domain-card-heading"><span class="domain-icon">↗</span><div><b id="aiAutoReplyTitle">Automatic replies</b><small>Enable separately for one mailbox at a time.</small></div></div>
+              <p class="ai-auto-mailbox" id="aiAutoMailboxLabel">Choose a mailbox to configure automatic replies.</p>
+              <label class="ai-consent-toggle ai-auto-toggle"><input id="aiAutomaticReplies" type="checkbox" /><span><b>Allow automatic replies for this mailbox</b><small>OpenMail sends only when it can cite exact approved company text and passes safety checks. Requests about refunds, payments, appointments, legal matters, complaints, account access, security, attachments or anything uncertain are sent to Needs human without an AI reply. Automatic replies are capped by the account's daily AI and email limits.</small></span></label>
+              <div class="ai-form-footer"><span id="aiAutoReplyStatus" role="status" aria-live="polite"></span><button class="button button-solid" id="saveAIReplyMode" type="button">Save mailbox setting <span>↗</span></button></div>
+            </section>
+            <p class="ai-phase-note"><span>PHASE 1</span> AI drafts and automatic responses share a 10-request daily account limit and a 25-request daily OpenMail limit; sending also respects your mailbox send quota. Groq may apply lower limits. Automatic replies remain off until you turn them on for a specific mailbox.</p>
           </section>
           <footer class="mail-footer"><span>OPENMAIL / PRIVATE MAIL SPACE</span><span>Mail is stored for your account only</span></footer>
           </div>
@@ -192,5 +209,7 @@
       </form>
     </dialog>
     <div class="toast" id="appToast" role="status" aria-live="polite"></div>
+    <script src="vendor/mammoth.browser.min.js"></script>
+    <script type="module" src="app-ai-documents.js"></script>
   </body>
 </html>

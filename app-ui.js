@@ -22,13 +22,15 @@ let currentMessages = [];
 let currentMessage = null;
 let visibleMessageIds = [];
 let selectedMessageIds = new Set();
-let categoryCounts = { all: 0, primary: 0, social: 0, promotions: 0, updates: 0, spam: 0, starred: 0, drafts: 0, unread: 0 };
+let categoryCounts = { all: 0, primary: 0, social: 0, promotions: 0, updates: 0, spam: 0, starred: 0, drafts: 0, unread: 0, aiSent: 0, needsReview: 0 };
 let toastTimer;
 let sentSort = "newest";
 let composeRequestId = null;
 let composeDraftId = null;
 let aiProviderConfigured = false;
 let aiProfileEnabled = false;
+let aiAutomaticEnabled = false;
+let aiMailReady = false;
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -113,7 +115,9 @@ function renderCategoryCounts() {
     updates: ["updatesCount", "updatesTabCount"],
     spam: ["spamCount", "spamTabCount"],
     starred: ["starredCount"],
-    drafts: ["draftsCount"]
+    drafts: ["draftsCount"],
+    aiSent: ["aiSentCount"],
+    needsReview: ["aiHandoffCount"]
   };
   Object.entries(targets).forEach(([view, ids]) => ids.forEach((id) => {
     const node = document.getElementById(id);
@@ -342,10 +346,12 @@ function updateAISafetyNotice() {
     copy.textContent = "A server administrator must add GROQ_API_KEY as a server-only environment variable. Your inbox and normal mail actions continue to work without it.";
   } else if (!aiProfileEnabled) {
     title.textContent = "Groq is connected. AI drafts are off until you opt in.";
-    copy.textContent = "When enabled, the selected email's subject and plain-text body, plus your saved company details/notes, go to Groq only after you click Generate AI draft. Attachments are not sent. Groq says inference data is not retained by default, but reliability or abuse investigations may retain it for up to 30 days. Replies are never sent automatically.";
+    copy.textContent = "When enabled, selected inbound messages and approved company knowledge can go to Groq. Automatic replies also require a separate opt-in for each mailbox.";
   } else {
-    title.textContent = "Groq is connected. Draft-only mode is enabled for your account.";
-    copy.textContent = "Only a message you open and send for drafting goes to Groq: its subject, plain-text body, and your saved company details/notes. Attachments are not sent. Groq says inference data is not retained by default, but reliability or abuse investigations may retain it for up to 30 days. You review and send every reply yourself.";
+    title.textContent = aiAutomaticEnabled ? `Automatic replies are on for ${selectedMailbox ? selectedMailbox.address : "this mailbox"}.` : "AI representative is on. Automatic replies remain off for this mailbox.";
+    copy.textContent = aiAutomaticEnabled
+      ? "Eligible incoming message text for this mailbox is processed by Groq. OpenMail sends a reply only when exact approved company evidence passes safety checks. Sensitive or uncertain messages go to Needs human. Turn this off any time in My AI."
+      : "AI drafts are available when you open a message and click Generate. Automatic sending is off until you explicitly enable it for a verified mailbox in My AI.";
   }
   syncAIDraftButton();
 }
@@ -355,6 +361,7 @@ async function refreshAICapability() {
     const result = await api("/api/ai/profile");
     aiProviderConfigured = Boolean(result.provider && result.provider.configured);
     aiProfileEnabled = Boolean(result.profile && result.profile.enabled);
+    aiMailReady = Boolean(result.mailReady);
     updateAISafetyNotice();
   } catch {
     aiProviderConfigured = false;
@@ -377,6 +384,7 @@ function openAIPanel() {
   $("#mobileComposeButton").disabled = true;
   $("#myAIButton").classList.add("active");
   $("#mobileMyAIButton").classList.add("active");
+  document.dispatchEvent(new Event("openmail:ai-panel-open"));
   loadAISetup();
 }
 
@@ -432,13 +440,15 @@ async function loadAISetup() {
   $("#aiProfileStatus").textContent = "Loading saved information…";
   $("#aiKnowledgeStatus").textContent = "";
   try {
-    const [profileResult, knowledgeResult] = await Promise.all([
+    const [profileResult, knowledgeResult, mailboxResult] = await Promise.all([
       api("/api/ai/profile"),
-      api("/api/ai/knowledge")
+      api("/api/ai/knowledge"),
+      selectedMailbox ? api(`/api/ai/mailbox-settings?mailboxId=${encodeURIComponent(selectedMailbox.id)}`) : Promise.resolve(null)
     ]);
     const profile = profileResult.profile || {};
     aiProviderConfigured = Boolean(profileResult.provider && profileResult.provider.configured);
     aiProfileEnabled = Boolean(profile.enabled);
+    aiMailReady = Boolean(profileResult.mailReady);
     $("#aiCompanyName").value = profile.company_name || "";
     $("#aiCompanyDescription").value = profile.company_description || "";
     $("#aiProductsServices").value = profile.products_services || "";
@@ -446,6 +456,24 @@ async function loadAISetup() {
     $("#aiBusinessHours").value = profile.business_hours || "";
     $("#aiPolicies").value = profile.policies || "";
     $("#aiEnableDrafts").checked = aiProfileEnabled;
+    aiAutomaticEnabled = Boolean(mailboxResult && mailboxResult.settings && mailboxResult.settings.auto_reply_enabled);
+    $("#aiAutoMailboxLabel").textContent = selectedMailbox
+      ? `Selected mailbox: ${selectedMailbox.address}`
+      : "Choose an active mailbox before configuring automatic replies.";
+    $("#aiAutomaticReplies").checked = aiAutomaticEnabled;
+    const canEnableAuto = Boolean(selectedMailbox && aiProfileEnabled && aiProviderConfigured && aiMailReady && mailboxResult && mailboxResult.domainVerified);
+    $("#aiAutomaticReplies").disabled = !selectedMailbox || (!canEnableAuto && !aiAutomaticEnabled);
+    $("#saveAIReplyMode").disabled = !selectedMailbox;
+    const autoStatus = $("#aiAutoReplyStatus");
+    autoStatus.classList.remove("error");
+    autoStatus.textContent = aiAutomaticEnabled
+      ? "Automatic replies are enabled for this mailbox."
+      : !selectedMailbox ? "Choose a mailbox first."
+        : !aiProviderConfigured ? "Groq is not connected on this deployment."
+          : !aiMailReady ? "Mail sending is not ready."
+            : !mailboxResult.domainVerified ? "Verify this mailbox’s domain before enabling."
+              : !aiProfileEnabled ? "Enable and save the AI representative first."
+                : "Automatic replies are off.";
     updateAISafetyNotice();
     $("#aiProfileStatus").textContent = profile.updated_at ? `Saved ${displayTime(profile.updated_at)}.` : "Not saved yet.";
     renderAIKnowledge(knowledgeResult.entries || []);
@@ -480,13 +508,53 @@ $("#aiProfileForm").addEventListener("submit", async (event) => {
       }
     });
     aiProfileEnabled = $("#aiEnableDrafts").checked;
+    if (!aiProfileEnabled) {
+      aiAutomaticEnabled = false;
+      $("#aiAutomaticReplies").checked = false;
+      $("#aiAutomaticReplies").disabled = true;
+    }
     updateAISafetyNotice();
+    loadAISetup();
     $("#aiProfileStatus").textContent = "Company profile saved to your account.";
     toast("Company profile saved.");
   } catch (error) {
     $("#aiProfileStatus").textContent = error.message;
     $("#aiProfileStatus").classList.add("error");
   } finally { button.disabled = false; }
+});
+
+$("#saveAIReplyMode").addEventListener("click", async () => {
+  if (!selectedMailbox) return toast("Choose a mailbox first.");
+  const checkbox = $("#aiAutomaticReplies");
+  const enabled = checkbox.checked;
+  if (enabled && !aiAutomaticEnabled) {
+    const accepted = window.confirm(
+      `Allow OpenMail to automatically send supported AI replies from ${selectedMailbox.address}? Sensitive or uncertain messages will be held for your review. You can turn this off here at any time.`
+    );
+    if (!accepted) { checkbox.checked = aiAutomaticEnabled; return; }
+  }
+  const button = $("#saveAIReplyMode");
+  const status = $("#aiAutoReplyStatus");
+  button.disabled = true;
+  status.classList.remove("error");
+  status.textContent = enabled ? "Saving automatic reply setting…" : "Turning automatic replies off…";
+  try {
+    const result = await api("/api/ai/mailbox-settings", {
+      method: "PATCH",
+      body: { mailboxId: selectedMailbox.id, enabled, confirmAutomaticSending: enabled }
+    });
+    aiAutomaticEnabled = Boolean(result.settings && result.settings.auto_reply_enabled);
+    checkbox.checked = aiAutomaticEnabled;
+    status.textContent = aiAutomaticEnabled ? "Automatic replies enabled for this mailbox." : "Automatic replies are off.";
+    updateAISafetyNotice();
+    toast(aiAutomaticEnabled ? "Automatic replies enabled." : "Automatic replies turned off.");
+  } catch (error) {
+    checkbox.checked = aiAutomaticEnabled;
+    status.textContent = error.message;
+    status.classList.add("error");
+  } finally {
+    button.disabled = !selectedMailbox;
+  }
 });
 
 $("#aiKnowledgeForm").addEventListener("submit", async (event) => {
@@ -701,7 +769,7 @@ async function selectMailbox(id) {
   selectedMailbox = mailboxes.find((item) => item.id === id) || null;
   if (!selectedMailbox) return;
   selectedMessageIds.clear();
-  categoryCounts = { all: 0, primary: 0, social: 0, promotions: 0, updates: 0, spam: 0, starred: 0, drafts: 0, unread: 0 };
+  categoryCounts = { all: 0, primary: 0, social: 0, promotions: 0, updates: 0, spam: 0, starred: 0, drafts: 0, unread: 0, aiSent: 0, needsReview: 0 };
   renderCategoryCounts();
   $("#mailboxPicker").value = selectedMailbox.id;
   $("#mobileMailboxPicker").value = selectedMailbox.id;
@@ -753,14 +821,18 @@ async function loadMessages() {
   if (!selectedMailbox || domainsPanel.hidden === false) return;
   const sourceView = Object.prototype.hasOwnProperty.call(inboxCategoryNames, selectedView) ? "inbox" : selectedView;
   const params = new URLSearchParams({ mailboxId: selectedMailbox.id, view: sourceView });
-  const [result, starredResult, draftsResult] = await Promise.all([
+  const [result, starredResult, draftsResult, aiSentResult, needsReviewResult] = await Promise.all([
     api(`/api/messages?${params}`),
     sourceView === "starred" ? Promise.resolve(null) : api(`/api/messages?${new URLSearchParams({ mailboxId: selectedMailbox.id, view: "starred" })}`),
-    sourceView === "drafts" ? Promise.resolve(null) : api(`/api/messages?${new URLSearchParams({ mailboxId: selectedMailbox.id, view: "drafts" })}`)
+    sourceView === "drafts" ? Promise.resolve(null) : api(`/api/messages?${new URLSearchParams({ mailboxId: selectedMailbox.id, view: "drafts" })}`),
+    sourceView === "ai_sent" ? Promise.resolve(null) : api(`/api/messages?${new URLSearchParams({ mailboxId: selectedMailbox.id, view: "ai_sent" })}`),
+    sourceView === "needs_review" ? Promise.resolve(null) : api(`/api/messages?${new URLSearchParams({ mailboxId: selectedMailbox.id, view: "needs_review" })}`)
   ]);
   currentMessages = result.messages || [];
   categoryCounts.starred = sourceView === "starred" ? currentMessages.length : ((starredResult && starredResult.messages) || []).length;
   categoryCounts.drafts = sourceView === "drafts" ? currentMessages.length : ((draftsResult && draftsResult.messages) || []).length;
+  categoryCounts.aiSent = sourceView === "ai_sent" ? currentMessages.length : ((aiSentResult && aiSentResult.messages) || []).length;
+  categoryCounts.needsReview = sourceView === "needs_review" ? currentMessages.length : ((needsReviewResult && needsReviewResult.messages) || []).length;
   if (sourceView === "inbox") {
     categoryCounts.all = currentMessages.length;
     categoryCounts.unread = currentMessages.filter((item) => !item.read_at && item.direction === "inbound").length;
@@ -769,7 +841,7 @@ async function loadMessages() {
     categoryCounts.spam = currentMessages.length;
   }
   $("#currentMailboxHeading").textContent = selectedMailbox.address.toUpperCase();
-  const viewLabels = { inbox: "All mail", ...inboxCategoryNames, sent: "Sent", archive: "Archive", spam: "Spam", trash: "Trash", starred: "Starred", drafts: "Drafts" };
+  const viewLabels = { inbox: "All mail", ...inboxCategoryNames, sent: "Sent", ai_sent: "AI Sent", needs_review: "Needs human", archive: "Archive", spam: "Spam", trash: "Trash", starred: "Starred", drafts: "Drafts" };
   $("#currentViewHeading").textContent = viewLabels[selectedView] || "All mail";
   renderCategoryCounts();
   renderMessages();
@@ -784,6 +856,10 @@ function renderMessages() {
       ? currentMessages.filter((message) => message.starred && message.folder !== "trash")
       : selectedView === "drafts"
         ? currentMessages.filter((message) => message.folder === "drafts")
+        : selectedView === "ai_sent"
+          ? currentMessages.filter((message) => message.ai_auto_sent && message.status === "sent")
+          : selectedView === "needs_review"
+            ? currentMessages.filter((message) => message.ai_handoff_status === "pending")
         : currentMessages;
   const visibleMessages = query ? viewMessages.filter((message) => [
     message.from_address, ...(message.to_addresses || []), message.subject, message.preview, message.text_body
@@ -837,6 +913,8 @@ function renderMessages() {
       : message.folder === "spam" ? "Spam"
       : message.folder === "archive" ? "Archive"
       : message.folder === "trash" ? "Trash"
+      : message.ai_auto_sent && message.status === "sent" ? "AI Sent"
+      : message.ai_handoff_status === "pending" ? "Needs human"
       : selectedView === "sent" ? "Sent"
       : inboxCategoryNames[categorizeMessage(message)] || "Inbox";
     senderWrap.append(senderName, category);
@@ -900,6 +978,8 @@ function renderMessages() {
       archive: ["Nothing archived.", "Archive a message to move it here."],
       starred: ["Nothing starred yet.", "Star a message to keep it easy to find here."],
       drafts: ["No drafts yet.", "Messages you save while composing appear here."],
+      ai_sent: ["No automatic replies sent yet.", "Replies that pass the safety checks will appear here."],
+      needs_review: ["No messages need review.", "Sensitive or uncertain requests are held here when automatic replies are enabled."],
       spam: ["No spam.", "Messages you mark as spam appear here."],
       trash: ["Nothing in the trash.", "Deleted messages will appear here."]
     };
@@ -934,6 +1014,10 @@ async function openMessage(message) {
   $("#detailArchive").textContent = message.folder === "archive" ? "Move to inbox ↗" : "Archive ↗";
   $("#detailSpam").textContent = message.folder === "spam" ? "Move to inbox" : "Mark spam";
   $("#detailTrash").textContent = message.folder === "trash" ? "Move to inbox" : "Move to trash";
+  $("#aiHandoffBanner").hidden = message.ai_handoff_status !== "pending";
+  $("#aiHandoffReason").textContent = message.ai_handoff_status === "pending" ? (message.ai_handoff_reason || "A person should review and reply to this message.") : "";
+  $("#resolveHandoffButton").disabled = message.ai_handoff_status !== "pending";
+  $("#aiSentBanner").hidden = !message.ai_auto_sent || message.status !== "sent";
   $("#replyButton").hidden = message.direction !== "inbound";
   syncAIDraftButton();
   await loadMessages().catch(() => {});
@@ -967,6 +1051,19 @@ $("#detailStar").addEventListener("click", async () => {
     messageDetail.hidden = false;
     inboxPane.hidden = true;
   } catch (error) { toast(error.message); }
+});
+
+$("#resolveHandoffButton").addEventListener("click", async () => {
+  if (!currentMessage || currentMessage.ai_handoff_status !== "pending") return;
+  const button = $("#resolveHandoffButton");
+  button.disabled = true;
+  try {
+    await api(`/api/messages/${encodeURIComponent(currentMessage.id)}`, { method: "PATCH", body: { action: "resolveHandoff" } });
+    currentMessage.ai_handoff_status = "resolved";
+    $("#aiHandoffBanner").hidden = true;
+    await loadMessages();
+    toast("Handoff marked as reviewed.");
+  } catch (error) { toast(error.message); button.disabled = false; }
 });
 
 function openCompose({ to = "", subject = "", text = "", draft = null, aiDraft = false } = {}) {

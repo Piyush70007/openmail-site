@@ -1,7 +1,7 @@
 const { json, method, readJson, requireSameOrigin, fail } = require("../server/http");
 const { signedIn, ownedRow } = require("../server/account");
 const { database } = require("../server/services");
-const { profile: aiProfile, knowledge: aiKnowledge } = require("../server/ai-setup");
+const { profile: aiProfile, knowledge: aiKnowledge, documents: aiDocuments, mailboxSettings: aiMailboxSettings } = require("../server/ai-setup");
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
@@ -14,6 +14,8 @@ module.exports = async (req, res) => {
   const aiResource = String(req.query.aiResource || "");
   if (aiResource === "profile") return aiProfile(req, res);
   if (aiResource === "knowledge") return aiKnowledge(req, res);
+  if (aiResource === "documents") return aiDocuments(req, res);
+  if (aiResource === "mailbox-settings") return aiMailboxSettings(req, res);
   if (aiResource) return json(res, 404, { error: "That OpenMail route was not found." });
   if (!method(req, res, ["GET", "POST", "PATCH"])) return;
   try {
@@ -24,9 +26,9 @@ module.exports = async (req, res) => {
       const mailbox = await ownedRow("mailboxes", req.query.mailboxId, user.id, "id,address,status");
       if (!mailbox) return json(res, 404, { error: "Mailbox not found." });
       const view = String(req.query.view || "inbox");
-      if (!["inbox", "sent", "archive", "spam", "trash", "drafts", "starred"].includes(view)) return json(res, 400, { error: "Unknown mailbox view." });
+      if (!["inbox", "sent", "archive", "spam", "trash", "drafts", "starred", "ai_sent", "needs_review"].includes(view)) return json(res, 400, { error: "Unknown mailbox view." });
       const filters = {
-        select: "id,direction,from_address,to_addresses,subject,preview,text_body,read_at,starred,folder,status,created_at,client_request_id",
+        select: "id,direction,from_address,to_addresses,subject,preview,text_body,read_at,starred,folder,status,created_at,client_request_id,ai_auto_sent,ai_reply_to_message_id,ai_handoff_status,ai_handoff_reason",
         owner_id: `eq.${user.id}`,
         mailbox_id: `eq.${mailbox.id}`,
         order: "created_at.desc",
@@ -35,6 +37,15 @@ module.exports = async (req, res) => {
       if (view === "starred") {
         filters.starred = "eq.true";
         filters.folder = "neq.trash";
+      } else if (view === "ai_sent") {
+        filters.direction = "eq.outbound";
+        filters.folder = "eq.sent";
+        filters.status = "eq.sent";
+        filters.ai_auto_sent = "eq.true";
+      } else if (view === "needs_review") {
+        filters.direction = "eq.inbound";
+        filters.folder = "neq.trash";
+        filters.ai_handoff_status = "eq.pending";
       } else {
         filters.folder = `eq.${view}`;
       }

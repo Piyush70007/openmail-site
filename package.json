@@ -4,6 +4,15 @@
   "private": true,
   "description": "OpenMail hosted mailbox web app",
   "scripts": {
-    "dev": "npx vercel dev"
+    "dev": "npx vercel dev",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@vercel/functions": "3.10.6",
+    "mammoth": "1.13.0",
+    "pdfjs-dist": "6.5.438"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

@@ -1,6 +1,8 @@
 const crypto = require("node:crypto");
 const { json, method } = require("../../server/http");
 const { config, database, resend } = require("../../server/services");
+const { waitUntil } = require("@vercel/functions");
+const { processAutomaticReply } = require("../../server/ai-automation");
 
 function verifySignature(raw, headers, secret) {
   const id = headers["svix-id"];
@@ -32,6 +34,27 @@ function htmlToText(value) {
     .replace(/[\t ]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
+function headerValue(headers, wanted) {
+  const target = String(wanted || "").toLowerCase();
+  if (Array.isArray(headers)) {
+    const item = headers.find((entry) => String(entry && (entry.name || entry.key) || "").toLowerCase() === target);
+    return String(item && item.value || "");
+  }
+  if (headers && typeof headers === "object") {
+    const key = Object.keys(headers).find((name) => name.toLowerCase() === target);
+    return String(key ? headers[key] : "");
+  }
+  return "";
+}
+
+function isAutoSubmitted(headers) {
+  const autoSubmitted = headerValue(headers, "auto-submitted").toLowerCase();
+  const precedence = headerValue(headers, "precedence").toLowerCase();
+  return (autoSubmitted && autoSubmitted !== "no") || /\b(bulk|list|junk)\b/.test(precedence)
+    || Boolean(headerValue(headers, "list-id"))
+    || Boolean(headerValue(headers, "x-auto-response-suppress"));
+}
+
 async function rawBody(req) {
   const chunks = [];
   let size = 0;
@@ -56,25 +79,42 @@ module.exports = async (req, res) => {
     const candidates = [...(detail.to || event.data.to || []), ...(detail.received_for || [])]
       .map((address) => String(address).trim().toLowerCase()).filter((address) => /^[^\s@]+@[^\s@]+$/.test(address));
     const addresses = [...new Set(candidates)];
+    const backgroundTasks = [];
     for (const address of addresses) {
       const mailboxes = await database(`mailboxes?select=id,owner_id,address,status&address=eq.${encodeURIComponent(address)}&status=eq.active&limit=1`);
       const mailbox = mailboxes && mailboxes[0];
       if (!mailbox) continue;
       const text = String(detail.text || htmlToText(detail.html || "")).slice(0, 100000);
       const subject = String(detail.subject || "(no subject)").slice(0, 200);
-      await database("messages", {
-        method: "POST",
-        body: {
-          owner_id: mailbox.owner_id, mailbox_id: mailbox.id, direction: "inbound", from_address: String(detail.from || "").slice(0, 320),
-          to_addresses: [address], subject, preview: text.slice(0, 180), text_body: text, folder: "inbox", status: "received",
-          provider_email_id: detail.id || event.data.email_id,
-          attachment_metadata: (detail.attachments || []).map((item) => ({ id: item.id, filename: item.filename, content_type: item.content_type, size: item.size }))
-        },
-        prefer: "return=minimal"
-      }).catch((error) => {
-        if (error.status !== 409) throw error;
-      });
+      const providerEmailId = detail.id || event.data.email_id;
+      let stored;
+      try {
+        stored = await database("messages", {
+          method: "POST",
+          body: {
+            owner_id: mailbox.owner_id, mailbox_id: mailbox.id, direction: "inbound", from_address: String(detail.from || "").slice(0, 320),
+            to_addresses: [address], subject, preview: text.slice(0, 180), text_body: text, folder: "inbox", status: "received",
+            provider_email_id: providerEmailId,
+            attachment_metadata: (detail.attachments || []).map((item) => ({ id: item.id, filename: item.filename, content_type: item.content_type, size: item.size })),
+            ai_auto_submitted: isAutoSubmitted(detail.headers)
+          },
+          prefer: "return=representation"
+        });
+      } catch (error) {
+        if (!error || error.status !== 409) throw error;
+      }
+      let message = Array.isArray(stored) ? stored[0] : stored;
+      if (!message || !message.id) {
+        const existing = await database(`messages?select=id,folder&provider_email_id=eq.${encodeURIComponent(providerEmailId)}&mailbox_id=eq.${encodeURIComponent(mailbox.id)}&direction=eq.inbound&limit=1`);
+        message = existing && existing[0];
+      }
+      if (message && message.id) backgroundTasks.push(processAutomaticReply(message.id));
     }
+    const settledTasks = backgroundTasks.map((task) => task.catch((error) => {
+      console.error("OpenMail AI automation failed safely:", error && error.message ? error.message : error);
+    }));
+    if (process.env.VERCEL === "1") settledTasks.forEach((task) => waitUntil(task));
+    else await Promise.all(settledTasks);
     json(res, 200, { ok: true });
   } catch (error) {
     console.error("OpenMail inbound webhook error:", error && error.message ? error.message : error);
@@ -83,3 +123,5 @@ module.exports = async (req, res) => {
 };
 
 module.exports.config = { api: { bodyParser: false } };
+
+module.exports._test = { verifySignature, headerValue, isAutoSubmitted, htmlToText };

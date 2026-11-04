@@ -23,6 +23,13 @@ module.exports = async (req, res) => {
         throw error;
       }
     }
+    if (body.action === "resolveHandoff") {
+      const resolved = await database(`messages?id=eq.${encodeURIComponent(req.query.id)}&owner_id=eq.${encodeURIComponent(user.id)}&direction=eq.inbound&ai_handoff_status=eq.pending&select=id,ai_handoff_status,ai_handoff_reason`, {
+        method: "PATCH", body: { ai_handoff_status: "resolved" }, prefer: "return=representation"
+      });
+      if (!resolved || !resolved.length) return json(res, 404, { error: "Open human handoff not found." });
+      return json(res, 200, { ok: true, message: resolved[0] });
+    }
     const updates = {};
     if (body.action === "read") updates.read_at = new Date().toISOString();
     else if (body.action === "unread") updates.read_at = null;
