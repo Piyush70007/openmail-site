@@ -1,4 +1,8 @@
 {
+  "rewrites": [
+    { "source": "/api/ai/profile", "destination": "/api/messages?aiResource=profile" },
+    { "source": "/api/ai/knowledge", "destination": "/api/messages?aiResource=knowledge" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

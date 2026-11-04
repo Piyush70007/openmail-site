@@ -12,8 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="workspace.css?v=20261031-live-mail-actions" />
-    <script defer src="app-ui.js?v=20261031-live-mail-actions"></script>
+    <link rel="stylesheet" href="workspace.css?v=20261104-groq-ai-phase1" />
+    <script defer src="app-ui.js?v=20261104-groq-ai-phase1"></script>
   </head>
   <body>
     <div class="ambient-grid" aria-hidden="true"></div>
@@ -86,6 +86,7 @@
             <button class="mail-side-link" type="button" data-view="drafts"><span class="side-icon">✎</span> Drafts <b id="draftsCount">00</b></button>
             <button class="mail-side-link" type="button" data-view="archive"><span class="side-icon">▱</span> Archive</button>
             <button class="mail-side-link" type="button" data-view="trash"><span class="side-icon">⌫</span> Trash</button>
+            <button class="mail-side-link ai-nav-link" id="myAIButton" type="button"><span class="side-icon">✧</span> My AI <b>SETUP</b></button>
             <button class="mail-side-link manage-domain-link" id="manageDomainButton" type="button"><span class="side-icon">⌘</span> Domains &amp; mailboxes <b>↗</b></button>
             <div class="sidebar-bottom"><span class="sidebar-avatar" id="accountInitials">OM</span><span><b id="accountEmail">Your account</b><small>PRIVATE ACCOUNT</small></span><button id="signOutButton" type="button" aria-label="Sign out" title="Sign out">↪</button></div>
           </aside>
@@ -97,7 +98,7 @@
               <button class="icon-button settings-button" id="headingCompose" type="button" aria-label="Compose a message" title="Compose a message">＋</button>
             </div>
             <div class="mobile-mail-nav" id="mobileMailNav" aria-label="Mailbox tools">
-              <div class="mobile-folder-scroll"><select id="mobileMailboxPicker" class="mobile-mailbox-picker" aria-label="Choose a mailbox"></select><button type="button" data-view="starred">Starred</button><button type="button" data-view="sent">Sent</button><button type="button" data-view="drafts">Drafts</button><button type="button" data-view="archive">Archive</button><button type="button" data-view="trash">Trash</button><button type="button" id="mobileManageDomain">Domains</button></div>
+              <div class="mobile-folder-scroll"><select id="mobileMailboxPicker" class="mobile-mailbox-picker" aria-label="Choose a mailbox"></select><button type="button" data-view="starred">Starred</button><button type="button" data-view="sent">Sent</button><button type="button" data-view="drafts">Drafts</button><button type="button" data-view="archive">Archive</button><button type="button" data-view="trash">Trash</button><button type="button" id="mobileMyAIButton">My AI</button><button type="button" id="mobileManageDomain">Domains</button></div>
               <button type="button" class="mobile-compose" id="mobileComposeButton">＋ Compose</button>
             </div>
             <div class="inbox-pane" id="inboxPane">
@@ -122,9 +123,10 @@
             <div class="detail-body" id="detailBody"></div>
             <div class="attachment-note" id="attachmentNote" hidden></div>
             <button class="button button-outline reply-button" id="replyButton" type="button">Reply <span>↗</span></button>
+            <button class="button button-outline reply-button" id="aiDraftButton" type="button" hidden>Generate AI draft <span>✧</span></button>
           </article>
           <section class="domains-panel" id="domainsPanel" hidden>
-            <div class="domains-panel-head"><button class="quiet-button" id="backToInbox" type="button">← Back to inbox</button><span class="eyebrow">DOMAIN CONTROL / PRIVATE TO YOUR ACCOUNT</span></div>
+            <div class="domains-panel-head"><button class="quiet-button" id="backToInbox" type="button">← Back to inbox</button><button class="quiet-button domains-ai-link" id="domainsMyAIButton" type="button">My AI ↗</button><span class="eyebrow">DOMAIN CONTROL / PRIVATE TO YOUR ACCOUNT</span></div>
             <div class="domains-title"><div><p class="eyebrow">OPENMAIL / SETUP</p><h2>Your domains<br /><span>and mailboxes.</span></h2></div><p>Enter a domain you own. OpenMail checks whether it already receives email, then prepares the setup for addresses like support@yourdomain.com.</p></div>
             <div class="setup-notice app-service-notice" id="mailServiceNotice" hidden><span class="notice-mark">!</span><div><b>Email services need configuration.</b><p>The database can be reached, but mailbox setup and mail delivery wait for the provider settings below.</p><code id="mailMissingConfig"></code></div></div>
             <div class="domain-workspace">
@@ -142,6 +144,37 @@
             <div class="domain-list-wrap"><div class="domain-list-heading"><h3>Connected domains</h3><span id="domainCount">0 domains</span></div><div class="domain-list" id="domainList"></div><div class="domain-empty" id="domainEmpty"><span>◇</span><b>No domain connected yet.</b><p>Enter your domain above. OpenMail will check its current email route before preparing setup.</p></div></div>
             <div class="setup-footnote"><span>YOUR APPROVAL IS REQUIRED</span><p>Email addresses use your domain, so its provider must point incoming mail to OpenMail. We check for existing email first. OpenMail never changes these settings for you; review and approve any changes with your domain provider. Changing the main mail route can affect an existing inbox.</p></div>
           </section>
+          <section class="ai-panel" id="aiPanel" hidden aria-labelledby="aiPanelTitle">
+            <div class="ai-panel-head"><button class="quiet-button" id="aiBackToInbox" type="button">← Back to inbox</button><span class="eyebrow">OPENMAIL / AI REPRESENTATIVE SETUP</span></div>
+            <div class="ai-panel-title"><div><p class="eyebrow">MY AI / PHASE 1</p><h2 id="aiPanelTitle">Teach your<br /><span>AI representative.</span></h2></div><p>Save the facts your representative may use. When enabled, it can draft a reply to a selected inbound email after you click Generate. Sending always stays manual.</p></div>
+            <div class="ai-safety-notice" role="status"><span class="notice-mark">i</span><div><b id="aiSafetyTitle">Groq status is loading…</b><p id="aiSafetyCopy">An email is sent to Groq only when you enable this feature and click Generate AI draft. The generated reply opens in the normal editable compose window and is never sent automatically.</p></div></div>
+            <div class="ai-workspace">
+              <section class="ai-card" aria-labelledby="aiCompanyTitle">
+                <div class="domain-card-heading"><span class="domain-icon">⌂</span><div><b id="aiCompanyTitle">Company profile</b><small>The approved facts your AI can rely on later.</small></div></div>
+                <form id="aiProfileForm" class="ai-form">
+                  <label>COMPANY NAME<input id="aiCompanyName" name="companyName" type="text" maxlength="120" placeholder="Example Studio" required /></label>
+                  <label>WHAT YOUR COMPANY DOES<textarea id="aiCompanyDescription" name="companyDescription" rows="3" maxlength="4000" placeholder="Describe your company in a few clear sentences."></textarea></label>
+                  <label>PRODUCTS AND SERVICES<textarea id="aiProductsServices" name="productsServices" rows="4" maxlength="6000" placeholder="List your services, what each includes, and any important limits."></textarea></label>
+                  <label>PRICING<textarea id="aiPricing" name="pricing" rows="3" maxlength="4000" placeholder="Add confirmed prices, currencies, and conditions. Leave blank if pricing needs a human quote."></textarea></label>
+                  <label>BUSINESS HOURS<textarea id="aiBusinessHours" name="businessHours" rows="2" maxlength="1200" placeholder="Include timezone and days of operation."></textarea></label>
+                  <label>POLICIES AND ESCALATION RULES<textarea id="aiPolicies" name="policies" rows="4" maxlength="5000" placeholder="Describe refunds, complaints, legal matters, custom quotes, and when a person must take over."></textarea></label>
+                  <label class="ai-consent-toggle"><input id="aiEnableDrafts" name="enabled" type="checkbox" /><span><b>Enable Groq AI reply drafts</b><small>The selected email's subject and plain-text body, plus these saved company details/notes, go to Groq only when you click Generate draft. Attachments are not sent. Review every reply yourself; OpenMail never sends one automatically.</small></span></label>
+                  <div class="ai-form-footer"><span id="aiProfileStatus" role="status" aria-live="polite"></span><button class="button button-solid" type="submit">Save company profile <span>↗</span></button></div>
+                </form>
+              </section>
+              <section class="ai-card ai-knowledge-card" aria-labelledby="aiKnowledgeTitle">
+                <div class="domain-card-heading"><span class="domain-icon">⌘</span><div><b id="aiKnowledgeTitle">Knowledge notes</b><small>Drafts use your 20 newest notes, up to 5,000 characters total.</small></div></div>
+                <form id="aiKnowledgeForm" class="ai-form">
+                  <label>NOTE TITLE<input id="aiKnowledgeTitleInput" name="title" type="text" maxlength="120" placeholder="Website development pricing" required /></label>
+                  <label>TYPE<select id="aiKnowledgeType" name="type"><option value="faq">FAQ / answer</option><option value="service">Service</option><option value="pricing">Pricing</option><option value="policy">Policy</option></select></label>
+                  <label>APPROVED INFORMATION<textarea id="aiKnowledgeContent" name="content" rows="5" maxlength="8000" placeholder="Write facts the representative may use. Do not include passwords, payment details, or private customer data." required></textarea></label>
+                  <div class="ai-form-footer"><span id="aiKnowledgeStatus" role="status" aria-live="polite"></span><button class="button button-outline" type="submit">Add knowledge <span>＋</span></button></div>
+                </form>
+                <div class="ai-knowledge-list" id="aiKnowledgeList" aria-live="polite"><p class="ai-empty-note">Loading your saved knowledge…</p></div>
+              </section>
+            </div>
+            <p class="ai-phase-note"><span>PHASE 1</span> Manual Groq reply drafts are available after the server key is configured, your company profile is saved, and you enable the feature above. Draft generation is limited to 10 per account per day and 25 across OpenMail per day. Groq may apply a lower request or token limit. Document uploads, automated classification, and automatic replies are not part of this phase.</p>
+          </section>
           <footer class="mail-footer"><span>OPENMAIL / PRIVATE MAIL SPACE</span><span>Mail is stored for your account only</span></footer>
           </div>
         </div>
@@ -151,6 +184,7 @@
     <dialog class="compose-dialog" id="composeDialog" aria-labelledby="composeTitle">
       <form id="composeForm" class="compose-form">
         <div class="compose-header"><div><p class="eyebrow"><span id="composeModeLabel">NEW MESSAGE</span> / <span id="composeFromLabel"></span></p><h2 id="composeTitle">Compose</h2></div><button class="dialog-close" id="closeCompose" type="button" aria-label="Close compose">×</button></div>
+        <p class="ai-draft-review-note" id="aiDraftReviewNotice" hidden>AI-generated draft — please review and edit before sending.</p>
         <label>To<input id="composeTo" name="to" type="text" inputmode="email" placeholder="name@example.com" required /></label>
         <label>Subject<input id="composeSubject" name="subject" type="text" maxlength="200" placeholder="A clear subject" required /></label>
         <label class="body-label">Message<textarea id="composeBody" name="text" rows="10" maxlength="100000" placeholder="Write your message…" required></textarea></label>

@@ -10,6 +10,7 @@ const domainsPanel = $("#domainsPanel");
 const inboxPane = $("#inboxPane");
 const messageDetail = $("#messageDetail");
 const composeDialog = $("#composeDialog");
+const aiPanel = $("#aiPanel");
 
 let systemStatus = { authReady: false, mailReady: false, authMissing: [], mailMissing: [] };
 let authMode = "login";
@@ -26,6 +27,8 @@ let toastTimer;
 let sentSort = "newest";
 let composeRequestId = null;
 let composeDraftId = null;
+let aiProviderConfigured = false;
+let aiProfileEnabled = false;
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -250,6 +253,7 @@ async function loadDashboard(user) {
     openDomains();
   }
   showMail();
+  refreshAICapability();
 }
 
 async function loadDomainsAndMailboxes() {
@@ -263,6 +267,7 @@ async function loadDomainsAndMailboxes() {
     return;
   }
   domainsPanel.hidden = true;
+  aiPanel.hidden = true;
   inboxPane.hidden = false;
   messageDetail.hidden = true;
   $("#mobileMailNav").hidden = false;
@@ -280,9 +285,13 @@ async function loadDomainsAndMailboxes() {
 
 function openDomains() {
   domainsPanel.hidden = false;
+  aiPanel.hidden = true;
+  $("#refreshMessages").disabled = false;
   inboxPane.hidden = true;
   messageDetail.hidden = true;
   $("#mobileMailNav").hidden = true;
+  $("#myAIButton").classList.remove("active");
+  $("#mobileMyAIButton").classList.remove("active");
   $("#currentViewHeading").textContent = "Domains & mailboxes";
   $("#currentMailboxHeading").textContent = "SETUP";
   $("#composeButton").disabled = true;
@@ -297,6 +306,8 @@ function openInbox() {
   selectedView = "inbox";
   syncViewControls();
   domainsPanel.hidden = true;
+  aiPanel.hidden = true;
+  $("#refreshMessages").disabled = false;
   $("#mobileMailNav").hidden = false;
   inboxPane.hidden = false;
   messageDetail.hidden = true;
@@ -315,6 +326,201 @@ function makeButton(label, className, callback) {
   button.addEventListener("click", callback);
   return button;
 }
+
+function syncAIDraftButton() {
+  const button = $("#aiDraftButton");
+  if (!button) return;
+  button.hidden = !currentMessage || currentMessage.direction !== "inbound" || ["spam", "trash"].includes(currentMessage.folder) || !aiProviderConfigured || !aiProfileEnabled;
+}
+
+function updateAISafetyNotice() {
+  const title = $("#aiSafetyTitle");
+  const copy = $("#aiSafetyCopy");
+  if (!title || !copy) return;
+  if (!aiProviderConfigured) {
+    title.textContent = "Groq is not connected on this deployment yet.";
+    copy.textContent = "A server administrator must add GROQ_API_KEY as a server-only environment variable. Your inbox and normal mail actions continue to work without it.";
+  } else if (!aiProfileEnabled) {
+    title.textContent = "Groq is connected. AI drafts are off until you opt in.";
+    copy.textContent = "When enabled, the selected email's subject and plain-text body, plus your saved company details/notes, go to Groq only after you click Generate AI draft. Attachments are not sent. Groq says inference data is not retained by default, but reliability or abuse investigations may retain it for up to 30 days. Replies are never sent automatically.";
+  } else {
+    title.textContent = "Groq is connected. Draft-only mode is enabled for your account.";
+    copy.textContent = "Only a message you open and send for drafting goes to Groq: its subject, plain-text body, and your saved company details/notes. Attachments are not sent. Groq says inference data is not retained by default, but reliability or abuse investigations may retain it for up to 30 days. You review and send every reply yourself.";
+  }
+  syncAIDraftButton();
+}
+
+async function refreshAICapability() {
+  try {
+    const result = await api("/api/ai/profile");
+    aiProviderConfigured = Boolean(result.provider && result.provider.configured);
+    aiProfileEnabled = Boolean(result.profile && result.profile.enabled);
+    updateAISafetyNotice();
+  } catch {
+    aiProviderConfigured = false;
+    aiProfileEnabled = false;
+    syncAIDraftButton();
+  }
+}
+
+function openAIPanel() {
+  domainsPanel.hidden = true;
+  inboxPane.hidden = true;
+  messageDetail.hidden = true;
+  aiPanel.hidden = false;
+  $("#refreshMessages").disabled = true;
+  $("#mobileMailNav").hidden = false;
+  $("#currentViewHeading").textContent = "My AI";
+  $("#currentMailboxHeading").textContent = selectedMailbox ? selectedMailbox.address.toUpperCase() : "AI SETUP";
+  $("#composeButton").disabled = true;
+  $("#headingCompose").disabled = true;
+  $("#mobileComposeButton").disabled = true;
+  $("#myAIButton").classList.add("active");
+  $("#mobileMyAIButton").classList.add("active");
+  loadAISetup();
+}
+
+function renderAIKnowledge(entries) {
+  const root = $("#aiKnowledgeList");
+  root.replaceChildren();
+  if (!entries.length) {
+    const empty = document.createElement("p");
+    empty.className = "ai-empty-note";
+    empty.textContent = "No knowledge notes yet. Add a verified answer or policy above.";
+    root.append(empty);
+    return;
+  }
+  entries.forEach((entry) => {
+    const card = document.createElement("article");
+    card.className = "ai-knowledge-entry";
+    const heading = document.createElement("div");
+    heading.className = "ai-knowledge-entry-head";
+    const title = document.createElement("b");
+    title.textContent = entry.title;
+    const type = document.createElement("span");
+    type.textContent = String(entry.entry_type || "faq").replaceAll("_", " ").toUpperCase();
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "quiet-button ai-delete-entry";
+    remove.textContent = "Remove";
+    remove.setAttribute("aria-label", `Remove knowledge note ${entry.title}`);
+    remove.addEventListener("click", async () => {
+      if (!window.confirm(`Remove “${entry.title}” from your AI knowledge?`)) return;
+      remove.disabled = true;
+      try {
+        await api(`/api/ai/knowledge?id=${encodeURIComponent(entry.id)}`, { method: "DELETE" });
+        await loadAIKnowledge();
+        toast("Knowledge note removed.");
+      } catch (error) { toast(error.message); remove.disabled = false; }
+    });
+    heading.append(title, type, remove);
+    const content = document.createElement("p");
+    content.textContent = entry.content;
+    card.append(heading, content);
+    root.append(card);
+  });
+}
+
+async function loadAIKnowledge() {
+  const result = await api("/api/ai/knowledge");
+  renderAIKnowledge(result.entries || []);
+}
+
+async function loadAISetup() {
+  $("#aiProfileStatus").classList.remove("error");
+  $("#aiKnowledgeStatus").classList.remove("error");
+  $("#aiProfileStatus").textContent = "Loading saved information…";
+  $("#aiKnowledgeStatus").textContent = "";
+  try {
+    const [profileResult, knowledgeResult] = await Promise.all([
+      api("/api/ai/profile"),
+      api("/api/ai/knowledge")
+    ]);
+    const profile = profileResult.profile || {};
+    aiProviderConfigured = Boolean(profileResult.provider && profileResult.provider.configured);
+    aiProfileEnabled = Boolean(profile.enabled);
+    $("#aiCompanyName").value = profile.company_name || "";
+    $("#aiCompanyDescription").value = profile.company_description || "";
+    $("#aiProductsServices").value = profile.products_services || "";
+    $("#aiPricing").value = profile.pricing || "";
+    $("#aiBusinessHours").value = profile.business_hours || "";
+    $("#aiPolicies").value = profile.policies || "";
+    $("#aiEnableDrafts").checked = aiProfileEnabled;
+    updateAISafetyNotice();
+    $("#aiProfileStatus").textContent = profile.updated_at ? `Saved ${displayTime(profile.updated_at)}.` : "Not saved yet.";
+    renderAIKnowledge(knowledgeResult.entries || []);
+  } catch (error) {
+    $("#aiProfileStatus").textContent = error.message;
+    $("#aiProfileStatus").classList.add("error");
+    $("#aiKnowledgeList").replaceChildren();
+    const unavailable = document.createElement("p");
+    unavailable.className = "ai-empty-note error";
+    unavailable.textContent = error.message;
+    $("#aiKnowledgeList").append(unavailable);
+  }
+}
+
+$("#aiProfileForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.submitter;
+  button.disabled = true;
+  $("#aiProfileStatus").classList.remove("error");
+  $("#aiProfileStatus").textContent = "Saving company profile…";
+  try {
+    await api("/api/ai/profile", {
+      method: "PATCH",
+      body: {
+        companyName: $("#aiCompanyName").value,
+        companyDescription: $("#aiCompanyDescription").value,
+        productsServices: $("#aiProductsServices").value,
+        pricing: $("#aiPricing").value,
+        businessHours: $("#aiBusinessHours").value,
+        policies: $("#aiPolicies").value,
+        enabled: $("#aiEnableDrafts").checked
+      }
+    });
+    aiProfileEnabled = $("#aiEnableDrafts").checked;
+    updateAISafetyNotice();
+    $("#aiProfileStatus").textContent = "Company profile saved to your account.";
+    toast("Company profile saved.");
+  } catch (error) {
+    $("#aiProfileStatus").textContent = error.message;
+    $("#aiProfileStatus").classList.add("error");
+  } finally { button.disabled = false; }
+});
+
+$("#aiKnowledgeForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.submitter;
+  button.disabled = true;
+  $("#aiKnowledgeStatus").classList.remove("error");
+  $("#aiKnowledgeStatus").textContent = "Saving approved information…";
+  try {
+    await api("/api/ai/knowledge", {
+      method: "POST",
+      body: {
+        title: $("#aiKnowledgeTitleInput").value,
+        type: $("#aiKnowledgeType").value,
+        content: $("#aiKnowledgeContent").value
+      }
+    });
+    $("#aiKnowledgeForm").reset();
+    $("#aiKnowledgeStatus").textContent = "Saved to your account.";
+    await loadAIKnowledge();
+    toast("Knowledge note saved.");
+  } catch (error) {
+    $("#aiKnowledgeStatus").textContent = error.message;
+    $("#aiKnowledgeStatus").classList.add("error");
+  } finally { button.disabled = false; }
+});
+
+$("#myAIButton").addEventListener("click", openAIPanel);
+$("#mobileMyAIButton").addEventListener("click", openAIPanel);
+$("#domainsMyAIButton").addEventListener("click", openAIPanel);
+$("#aiBackToInbox").addEventListener("click", () => {
+  if (selectedMailbox) openInbox();
+  else openDomains();
+});
 
 function renderDomains() {
   const root = $("#domainList");
@@ -509,6 +715,8 @@ $("#mobileMailboxPicker").addEventListener("change", () => selectMailbox($("#mob
 
 function syncViewControls() {
   document.querySelectorAll(".mail-side-link[data-view], .mobile-folder-scroll [data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === selectedView));
+  $("#myAIButton").classList.remove("active");
+  $("#mobileMyAIButton").classList.remove("active");
   document.querySelectorAll(".mail-tab[data-view]").forEach((item) => {
     const active = item.dataset.view === selectedView;
     item.classList.toggle("active", active);
@@ -710,6 +918,7 @@ async function openMessage(message) {
     } catch (error) { toast(error.message); }
   }
   inboxPane.hidden = true;
+  aiPanel.hidden = true;
   messageDetail.hidden = false;
   $("#detailSubject").textContent = message.subject || "(no subject)";
   const from = message.direction === "outbound" ? `You <${message.from_address}>` : message.from_address;
@@ -726,6 +935,7 @@ async function openMessage(message) {
   $("#detailSpam").textContent = message.folder === "spam" ? "Move to inbox" : "Mark spam";
   $("#detailTrash").textContent = message.folder === "trash" ? "Move to inbox" : "Move to trash";
   $("#replyButton").hidden = message.direction !== "inbound";
+  syncAIDraftButton();
   await loadMessages().catch(() => {});
   messageDetail.hidden = false;
   inboxPane.hidden = true;
@@ -759,7 +969,7 @@ $("#detailStar").addEventListener("click", async () => {
   } catch (error) { toast(error.message); }
 });
 
-function openCompose({ to = "", subject = "", draft = null } = {}) {
+function openCompose({ to = "", subject = "", text = "", draft = null, aiDraft = false } = {}) {
   if (!selectedMailbox) return toast("Create or choose a mailbox first.");
   composeDraftId = draft ? draft.id : null;
   composeRequestId = draft && draft.client_request_id ? draft.client_request_id : makeId();
@@ -768,8 +978,9 @@ function openCompose({ to = "", subject = "", draft = null } = {}) {
   $("#composeTitle").textContent = draft ? "Edit draft" : "Compose";
   $("#composeTo").value = draft ? (draft.to_addresses || []).join(", ") : to;
   $("#composeSubject").value = draft ? (draft.subject || "") : subject;
-  $("#composeBody").value = draft ? (draft.text_body || "") : "";
-  $("#composeStatus").textContent = draft ? "This draft is saved to your account." : "Plain text email · up to 10 recipients";
+  $("#composeBody").value = draft ? (draft.text_body || "") : text;
+  $("#aiDraftReviewNotice").hidden = !aiDraft;
+  $("#composeStatus").textContent = aiDraft ? "AI draft created. Review it before sending." : draft ? "This draft is saved to your account." : "Plain text email · up to 10 recipients";
   composeDialog.showModal();
   setTimeout(() => $("#composeTo").focus(), 30);
 }
@@ -820,6 +1031,34 @@ $("#replyButton").addEventListener("click", () => {
   openCompose({ to: extractAddress(currentMessage.from_address), subject: /^re:/i.test(currentMessage.subject || "") ? currentMessage.subject : `Re: ${currentMessage.subject || ""}` });
 });
 
+$("#aiDraftButton").addEventListener("click", async () => {
+  if (!currentMessage || !selectedMailbox) return;
+  const message = currentMessage;
+  const button = $("#aiDraftButton");
+  button.disabled = true;
+  button.textContent = "Generating draft…";
+  try {
+    const result = await api(`/api/messages/${encodeURIComponent(message.id)}`, {
+      method: "PATCH",
+      body: { action: "aiDraft", mailboxId: selectedMailbox.id }
+    });
+    if (currentMessage !== message || messageDetail.hidden) {
+      toast("The draft was generated, but this message is no longer open. Open it again to generate a new draft.");
+      return;
+    }
+    openCompose({
+      to: extractAddress(message.from_address),
+      subject: /^re:/i.test(message.subject || "") ? message.subject : `Re: ${message.subject || ""}`,
+      text: result.draft,
+      aiDraft: true
+    });
+  } catch (error) { toast(error.message); }
+  finally {
+    button.disabled = false;
+    button.innerHTML = "Generate AI draft <span>✧</span>";
+  }
+});
+
 $("#composeForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = $("#sendMessageButton");
@@ -851,6 +1090,8 @@ document.querySelectorAll(".mail-side-link[data-view], .mail-tab[data-view], .mo
   selectedView = button.dataset.view;
   syncViewControls();
   domainsPanel.hidden = true;
+  aiPanel.hidden = true;
+  $("#refreshMessages").disabled = false;
   $("#mobileMailNav").hidden = false;
   messageDetail.hidden = true;
   inboxPane.hidden = false;

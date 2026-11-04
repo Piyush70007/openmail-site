@@ -241,3 +241,64 @@ body:has(#mailView:not([hidden])) main {
   #mailView .mail-tabs { gap: 14px; }
   #mailView .mail-tab { font-size: 10px; }
 }
+
+/* My AI is an additive setup surface; the inbox and mail actions keep their own views. */
+#mailView .ai-panel { width: 100%; min-width: 0; flex: 1; overflow: auto; padding: 22px 0 30px; }
+#mailView .ai-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
+#mailView .ai-panel-title { display: flex; align-items: end; justify-content: space-between; gap: 28px; padding: 28px 0 24px; }
+#mailView .ai-panel-title h2 { margin: 10px 0 0; font-size: clamp(34px, 4vw, 56px); font-weight: 500; line-height: .98; letter-spacing: -.07em; }
+#mailView .ai-panel-title h2 span { color: #8caaa6; }
+#mailView .ai-panel-title > p { max-width: 360px; margin: 0 0 3px; color: #98a8a8; font-size: 12px; line-height: 1.7; }
+#mailView .ai-safety-notice { display: flex; gap: 12px; margin: 0 0 22px; padding: 15px; border: 1px solid rgba(164,245,230,.2); border-radius: 5px; background: rgba(41,115,123,.09); }
+#mailView .ai-safety-notice .notice-mark { color: var(--cyan); background: rgba(164,245,230,.1); }
+#mailView .ai-safety-notice b { color: #d7ece9; font-size: 11px; }
+#mailView .ai-safety-notice p { max-width: 900px; margin: 6px 0 0; color: #91a09f; font-size: 10px; line-height: 1.65; }
+#mailView .ai-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .78fr); align-items: start; gap: 15px; }
+#mailView .ai-card { min-width: 0; padding: 20px; border: 1px solid var(--line); border-radius: 5px; background: linear-gradient(145deg,rgba(17,26,30,.72),rgba(10,15,18,.82)); }
+#mailView .ai-card .domain-card-heading { margin-bottom: 18px; }
+#mailView .ai-card .domain-card-heading b { font-size: 13px; }
+#mailView .ai-card .domain-card-heading small { line-height: 1.5; }
+#mailView .ai-form { display: grid; gap: 14px; }
+#mailView .ai-form label { display: grid; gap: 7px; color: #94a3a4; font: 8px var(--mono); letter-spacing: .08em; }
+#mailView .ai-form input, #mailView .ai-form textarea, #mailView .ai-form select { width: 100%; min-width: 0; border: 1px solid rgba(182,211,216,.15); border-radius: 4px; background: #091013; color: #e9f0ef; outline: 0; padding: 10px 11px; font: 11px var(--font); letter-spacing: 0; resize: vertical; }
+#mailView .ai-form input { min-height: 39px; }
+#mailView .ai-form textarea { min-height: 74px; line-height: 1.6; }
+#mailView .ai-form input:focus, #mailView .ai-form textarea:focus, #mailView .ai-form select:focus { border-color: rgba(164,245,230,.6); box-shadow: 0 0 0 3px rgba(164,245,230,.08); }
+#mailView .ai-form .ai-consent-toggle { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid rgba(164,245,230,.16); background: rgba(41,115,123,.06); color: #d7e4e1; font: 9px var(--font); letter-spacing: 0; line-height: 1.55; cursor: pointer; }
+#mailView .ai-consent-toggle input { flex: 0 0 auto; width: 16px; height: 16px; min-height: 16px; margin: 1px 0 0; accent-color: #a4f5e6; }
+#mailView .ai-consent-toggle span { display: grid; gap: 4px; }
+#mailView .ai-consent-toggle b { color: #d7ece9; font-size: 10px; }
+#mailView .ai-consent-toggle small { color: #91a09f; font: 9px/1.6 var(--font); }
+#mailView #aiDraftButton { margin-top: 10px; }
+#aiDraftReviewNotice { margin: 0; padding: 10px 12px; border: 1px solid rgba(164,245,230,.2); color: #b8d9d4; background: rgba(41,115,123,.08); font-size: 10px; line-height: 1.5; }
+#mailView .ai-form-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; }
+#mailView .ai-form-footer > span { min-height: 15px; color: #8b9d9d; font-size: 9px; line-height: 1.5; }
+#mailView .ai-form-footer > span.error, #mailView .ai-empty-note.error { color: #ff9c91; }
+#mailView .ai-form-footer .button { min-height: 36px; flex: 0 0 auto; font-size: 9px; }
+#mailView .ai-knowledge-list { display: grid; gap: 8px; margin-top: 18px; }
+#mailView .ai-empty-note { margin: 0; padding: 16px 12px; border: 1px dashed var(--line-strong); color: #849394; font-size: 10px; line-height: 1.6; }
+#mailView .ai-knowledge-entry { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: rgba(0,0,0,.12); }
+#mailView .ai-knowledge-entry-head { display: flex; align-items: center; gap: 8px; }
+#mailView .ai-knowledge-entry-head b { min-width: 0; overflow: hidden; color: #d8e4e2; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+#mailView .ai-knowledge-entry-head > span { flex: 0 0 auto; color: #70817f; font: 7px var(--mono); }
+#mailView .ai-delete-entry { flex: 0 0 auto; margin-left: auto; padding: 4px 5px; font-size: 8px; }
+#mailView .ai-knowledge-entry p { margin: 9px 0 0; color: #91a09f; font-size: 10px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+#mailView .ai-phase-note { margin: 20px 0 0; padding-top: 14px; border-top: 1px solid var(--line); color: #748482; font-size: 9px; line-height: 1.7; }
+#mailView .ai-phase-note span { margin-right: 12px; color: var(--cyan); font: 8px var(--mono); letter-spacing: .1em; }
+#mailView .ai-nav-link b { color: var(--cyan); font: 7px var(--mono); letter-spacing: .07em; }
+#mailView .domains-ai-link { margin-left: auto; margin-right: auto; }
+#mailView #mobileMyAIButton.active { border-color: rgba(164,245,230,.2); color: var(--cyan); background: rgba(164,245,230,.07); }
+
+@media (max-width: 900px) {
+  #mailView .ai-workspace { grid-template-columns: minmax(0, 1fr); }
+  #mailView .ai-panel-title { align-items: start; }
+}
+@media (max-width: 720px) {
+  #mailView .ai-panel { padding-top: 15px; }
+  #mailView .ai-panel-title { display: grid; gap: 13px; padding: 21px 0 17px; }
+  #mailView .ai-panel-title > p { max-width: 100%; font-size: 11px; }
+  #mailView .ai-card { padding: 15px; }
+  #mailView .domains-panel-head .eyebrow { display: none; }
+  #mailView .domains-ai-link { margin-left: auto; margin-right: 0; }
+  #mailView .ai-form-footer { align-items: start; flex-direction: column; }
+}

@@ -1,6 +1,7 @@
 const { json, method, readJson, requireSameOrigin, fail } = require("../server/http");
 const { signedIn, ownedRow } = require("../server/account");
 const { database } = require("../server/services");
+const { profile: aiProfile, knowledge: aiKnowledge } = require("../server/ai-setup");
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
@@ -10,6 +11,10 @@ function addressList(value) {
 }
 
 module.exports = async (req, res) => {
+  const aiResource = String(req.query.aiResource || "");
+  if (aiResource === "profile") return aiProfile(req, res);
+  if (aiResource === "knowledge") return aiKnowledge(req, res);
+  if (aiResource) return json(res, 404, { error: "That OpenMail route was not found." });
   if (!method(req, res, ["GET", "POST", "PATCH"])) return;
   try {
     const user = await signedIn(req, res);

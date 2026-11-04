@@ -1,6 +1,7 @@
 const { json, method, readJson, requireSameOrigin, fail } = require("../../server/http");
-const { signedIn } = require("../../server/account");
+const { signedIn, requireConfirmedEmail } = require("../../server/account");
 const { database } = require("../../server/services");
+const { generateReplyDraft } = require("../../server/ai");
 
 module.exports = async (req, res) => {
   if (!method(req, res, ["PATCH"]) || !requireSameOrigin(req, res)) return;
@@ -9,6 +10,19 @@ module.exports = async (req, res) => {
     if (!user) return;
     if (!/^[0-9a-f-]{36}$/i.test(String(req.query.id || ""))) return json(res, 404, { error: "Message not found." });
     const body = await readJson(req);
+    if (body.action === "aiDraft") {
+      if (!requireConfirmedEmail(user, res)) return;
+      try {
+        const result = await generateReplyDraft(user.id, body.mailboxId, req.query.id);
+        return json(res, 200, result);
+      } catch (error) {
+        if (error && error.retryAfter) res.setHeader("Retry-After", String(error.retryAfter));
+        if (error && Number.isInteger(error.status) && error.status >= 400 && error.status < 500) {
+          return json(res, error.status, { error: error.message });
+        }
+        throw error;
+      }
+    }
     const updates = {};
     if (body.action === "read") updates.read_at = new Date().toISOString();
     else if (body.action === "unread") updates.read_at = null;

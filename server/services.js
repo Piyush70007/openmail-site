@@ -8,7 +8,9 @@ function config() {
     secretKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "",
     sessionSecret: process.env.SESSION_SECRET || "",
     resendKey: process.env.RESEND_API_KEY || "",
-    resendWebhookSecret: process.env.RESEND_WEBHOOK_SECRET || ""
+    resendWebhookSecret: process.env.RESEND_WEBHOOK_SECRET || "",
+    groqKey: process.env.GROQ_API_KEY || "",
+    groqModel: process.env.GROQ_MODEL || "openai/gpt-oss-20b"
   };
 }
 
@@ -85,6 +87,15 @@ async function consumeQuota(ownerId, action) {
   return result;
 }
 
+async function consumeAIDraftQuota(ownerId) {
+  const result = await database("rpc/consume_openmail_ai_draft_quota", {
+    method: "POST",
+    body: { p_owner: ownerId, p_user_limit: 10, p_global_limit: 25 }
+  });
+  if (typeof result !== "boolean") throw new Error("AI usage limit service returned an invalid response.");
+  return result;
+}
+
 function cookieOptions(maxAge = 60 * 60 * 24 * 30) {
   const secure = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
   return `Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure ? "; Secure" : ""}`;
@@ -157,4 +168,4 @@ function rememberAuthResponse(res, auth) {
   return true;
 }
 
-module.exports = { config, readiness, supabaseAuth, database, resend, consumeQuota, cookieOptions, currentUser, rememberAuthResponse, clearSession };
+module.exports = { config, readiness, supabaseAuth, database, resend, consumeQuota, consumeAIDraftQuota, cookieOptions, currentUser, rememberAuthResponse, clearSession };
