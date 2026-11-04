@@ -61,7 +61,7 @@ async function readPdf(file) {
     }
     return pages.join("\n\n").trim();
   } finally {
-    await pdf.destroy();
+    await task.destroy();
   }
 }
 
