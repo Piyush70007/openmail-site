@@ -27,9 +27,6 @@ let toastTimer;
 let sentSort = "newest";
 let composeRequestId = null;
 let composeDraftId = null;
-let aiProviderName = "Groq";
-let aiProviderDataUseNotice = "Groq says inference inputs and outputs are not retained by default, but may be retained up to 30 days for reliability or abuse investigations.";
-let aiProviderPolicyUrl = "https://console.groq.com/docs/your-data";
 let aiProviderConfigured = false;
 let aiProfileEnabled = false;
 let aiAutomaticEnabled = false;
@@ -345,42 +342,23 @@ function updateAISafetyNotice() {
   const copy = $("#aiSafetyCopy");
   if (!title || !copy) return;
   if (!aiProviderConfigured) {
-    title.textContent = `${aiProviderName} is not connected on this deployment yet.`;
-    copy.textContent = `A server administrator must configure ${aiProviderName} as a server-only environment variable. Your inbox and normal mail actions continue to work without it.`;
+    title.textContent = "Groq is not connected on this deployment yet.";
+    copy.textContent = "A server administrator must add GROQ_API_KEY as a server-only environment variable. Your inbox and normal mail actions continue to work without it.";
   } else if (!aiProfileEnabled) {
-    title.textContent = `${aiProviderName} is connected. AI drafts are off until you opt in.`;
-    copy.textContent = `When enabled, selected inbound messages and approved company knowledge can go to ${aiProviderName}. Automatic replies also require a separate opt-in for each mailbox.`;
+    title.textContent = "Groq is connected. AI drafts are off until you opt in.";
+    copy.textContent = "When enabled, selected inbound messages and approved company knowledge can go to Groq. Automatic replies also require a separate opt-in for each mailbox.";
   } else {
     title.textContent = aiAutomaticEnabled ? `Automatic replies are on for ${selectedMailbox ? selectedMailbox.address : "this mailbox"}.` : "AI representative is on. Automatic replies remain off for this mailbox.";
     copy.textContent = aiAutomaticEnabled
-      ? `Eligible incoming message text for this mailbox is processed by ${aiProviderName}. OpenMail sends a reply only when exact approved company evidence passes safety checks. Sensitive or uncertain messages go to Needs human. Turn this off any time in My AI.`
+      ? "Eligible incoming message text for this mailbox is processed by Groq. OpenMail sends a reply only when exact approved company evidence passes safety checks. Sensitive or uncertain messages go to Needs human. Turn this off any time in My AI."
       : "AI drafts are available when you open a message and click Generate. Automatic sending is off until you explicitly enable it for a verified mailbox in My AI.";
   }
   syncAIDraftButton();
 }
 
-function updateAIProviderInfo(provider) {
-  if (!provider) return;
-  aiProviderName = provider.name || "AI provider";
-  aiProviderDataUseNotice = provider.dataUseNotice || "Review the provider policy before adding sensitive information.";
-  aiProviderPolicyUrl = provider.policyUrl || "";
-  const disclosure = $("#aiDataDisclosureCopy");
-  if (disclosure) disclosure.textContent = `When drafting or processing an automatic reply, OpenMail can send eligible email subject/body text and your approved profile, notes, and extracted document text to ${aiProviderName}. Email attachments and original uploaded files are not sent. ${aiProviderDataUseNotice} Do not add passwords or unnecessary sensitive customer data.`;
-  const policyLink = $("#aiProviderPolicyLink");
-  if (policyLink) {
-    policyLink.href = aiProviderPolicyUrl || "#";
-    policyLink.hidden = !aiProviderPolicyUrl;
-  }
-  const consent = $("#aiConsentProviderCopy");
-  if (consent) consent.textContent = `When enabled, selected inbound emails and approved knowledge can be sent to ${aiProviderName} to create drafts or, only for mailboxes you separately opt in, automatic replies. Email attachments are never sent.`;
-  const documentPrivacy = $("#aiDocumentPrivacy");
-  if (documentPrivacy) documentPrivacy.textContent = `Files are read in this browser. OpenMail stores extracted text in your account; the original file is not uploaded. Text can be sent to ${aiProviderName} while your AI representative is enabled.`;
-}
-
 async function refreshAICapability() {
   try {
     const result = await api("/api/ai/profile");
-    updateAIProviderInfo(result.provider);
     aiProviderConfigured = Boolean(result.provider && result.provider.configured);
     aiProfileEnabled = Boolean(result.profile && result.profile.enabled);
     aiMailReady = Boolean(result.mailReady);
@@ -469,7 +447,6 @@ async function loadAISetup() {
     ]);
     const profile = profileResult.profile || {};
     aiProviderConfigured = Boolean(profileResult.provider && profileResult.provider.configured);
-    updateAIProviderInfo(profileResult.provider);
     aiProfileEnabled = Boolean(profile.enabled);
     aiMailReady = Boolean(profileResult.mailReady);
     $("#aiCompanyName").value = profile.company_name || "";
@@ -492,7 +469,7 @@ async function loadAISetup() {
     autoStatus.textContent = aiAutomaticEnabled
       ? "Automatic replies are enabled for this mailbox."
       : !selectedMailbox ? "Choose a mailbox first."
-        : !aiProviderConfigured ? `${aiProviderName} is not connected on this deployment.`
+        : !aiProviderConfigured ? "Groq is not connected on this deployment."
           : !aiMailReady ? "Mail sending is not ready."
             : !mailboxResult.domainVerified ? "Verify this mailbox’s domain before enabling."
               : !aiProfileEnabled ? "Enable and save the AI representative first."

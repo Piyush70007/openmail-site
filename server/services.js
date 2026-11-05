@@ -1,13 +1,7 @@
 const crypto = require("node:crypto");
 
-function config(ownerId) {
+function config() {
   const url = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
-  const groqKey = process.env.GROQ_API_KEY || "";
-  const geminiKey = process.env.GEMINI_API_KEY || "";
-  const useGeminiForTestOwner = Boolean(ownerId && geminiKey && process.env.GEMINI_TEST_OWNER_ID && ownerId === process.env.GEMINI_TEST_OWNER_ID);
-  const aiProvider = useGeminiForTestOwner ? "gemini" : "groq";
-  const aiKey = useGeminiForTestOwner ? geminiKey : groqKey;
-  const aiModel = useGeminiForTestOwner ? (process.env.GEMINI_MODEL || "gemini-2.5-flash") : (process.env.GROQ_MODEL || "openai/gpt-oss-20b");
   return {
     supabaseUrl: url,
     publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || "",
@@ -15,19 +9,8 @@ function config(ownerId) {
     sessionSecret: process.env.SESSION_SECRET || "",
     resendKey: process.env.RESEND_API_KEY || "",
     resendWebhookSecret: process.env.RESEND_WEBHOOK_SECRET || "",
-    groqKey,
-    groqModel: process.env.GROQ_MODEL || "openai/gpt-oss-20b",
-    geminiKey,
-    aiProvider,
-    aiProviderName: aiProvider === "gemini" ? "Google Gemini" : "Groq",
-    aiKey,
-    aiModel,
-    aiDataUseNotice: aiProvider === "gemini"
-      ? "Google's free Gemini API tier may use prompts and responses to improve Google products."
-      : "Groq says inference inputs and outputs are not retained by default, but may be retained up to 30 days for reliability or abuse investigations.",
-    aiPolicyUrl: aiProvider === "gemini"
-      ? "https://ai.google.dev/gemini-api/docs/pricing"
-      : "https://console.groq.com/docs/your-data"
+    groqKey: process.env.GROQ_API_KEY || "",
+    groqModel: process.env.GROQ_MODEL || "openai/gpt-oss-20b"
   };
 }
 

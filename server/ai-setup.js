@@ -30,16 +30,10 @@ async function profile(req, res) {
 
     if (req.method === "GET") {
       const rows = await database(`ai_profiles?select=${PROFILE_FIELDS.join(",")},enabled,reply_mode,updated_at&owner_id=eq.${encodeURIComponent(user.id)}&limit=1`);
-      const settings = config(user.id);
+      const settings = config();
       return json(res, 200, {
         profile: rows && rows[0] || null,
-        provider: {
-          name: settings.aiProviderName,
-          configured: Boolean(settings.aiKey),
-          model: settings.aiModel,
-          dataUseNotice: settings.aiDataUseNotice,
-          policyUrl: settings.aiPolicyUrl
-        },
+        provider: { name: "Groq", configured: Boolean(settings.groqKey), model: settings.groqModel },
         mailReady: readiness().mailReady
       });
     }
@@ -59,8 +53,7 @@ async function profile(req, res) {
       updated_at: new Date().toISOString()
     };
     if (!value.company_name) return json(res, 400, { error: "Add your company name before saving." });
-    const aiSettings = config(user.id);
-    if (value.enabled && !aiSettings.aiKey) return json(res, 503, { error: `${aiSettings.aiProviderName} is not connected yet. Add its server-only environment variable first.` });
+    if (value.enabled && !config().groqKey) return json(res, 503, { error: "Groq is not connected yet. Add GROQ_API_KEY as a server-only environment variable first." });
 
     const rows = await database("ai_profiles?on_conflict=owner_id", {
       method: "POST",
@@ -160,14 +153,14 @@ async function mailboxSettings(req, res) {
         settings: currentRows && currentRows[0] || { mailbox_id: mailbox.id, auto_reply_enabled: false },
         domainVerified: Boolean(domainRows && domainRows[0] && domainRows[0].status === "verified"),
         mailReady: readiness().mailReady,
-        providerConfigured: Boolean(config(user.id).aiKey)
+        providerConfigured: Boolean(config().groqKey)
       });
     }
 
     const enabled = body.enabled === true;
     if (enabled) {
       if (body.confirmAutomaticSending !== true) return json(res, 400, { error: "Confirm that OpenMail may automatically send supported replies for this mailbox." });
-      if (!config(user.id).aiKey || !readiness().mailReady) return json(res, 503, { error: "AI and mail services must be connected before automatic replies can be enabled." });
+      if (!config().groqKey || !readiness().mailReady) return json(res, 503, { error: "AI and mail services must be connected before automatic replies can be enabled." });
       const profileRows = await database(`ai_profiles?select=company_name,enabled&owner_id=eq.${encodeURIComponent(user.id)}&limit=1`);
       const profile = profileRows && profileRows[0];
       if (!profile || !profile.enabled || !String(profile.company_name || "").trim()) return json(res, 409, { error: "Save and enable your AI representative profile first." });

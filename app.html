@@ -12,8 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="workspace.css?v=20261105-ai-provider-test" />
-    <script defer src="app-ui.js?v=20261105-ai-provider-test"></script>
+    <link rel="stylesheet" href="workspace.css?v=20261104-groq-ai-phase1" />
+    <script defer src="app-ui.js?v=20261104-ai-phase1"></script>
   </head>
   <body>
     <div class="ambient-grid" aria-hidden="true"></div>
@@ -151,8 +151,8 @@
           <section class="ai-panel" id="aiPanel" hidden aria-labelledby="aiPanelTitle">
             <div class="ai-panel-head"><button class="quiet-button" id="aiBackToInbox" type="button">← Back to inbox</button><span class="eyebrow">OPENMAIL / AI REPRESENTATIVE SETUP</span></div>
             <div class="ai-panel-title"><div><p class="eyebrow">MY AI / PHASE 1</p><h2 id="aiPanelTitle">Teach your<br /><span>AI representative.</span></h2></div><p>Give your representative approved company facts and documents. Keep replies as editable drafts, or separately opt in to automatic replies for one verified mailbox. Uncertain messages go to Needs human.</p></div>
-            <div class="ai-safety-notice" role="status"><span class="notice-mark">i</span><div><b id="aiSafetyTitle">AI provider status is loading…</b><p id="aiSafetyCopy">Your email content is sent to the configured AI provider only when an enabled AI representative processes it. Automatic replies are off by default and can be enabled for each mailbox separately.</p></div></div>
-            <p class="ai-data-disclosure"><span id="aiDataDisclosureCopy">When drafting or processing an automatic reply, OpenMail can send eligible email subject/body text and your approved profile, notes, and extracted document text to the AI provider. Email attachments and original uploaded files are not sent. Do not add passwords or unnecessary sensitive customer data.</span> <a id="aiProviderPolicyLink" href="https://console.groq.com/docs/your-data" target="_blank" rel="noopener noreferrer">Review provider data policy ↗</a></p>
+            <div class="ai-safety-notice" role="status"><span class="notice-mark">i</span><div><b id="aiSafetyTitle">Groq status is loading…</b><p id="aiSafetyCopy">Your email content goes to Groq only when an enabled AI representative processes it. Automatic replies are off by default and can be enabled for each mailbox separately.</p></div></div>
+            <p class="ai-data-disclosure">When drafting or processing an automatic reply, OpenMail can send eligible email subject/body text and your approved profile, notes, and extracted document text to Groq. Email attachments and original uploaded files are not sent. Groq says inference inputs and outputs are not retained by default, but may be retained up to 30 days for reliability or abuse investigations. <a href="https://console.groq.com/docs/your-data" target="_blank" rel="noopener noreferrer">Review Groq data controls ↗</a> Do not add passwords or unnecessary sensitive customer data.</p>
             <div class="ai-workspace">
               <section class="ai-card" aria-labelledby="aiCompanyTitle">
                 <div class="domain-card-heading"><span class="domain-icon">⌂</span><div><b id="aiCompanyTitle">Company profile</b><small>The approved facts your AI can rely on later.</small></div></div>
@@ -163,7 +163,7 @@
                   <label>PRICING<textarea id="aiPricing" name="pricing" rows="3" maxlength="4000" placeholder="Add confirmed prices, currencies, and conditions. Leave blank if pricing needs a human quote."></textarea></label>
                   <label>BUSINESS HOURS<textarea id="aiBusinessHours" name="businessHours" rows="2" maxlength="1200" placeholder="Include timezone and days of operation."></textarea></label>
                   <label>POLICIES AND ESCALATION RULES<textarea id="aiPolicies" name="policies" rows="4" maxlength="5000" placeholder="Describe refunds, complaints, legal matters, custom quotes, and when a person must take over."></textarea></label>
-                  <label class="ai-consent-toggle"><input id="aiEnableDrafts" name="enabled" type="checkbox" /><span><b>Enable the AI representative</b><small id="aiConsentProviderCopy">When enabled, selected inbound emails and approved knowledge can be sent to the AI provider to create drafts or, only for mailboxes you separately opt in, automatic replies. Email attachments are never sent.</small></span></label>
+                  <label class="ai-consent-toggle"><input id="aiEnableDrafts" name="enabled" type="checkbox" /><span><b>Enable the AI representative</b><small>When enabled, selected inbound emails and approved knowledge can be sent to Groq to create drafts or, only for mailboxes you separately opt in, automatic replies. Email attachments are never sent to Groq.</small></span></label>
                   <div class="ai-form-footer"><span id="aiProfileStatus" role="status" aria-live="polite"></span><button class="button button-solid" type="submit">Save company profile <span>↗</span></button></div>
                 </form>
               </section>
@@ -178,7 +178,7 @@
                 <div class="ai-knowledge-list" id="aiKnowledgeList" aria-live="polite"><p class="ai-empty-note">Loading your saved knowledge…</p></div>
                 <section class="ai-documents-section" aria-labelledby="aiDocumentsTitle">
                   <div class="ai-documents-heading"><div><b id="aiDocumentsTitle">Company documents</b><small>PDF, DOCX, TXT, Markdown or CSV · 10 files · 40,000 text characters each</small></div></div>
-                  <p class="ai-document-privacy" id="aiDocumentPrivacy">Files are read in this browser. OpenMail stores extracted text in your account; the original file is not uploaded. Text can be sent to the AI provider while your AI representative is enabled.</p>
+                  <p class="ai-document-privacy">Files are read in this browser. OpenMail stores extracted text in your account; the original file is not uploaded. Text can be sent to Groq while your AI representative is enabled.</p>
                   <form id="aiDocumentForm" class="ai-document-form"><input id="aiDocumentFile" type="file" accept=".pdf,.docx,.txt,.md,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/csv" required /><button class="button button-outline" type="submit">Add document <span>＋</span></button><span id="aiDocumentStatus" role="status" aria-live="polite"></span></form>
                   <div id="aiDocumentList" class="ai-document-list" aria-live="polite"><p class="ai-empty-note">Loading your documents…</p></div>
                 </section>
@@ -190,7 +190,7 @@
               <label class="ai-consent-toggle ai-auto-toggle"><input id="aiAutomaticReplies" type="checkbox" /><span><b>Allow automatic replies for this mailbox</b><small>OpenMail sends only when it can cite exact approved company text and passes safety checks. Requests about refunds, payments, appointments, legal matters, complaints, account access, security, attachments or anything uncertain are sent to Needs human without an AI reply. Automatic replies are capped by the account's daily AI and email limits.</small></span></label>
               <div class="ai-form-footer"><span id="aiAutoReplyStatus" role="status" aria-live="polite"></span><button class="button button-solid" id="saveAIReplyMode" type="button">Save mailbox setting <span>↗</span></button></div>
             </section>
-            <p class="ai-phase-note"><span>PHASE 1</span> <span id="aiQuotaNote">AI drafts and automatic responses share a 10-request daily account limit and a 25-request daily OpenMail limit; sending also respects your mailbox send quota. The AI provider may apply lower limits. Automatic replies remain off until you turn them on for a specific mailbox.</span></p>
+            <p class="ai-phase-note"><span>PHASE 1</span> AI drafts and automatic responses share a 10-request daily account limit and a 25-request daily OpenMail limit; sending also respects your mailbox send quota. Groq may apply lower limits. Automatic replies remain off until you turn them on for a specific mailbox.</p>
           </section>
           <footer class="mail-footer"><span>OPENMAIL / PRIVATE MAIL SPACE</span><span>Mail is stored for your account only</span></footer>
           </div>
