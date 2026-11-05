@@ -112,6 +112,27 @@ test("exact approved source evidence and confidence are required for automation"
   assert.equal(validateAutomaticDecision({ ...decision, evidence: [] }, sources).ok, false);
 });
 
+test("citation formatting differences return only the matching approved source text", () => {
+  const sourceText = "OpenMail, Sentry ML, and SafeOps AI are personal projects.\nSafeOps AI is currently in progress.";
+  const sources = [{ id: "profile:projects", text: sourceText }];
+  const validated = validateAutomaticDecision({
+    decision: "auto_reply",
+    confidence: 0.98,
+    evidence: [{
+      source_id: "profile:projects",
+      quote: "openmail, Sentry ML, and SafeOps AI are personal projects. SafeOps AI is currently in progress."
+    }]
+  }, sources);
+
+  assert.equal(validated.ok, true);
+  assert.ok(validated.reply.includes(sourceText));
+  assert.equal(validateAutomaticDecision({
+    decision: "auto_reply",
+    confidence: 0.98,
+    evidence: [{ source_id: "profile:projects", quote: sourceText.replace("currently", "actively") }]
+  }, sources).ok, false);
+});
+
 test("sensitive, attachment, and prompt-injection emails are routed away from automatic replies", () => {
   assert.match(highRiskReason({ text_body: "Please refund the payment I made." }), /payment|refund/i);
   assert.match(highRiskReason({ text_body: "Can you book an appointment tomorrow?" }), /appointment|calendar/i);
