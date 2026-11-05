@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
-const { highRiskReason, validateAutomaticDecision, messageAddress } = require("../server/ai");
+const { highRiskReason, validateAutomaticDecision, generateAutomaticDecision, messageAddress } = require("../server/ai");
 const { processAutomaticReply } = require("../server/ai-automation");
 const { requireSameOrigin } = require("../server/http");
 const { _test: webhook } = require("../api/webhooks/resend");
@@ -14,7 +14,7 @@ const ids = {
   outbound: "55555555-5555-4555-8555-555555555555"
 };
 
-function mockAutomation({ enabled = true, riskMessage = {}, decision, quota = true, sendError } = {}) {
+function mockAutomation({ enabled = true, riskMessage = {}, decision, decisionError, quota = true, sendError } = {}) {
   const state = {
     jobInserted: false,
     inbound: {
@@ -79,6 +79,7 @@ function mockAutomation({ enabled = true, riskMessage = {}, decision, quota = tr
       consumeQuota: async () => { state.quotaCalls += 1; return quota; },
       generateAutomaticDecision: async () => {
         state.aiCalls += 1;
+        if (decisionError) throw decisionError;
         return decision || {
           decision: "auto_reply",
           reply: "Our support hours are Monday through Friday, 9 to 5 CET.",
@@ -133,6 +134,67 @@ test("citation formatting differences return only the matching approved source t
     confidence: 0.98,
     evidence: [{ source_id: "profile:projects", quote: sourceText.replace("currently", "actively") }]
   }, sources).ok, false);
+});
+
+test("Groq schema validation errors get one quota-checked JSON fallback, then evidence is verified", async () => {
+  const source = { id: "profile:business_hours", text: "Our support hours are Monday through Friday, from 9 AM to 5 PM." };
+  const context = {
+    settings: { groqKey: "test-key", groqModel: "openai/gpt-oss-20b" },
+    message: { subject: "What are your support hours?", text_body: "What are your support hours?", attachment_metadata: [] },
+    emailBody: "What are your support hours?",
+    sources: [source]
+  };
+  const attempts = [];
+  let quotaCalls = 0;
+  const result = await generateAutomaticDecision(ids.owner, ids.mailbox, ids.inbound, {
+    loadReplyContext: async () => context,
+    consumeAIDraftQuota: async () => { quotaCalls += 1; return true; },
+    groqCompletion: async (_settings, messages, options) => {
+      attempts.push({ messages, options });
+      if (attempts.length === 1) throw Object.assign(new Error("Groq schema validation failed"), { providerCode: "json_validate_failed" });
+      return {
+        content: JSON.stringify({
+          decision: "auto_reply",
+          reason: "The hours are explicitly documented.",
+          confidence: 0.98,
+          evidence: [{ source_id: source.id, quote: source.text }]
+        }),
+        model: "openai/gpt-oss-20b"
+      };
+    }
+  });
+
+  assert.equal(result.decision, "auto_reply");
+  assert.match(result.reply, /Monday through Friday, from 9 AM to 5 PM/);
+  assert.equal(attempts.length, 2);
+  assert.equal(quotaCalls, 2);
+  assert.equal(attempts[0].options.responseFormat.type, "json_schema");
+  assert.equal(attempts[0].options.maxTokens, 1200);
+  assert.equal(attempts[0].options.reasoningEffort, "low");
+  assert.equal(attempts[1].options.responseFormat.type, "json_object");
+  assert.equal(attempts[1].options.maxTokens, 1200);
+});
+
+test("Groq validation fallback stops when the second inference quota is unavailable", async () => {
+  let quotaCalls = 0;
+  let modelCalls = 0;
+  const error = await generateAutomaticDecision(ids.owner, ids.mailbox, ids.inbound, {
+    loadReplyContext: async () => ({
+      settings: { groqKey: "test-key", groqModel: "openai/gpt-oss-20b" },
+      message: { subject: "Question", text_body: "Question", attachment_metadata: [] },
+      emailBody: "Question",
+      sources: [{ id: "faq", text: "A supported fact is documented here for a customer question." }]
+    }),
+    consumeAIDraftQuota: async () => { quotaCalls += 1; return quotaCalls === 1; },
+    groqCompletion: async () => {
+      modelCalls += 1;
+      throw Object.assign(new Error("Groq schema validation failed"), { providerCode: "json_validate_failed" });
+    }
+  }).catch((value) => value);
+
+  assert.equal(error.status, 429);
+  assert.equal(quotaCalls, 2);
+  assert.equal(modelCalls, 1);
 });
 
 test("sensitive, attachment, and prompt-injection emails are routed away from automatic replies", () => {
@@ -226,6 +288,15 @@ test("a provider failure leaves no falsely labeled AI Sent message and asks a hu
   assert.equal(mock.state.outbound.folder, "drafts");
   assert.equal(mock.state.outbound.ai_auto_sent, false);
   assert.match(mock.state.inbound.ai_handoff_reason, /Check Sent/);
+});
+
+test("an AI inference failure clearly says no reply was sent and does not call Resend", async () => {
+  const mock = mockAutomation({ decisionError: Object.assign(new Error("Groq rejected structured output"), { status: 502 }) });
+  const result = await processAutomaticReply(ids.inbound, mock.overrides);
+  assert.equal(result.status, "human_review");
+  assert.equal(mock.state.sendCount, 0);
+  assert.equal(mock.state.outbound, null);
+  assert.match(mock.state.inbound.ai_handoff_reason, /No reply was sent/);
 });
 
 test("Resend webhook signature rejects stale and tampered requests", () => {

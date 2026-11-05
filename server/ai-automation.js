@@ -48,6 +48,7 @@ async function processAutomaticReply(messageId, overrides = {}) {
   if (!settingsRows || !settingsRows[0] || settingsRows[0].auto_reply_enabled !== true) return { status: "disabled" };
 
   let job;
+  let providerSendAttempted = false;
   try {
     job = await db("ai_auto_reply_jobs?on_conflict=inbound_message_id", {
       method: "POST",
@@ -134,6 +135,7 @@ async function processAutomaticReply(messageId, overrides = {}) {
     if (!outbound) throw new Error("Could not persist the automatic reply before sending.");
     let sent;
     try {
+      providerSendAttempted = true;
       sent = await sendMail("/emails", {
         method: "POST",
         headers: { "Idempotency-Key": `openmail-ai-${inbound.id}` },
@@ -168,7 +170,9 @@ async function processAutomaticReply(messageId, overrides = {}) {
   } catch (error) {
     const reason = error && error.status === 429
       ? "The AI or sending limit was reached; a person needs to reply."
-      : "OpenMail could not verify whether the provider accepted this reply. Check Sent before replying manually.";
+      : providerSendAttempted
+        ? "OpenMail could not verify whether the provider accepted this reply. Check Sent before replying manually."
+        : "OpenMail could not prepare a verified AI reply. No reply was sent; a person needs to review this message.";
     try { return await handoff(inbound, reason, "", db); }
     catch (saveError) {
       console.error("Could not record OpenMail AI handoff:", saveError && saveError.message || saveError);
