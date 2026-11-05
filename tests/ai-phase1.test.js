@@ -108,6 +108,8 @@ test("exact approved source evidence and confidence are required for automation"
   assert.match(validated.reply, /Our support hours are Monday through Friday, 9 to 5 CET\./);
   assert.doesNotMatch(validated.reply, /50% discount/);
   assert.equal(validateAutomaticDecision({ ...decision, confidence: 0.6 }, sources).ok, false);
+  assert.equal(validateAutomaticDecision({ ...decision, confidence: 0.84 }, sources).ok, false);
+  assert.equal(validateAutomaticDecision({ ...decision, confidence: 0.85 }, sources).ok, true);
   assert.equal(validateAutomaticDecision({ ...decision, evidence: [{ source_id: "faq-1", quote: "We answer all customer requests immediately" }] }, sources).ok, false);
   assert.equal(validateAutomaticDecision({ ...decision, evidence: [] }, sources).ok, false);
 });
