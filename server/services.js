@@ -7,7 +7,7 @@ function config(ownerId) {
   const useGeminiForTestOwner = Boolean(ownerId && geminiKey && process.env.GEMINI_TEST_OWNER_ID && ownerId === process.env.GEMINI_TEST_OWNER_ID);
   const aiProvider = useGeminiForTestOwner ? "gemini" : "groq";
   const aiKey = useGeminiForTestOwner ? geminiKey : groqKey;
-  const aiModel = useGeminiForTestOwner ? (process.env.GEMINI_MODEL || "gemini-2.5-flash") : (process.env.GROQ_MODEL || "openai/gpt-oss-20b");
+  const aiModel = useGeminiForTestOwner ? (process.env.GEMINI_MODEL || "gemini-3.8-flash") : (process.env.GROQ_MODEL || "openai/gpt-oss-20b");
   return {
     supabaseUrl: url,
     publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || "",
