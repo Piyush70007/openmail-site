@@ -47,7 +47,7 @@ test("Gemini response schemas are converted to the provider's schema shape", () 
 
 test("Gemini completion keeps the API key in a header and maps structured output", async () => {
   let request;
-  const result = await geminiCompletion({ aiKey: "secret-test-value", aiModel: "gemini-3.8-flash" }, [
+  const result = await geminiCompletion({ aiKey: "secret-test-value", aiModel: "gemini-2.5-flash" }, [
     { role: "system", content: "Only use the approved company facts." },
     { role: "user", content: "Can you answer this question?" }
   ], {
@@ -63,14 +63,14 @@ test("Gemini completion keeps the API key in a header and maps structured output
       return {
         status: 200,
         ok: true,
-        json: async () => ({ modelVersion: "gemini-3.8-flash", candidates: [{ content: { parts: [{ text: '{"answer":"verified"}' }] } }] })
+        json: async () => ({ modelVersion: "gemini-2.5-flash", candidates: [{ content: { parts: [{ text: '{"answer":"verified"}' }] } }] })
       };
     }
   });
 
   assert.equal(result.content, '{"answer":"verified"}');
-  assert.equal(result.model, "gemini-3.8-flash");
-  assert.equal(request.url, "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent");
+  assert.equal(result.model, "gemini-2.5-flash");
+  assert.equal(request.url, "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent");
   assert.equal(request.options.headers["x-goog-api-key"], "secret-test-value");
   assert.equal(request.options.headers["Content-Type"], "application/json");
   assert.equal(request.body.systemInstruction.parts[0].text, "Only use the approved company facts.");
@@ -78,7 +78,6 @@ test("Gemini completion keeps the API key in a header and maps structured output
   assert.equal(request.body.generationConfig.responseMimeType, "application/json");
   assert.equal(request.body.generationConfig.maxOutputTokens, 120);
   assert.equal(request.body.generationConfig.responseSchema.type, "OBJECT");
-  assert.equal("temperature" in request.body.generationConfig, false);
   assert.doesNotMatch(request.url, /secret-test-value/);
 });
 
@@ -86,6 +85,6 @@ test("Gemini quota errors remain distinguishable from OpenMail's own quota", asy
   await assert.rejects(() => geminiCompletion({ aiKey: "key", aiModel: "gemini-2.5-flash" }, [
     { role: "user", content: "test" }
   ], {
-    fetchImpl: async () => ({ status: 429, ok: false, json: async () => ({}) })
+    fetchImpl: async () => ({ status: 429, ok: false })
   }), (error) => error.status === 429 && /Gemini/.test(error.message));
 });

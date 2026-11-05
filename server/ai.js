@@ -214,7 +214,7 @@ async function geminiCompletion(settings, messages, { responseFormat, maxTokens 
         ...(system ? { systemInstruction: { parts: [{ text: system.content }] } } : {}),
         contents,
         generationConfig: {
-          ...(String(settings.aiModel || "").startsWith("gemini-3.") ? {} : { temperature: 0.1 }),
+          temperature: 0.1,
           maxOutputTokens: maxTokens,
           ...(schema ? { responseMimeType: "application/json", responseSchema: toGeminiSchema(schema) } : {})
         }
@@ -225,17 +225,13 @@ async function geminiCompletion(settings, messages, { responseFormat, maxTokens 
     throw httpError(502, "OpenMail could not reach Google Gemini.");
   } finally { clearTimeout(timeout); }
 
-  const result = await response.json().catch(() => null);
   if (response.status === 429) throw httpError(429, "Google Gemini's current request or token limit has been reached.");
   if (response.status === 401 || response.status === 403) throw httpError(503, "The Google Gemini server key needs attention.");
   if (!response.ok) {
-    const providerStatus = result && result.error && typeof result.error.status === "string" ? result.error.status : "";
-    const providerMessage = result && result.error && typeof result.error.message === "string"
-      ? result.error.message.replace(settings.aiKey, "[redacted]").slice(0, 200)
-      : "No provider error detail";
-    console.error("Google Gemini reply request returned HTTP", response.status, providerStatus, providerMessage);
+    console.error("Google Gemini reply request returned HTTP", response.status);
     throw httpError(502, "Google Gemini could not create a reply right now.");
   }
+  const result = await response.json().catch(() => null);
   const parts = result && result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts;
   const content = Array.isArray(parts) ? parts.map((part) => typeof part.text === "string" ? part.text : "").join("").trim() : "";
   if (!content) throw httpError(502, "Google Gemini returned an empty response.");
