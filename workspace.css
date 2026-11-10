@@ -1,4 +1,4 @@
-/* Full-size account workspace; the landing-page preview uses its own compact scale. */
+/* Full-size account workspace; navigation is shared with the product tour. */
 body:has(#mailView:not([hidden])) .app-topbar {
   max-width: none;
   padding-inline: clamp(16px, 2vw, 32px);
@@ -545,4 +545,204 @@ body:has(#mailView:not([hidden])) .app-topbar { height: 64px; min-height: 64px; 
   #mailView .ai-feature-title h3 { font-size: 30px; }
   #mailView .ai-setup-nav { gap: 8px; }
   #mailView .ai-setup-nav a { font-size: 11px; padding: 10px; }
+}
+
+/* Workspace sections share one sidebar; mail folders remain inside Inbox. */
+#mailView [hidden] { display: none !important; }
+#mailView .ai-setup-nav,
+#mailView .ai-feature-tabs { display: none; }
+#mailView .workspace-sidebar-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding-top: 28px;
+}
+#mailView .workspace-sidebar-tools .mailbox-picker-label {
+  margin: 0 6px;
+  font-size: 9px;
+}
+#mailView .workspace-sidebar-tools .mailbox-picker { margin-bottom: 0; min-width: 0; max-width: 100%; }
+#mailView .workspace-sidebar-tools .manage-domain-link {
+  margin: 4px 0 0;
+  min-height: 44px;
+  padding: 12px 8px 8px;
+  font-size: 12px;
+}
+#mailView .sidebar-bottom { flex-shrink: 0; margin-top: 12px; }
+#mailView .sidebar-bottom > div { min-width: 0; }
+#mailView .sidebar-bottom > span:not(.sidebar-avatar) { min-width: 0; }
+#mailView .sidebar-bottom b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#mailView .mobile-workspace-menu,
+#mailView #mobileMyAIButton { display: none; }
+
+#mailView .mail-folder-menu {
+  position: relative;
+  z-index: 4;
+  flex: 0 0 auto;
+  width: fit-content;
+  max-width: 100%;
+  margin: 12px 0 4px;
+}
+#mailView .mail-folder-menu > summary,
+#mailView .mobile-workspace-menu > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid #2a3c34;
+  border-radius: 6px;
+  color: #9fb3a8;
+  background: #0f1916;
+  font: 12px/1.5 var(--font);
+  list-style: none;
+  cursor: pointer;
+}
+#mailView .mail-folder-menu > summary::-webkit-details-marker,
+#mailView .mobile-workspace-menu > summary::-webkit-details-marker { display: none; }
+#mailView .mail-folder-menu > summary::after,
+#mailView .mobile-workspace-menu > summary::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+}
+#mailView .mail-folder-menu[open] > summary::after,
+#mailView .mobile-workspace-menu[open] > summary::after {
+  transform: translateY(2px) rotate(225deg);
+}
+#mailView .mail-folder-menu > summary span,
+#mailView .mobile-workspace-menu > summary span {
+  min-width: 0;
+  color: #d3e9dc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#mailView .mail-folder-menu > summary:focus-visible,
+#mailView .mobile-workspace-menu > summary:focus-visible {
+  outline: 2px solid #a5e8d8;
+  outline-offset: 3px;
+}
+#mailView .mail-folder-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  width: min(380px, calc(100vw - 40px));
+  max-height: min(430px, 55dvh, calc(100dvh - 330px));
+  padding: 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+  border: 1px solid #2a3c34;
+  border-radius: 8px;
+  background: #101b17;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
+}
+#mailView .mail-folder-menu:not([open]) > .mail-folder-list,
+#mailView .mobile-workspace-menu:not([open]) > .mobile-workspace-nav { display: none; }
+#mailView .mail-folder-list .mail-side-link { min-height: 44px; padding: 10px; font-size: 12px; }
+#mailView .mail-folder-list .mail-side-link b { margin-left: auto; }
+#mailView .mail-folder-list > .mail-nav-label { grid-column: 1 / -1; margin: 8px 10px 2px; }
+#mailView .ai-workspace-load-notice { margin: 0 0 20px; padding: 14px 18px; border: 1px solid #6c5540; border-radius: 8px; background: #292119; color: #ead0ae; }
+
+@media (max-width: 820px) {
+  #mailView .mail-app { grid-template-rows: auto minmax(0, 1fr); }
+  #mailView .mail-sidebar { display: none; }
+  #mailView .mail-main { grid-column: 1; grid-row: 2; padding-inline: 14px; }
+  #mailView .mobile-workspace-menu {
+    position: relative;
+    z-index: 8;
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line-soft);
+    background: #0b1011;
+  }
+  #mailView .mobile-workspace-menu > summary { width: 100%; }
+  #mailView .mobile-workspace-menu > .mobile-workspace-nav {
+    position: absolute;
+    top: calc(100% - 4px);
+    right: 14px;
+    left: 14px;
+    max-height: min(430px, 65dvh);
+    padding: 8px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #2a3c34;
+    border-radius: 8px;
+    background: #101b17;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
+  }
+  #mailView .mobile-mail-nav {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 8px;
+    min-height: 56px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  #mailView .mobile-folder-scroll {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #mailView .mobile-folder-scroll button {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 9px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: #a2b4ad;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  #mailView .mobile-folder-scroll button.active {
+    border-color: rgba(164, 245, 230, .16);
+    background: #1b2b27;
+    color: #dcece4;
+  }
+  #mailView .mobile-mailbox-picker {
+    display: block;
+    flex: 0 0 auto;
+    width: min(180px, 34vw);
+    min-height: 44px;
+    border: 1px solid #293a38;
+    border-radius: 4px;
+    background: #0a0f10;
+    color: #c8d6d1;
+    font-size: 12px;
+  }
+  #mailView .mobile-compose {
+    min-height: 44px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 4px;
+    background: #d7e8e2;
+    color: #172822;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+  }
+  #mailView .mail-folder-menu { margin-top: 10px; }
+}
+
+@media (max-width: 380px) {
+  #mailView .mail-folder-list { grid-template-columns: minmax(0, 1fr); }
 }
