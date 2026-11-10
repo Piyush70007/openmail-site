@@ -21,12 +21,12 @@ This is an engineering review, not a certification or an independent penetration
 
 ## Automated test cases
 
-`npm test` currently passes **48 tests**. The suite includes:
+`npm test` currently passes **49 tests**. The suite includes:
 
 - invalid/oversized JSON and oversized webhook bodies;
 - missing, foreign, scheme-mismatched, and port-mismatched origins;
 - malformed/oversized auth inputs, account-enumeration-safe provider errors, secure cookie flags, and tampered session signatures;
-- forwarded-IP trust gates, new-secret-key enforcement, and legacy-key fallback for Supabase Auth;
+- forwarded-IP trust gates, new-secret-key enforcement, legacy-key fallback, and route-level login/signup forwarding for Supabase Auth;
 - timeout/network failure handling and private-log redaction;
 - webhook signature tampering/staleness and automated-message detection;
 - exact citation matching, confidence boundaries, prompt injection, sensitive/account/payment/cancellation cases, test-price exclusion, and internal-policy separation;
@@ -47,8 +47,8 @@ Additional checks run: `npm audit --omit=dev`, `git diff --check`, `vercel.json`
 ## Checks still needed outside this repository
 
 - The local Supabase/Docker database stack was unavailable during this review, so pgTAP and real two-account RLS tests were not run. The SQL has been reviewed, but production grants/policies have not been read back from the hosted database in this run.
-- No external penetration test, browser-based DAST, or production mailbox send/receive test was performed. The question matrix uses synthetic data and mocks the model/provider in automated tests.
-- OpenMail proxies Supabase Auth through Vercel. The app now forwards only a single valid IP from Vercel's `X-Forwarded-For` header, and only when `SUPABASE_SECRET_KEY` uses the new `sb_secret_` format. Supabase rejects this feature with publishable or legacy `anon`/`service_role` keys. Vercel documents that it overwrites `X-Forwarded-For` to prevent spoofing. The project-level IP-forwarding switch still needs read-back verification in Supabase after the deployment is live.
+- No external penetration test, browser-based DAST, or production mailbox send/receive test was performed. Automated question tests use synthetic data and mock the model/provider. Three additional synthetic prompts were run against the live Groq simulator; all three decisions matched their expected auto-reply/human-review outcomes, and no email was sent.
+- OpenMail proxies Supabase Auth through Vercel. The app forwards only a single valid IP from Vercel's `X-Forwarded-For` header, and only when `SUPABASE_SECRET_KEY` uses the new `sb_secret_` format. Supabase rejects this feature with publishable or legacy `anon`/`service_role` keys. Vercel documents that it overwrites `X-Forwarded-For` to prevent spoofing. The project-level IP-forwarding switch was enabled and read back as on in Supabase after deployment. The production readiness endpoint confirms required configuration is present but does not disclose the API-key type; verify that the production key begins with `sb_secret_` in Vercel without exposing its value before relying on per-client rate limiting.
 - Confirm the Supabase Auth redirect allowlist, email confirmation, admin MFA, production-only server secrets, and Vercel deployment protection settings in their dashboards.
 
 ## References

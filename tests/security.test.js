@@ -140,6 +140,46 @@ test("Supabase Auth uses the new secret key and validated forwarded IP only when
   }
 });
 
+test("password login and signup pass the trusted Vercel IP through the Auth proxy", async () => {
+  const keys = ["VERCEL", "SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "SUPABASE_SECRET_KEY", "SESSION_SECRET"];
+  const previous = keys.map((key) => [key, process.env[key]]);
+  const originalFetch = global.fetch;
+  const calls = [];
+  process.env.VERCEL = "1";
+  process.env.SUPABASE_URL = "https://supabase.example.test";
+  process.env.SUPABASE_PUBLISHABLE_KEY = "sb_publishable_test-only";
+  process.env.SUPABASE_SECRET_KEY = "sb_secret_test-only";
+  process.env.SESSION_SECRET = "unit-test-session-secret-that-is-long-enough";
+  global.fetch = async (url, options) => {
+    calls.push({ url, options });
+    return new Response(JSON.stringify({
+      access_token: "a".repeat(32),
+      refresh_token: "r".repeat(32),
+      expires_in: 3600,
+      user: { email: "person@example.com" }
+    }), { status: 200 });
+  };
+  const makeResponse = () => ({ headers: {}, statusCode: 200, setHeader(name, value) { this.headers[name] = value; }, end(value) { this.body = value; } });
+  try {
+    const headers = { origin: "https://openmail.example", host: "openmail.example", "x-forwarded-proto": "https", "x-forwarded-for": "203.0.113.9" };
+    for (const action of ["login", "signup"]) {
+      const res = makeResponse();
+      await authHandler({ method: "POST", headers, body: { action, email: "person@example.com", password: "a-long-enough-password" } }, res);
+      assert.equal(res.statusCode, 200);
+    }
+    assert.equal(calls.length, 2);
+    for (const { options } of calls) {
+      assert.equal(options.headers.apikey, "sb_secret_test-only");
+      assert.equal(options.headers["Sb-Forwarded-For"], "203.0.113.9");
+    }
+    assert.match(calls[0].url, /\/auth\/v1\/token\?grant_type=password$/);
+    assert.match(calls[1].url, /\/auth\/v1\/signup\?/);
+  } finally {
+    global.fetch = originalFetch;
+    for (const [key, value] of previous) if (value === undefined) delete process.env[key]; else process.env[key] = value;
+  }
+});
+
 test("production session cookies are Secure, HttpOnly, root-scoped, and SameSite Lax", () => {
   const oldNodeEnv = process.env.NODE_ENV;
   const oldVercel = process.env.VERCEL;
