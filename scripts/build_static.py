@@ -1,4 +1,4 @@
-"""Package the compiled homepage and explicit unchanged mailbox assets only."""
+"""Package the compiled homepage and explicit approved mailbox assets only."""
 from pathlib import Path
 import shutil
 import sys
@@ -27,7 +27,7 @@ def build(root=ROOT):
         target = destination / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
-    print(f'Prepared {len(landing)} compiled homepage files and {len(MAILBOX_FILES)} unchanged mailbox assets.')
+    print(f'Prepared {len(landing)} compiled homepage files and {len(MAILBOX_FILES)} approved mailbox assets.')
 
 
 if __name__ == '__main__':

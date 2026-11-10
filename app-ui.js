@@ -351,14 +351,14 @@ function updateAISafetyNotice() {
   if (!title || !copy) return;
   if (!aiProviderConfigured) {
     title.textContent = "Groq is not connected on this deployment yet.";
-    copy.textContent = "A server administrator must add GROQ_API_KEY as a server-only environment variable. Your inbox and normal mail actions continue to work without it.";
+    copy.textContent = "The site owner needs to connect the AI service. Your inbox and normal mail actions still work.";
   } else if (!aiProfileEnabled) {
     title.textContent = "Groq is connected. AI drafts are off until you opt in.";
     copy.textContent = "When enabled, selected inbound messages and approved company knowledge can go to Groq. Automatic replies also require a separate opt-in for each mailbox.";
   } else {
     title.textContent = aiAutomaticEnabled ? `Automatic replies are on for ${selectedMailbox ? selectedMailbox.address : "this mailbox"}.` : "AI representative is on. Automatic replies remain off for this mailbox.";
     copy.textContent = aiAutomaticEnabled
-      ? "Eligible incoming message text for this mailbox is processed by Groq. OpenMail sends a reply only when exact approved company evidence passes safety checks. Sensitive or uncertain messages go to Needs human. Turn this off any time in My AI."
+      ? "Eligible incoming message text for this mailbox is processed by Groq. OpenMail sends a reply only when exact approved company evidence passes safety checks. Sensitive or uncertain messages go to Needs your help. Turn this off any time in My AI."
       : "AI drafts are available when you open a message and click Generate. Automatic sending is off until you explicitly enable it for a verified mailbox in My AI.";
   }
   syncAIDraftButton();
@@ -474,7 +474,7 @@ function renderAIRepresentatives() {
   if (!aiRepresentatives.length) {
     const note = document.createElement("p");
     note.className = "ai-empty-note error";
-    note.textContent = "Representatives could not load. Apply the OpenMail AI phases 2–5 database migration, then refresh.";
+    note.textContent = "Your AI team could not load. Try refreshing. If it still fails, ask the site owner to check the AI setup.";
     root.append(note);
     return;
   }
@@ -557,42 +557,161 @@ function setAIView(view) {
   if (view === "trust") loadAITrust();
 }
 
+// Charts describe saved results only; confidence is never treated as accuracy.
+function insightCount(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, Math.floor(number))) : 0;
+}
+
+function insightPercent(value) {
+  if (value == null || value === "" || typeof value === "boolean") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) : null;
+}
+
+function insightRate(part, total) {
+  return insightCount(total) > 0 ? insightPercent(insightCount(part) / insightCount(total) * 100) : null;
+}
+
+function insightNode(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text != null) node.textContent = String(text);
+  return node;
+}
+
+function insightGauge({ title, percent, detail, note, threshold = null, tone = "mint" }) {
+  const value = insightPercent(percent);
+  const thresholdValue = insightPercent(threshold);
+  const valueText = value == null ? "—" : `${Number(value.toFixed(1))}%`;
+  const card = insightNode("section", `insight-card insight-gauge-card insight-tone-${tone}`);
+  card.append(insightNode("h4", "insight-title", title));
+  const figure = insightNode("div", "insight-gauge");
+  figure.setAttribute("role", "img");
+  figure.setAttribute("aria-label", `${title}: ${value == null ? "no data yet" : valueText}. ${detail}`);
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 240 150");
+  svg.setAttribute("aria-hidden", "true");
+  const arc = (className) => {
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M20 120 A100 100 0 0 1 220 120");
+    path.setAttribute("pathLength", "100");
+    path.setAttribute("class", className);
+    svg.append(path);
+    return path;
+  };
+  arc("insight-gauge-track");
+  if (value != null && value > 0) arc("insight-gauge-fill").setAttribute("stroke-dasharray", `${value} 100`);
+  if (thresholdValue != null) {
+    const angle = Math.PI * thresholdValue / 100;
+    const marker = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    marker.setAttribute("x1", String(120 - 88 * Math.cos(angle)));
+    marker.setAttribute("y1", String(120 - 88 * Math.sin(angle)));
+    marker.setAttribute("x2", String(120 - 112 * Math.cos(angle)));
+    marker.setAttribute("y2", String(120 - 112 * Math.sin(angle)));
+    marker.setAttribute("class", "insight-gauge-marker");
+    svg.append(marker);
+  }
+  const valueNode = insightNode("strong", "insight-gauge-value", valueText);
+  valueNode.setAttribute("aria-hidden", "true");
+  const scale = insightNode("div", "insight-gauge-scale");
+  scale.setAttribute("aria-hidden", "true");
+  scale.append(insightNode("span", "", "0%"), insightNode("span", "", "100%"));
+  figure.append(svg, valueNode, scale);
+  card.append(figure, insightNode("p", "insight-detail", detail), insightNode("p", "insight-note", note));
+  return card;
+}
+
+function insightBars(title, description, items, emptyText = "No recorded activity yet.") {
+  const card = insightNode("section", "insight-card insight-bars-card");
+  card.append(insightNode("h4", "insight-title", title), insightNode("p", "insight-note", description));
+  const maximum = Math.max(0, ...items.map((item) => insightCount(item.value)));
+  const list = insightNode("ul", "insight-bars");
+  for (const item of items) {
+    const count = insightCount(item.value);
+    const row = insightNode("li", `insight-bar-row insight-tone-${item.tone || "mint"}`);
+    const label = insightNode("div", "insight-bar-label");
+    label.append(insightNode("span", "", item.label), insightNode("b", "", count.toLocaleString()));
+    const track = insightNode("div", "insight-bar-track");
+    track.setAttribute("aria-hidden", "true");
+    const fill = insightNode("span", "insight-bar-fill");
+    fill.style.width = `${maximum ? count / maximum * 100 : 0}%`;
+    track.append(fill);
+    row.append(label, track);
+    list.append(row);
+  }
+  card.append(list);
+  if (!maximum) card.append(insightNode("p", "insight-empty", emptyText));
+  else card.append(insightNode("p", "insight-axis", `Shared scale: 0–${maximum.toLocaleString()} recorded events`));
+  return card;
+}
+
 function renderSimulationHistory(runs) {
   const root = $("#aiSimulatorHistory");
   root.replaceChildren();
+  const passed = runs.filter((run) => run.passed === true).length;
+  const overview = insightNode("div", "insight-test-overview");
+  overview.append(insightGauge({
+    title: "Test pass rate", percent: insightRate(passed, runs.length),
+    detail: runs.length ? `${passed} of ${runs.length} saved tests passed` : "Run your first test to see a result",
+    note: "Based on the latest 20 saved tests across your account. A pass means the expected result and required checks matched."
+  }));
+  overview.append(insightBars("How your tests went", "These are practice tests, not emails sent to customers.", [
+    { label: "Matched the expected result", value: passed },
+    { label: "Needs a closer look", value: runs.length - passed, tone: "amber" }
+  ], "Try a question your saved company information can answer, then one that should go to a person."));
+  root.append(overview);
   if (!runs.length) {
     const note = document.createElement("p"); note.className = "ai-empty-note";
-    note.textContent = "No simulator runs yet."; root.append(note); return;
+    note.textContent = "No saved tests yet. Your first result will appear here."; root.append(note); return;
   }
+  const history = insightNode("div", "insight-test-history");
   for (const run of runs) {
     const row = document.createElement("article"); row.className = "ai-metric-row";
     const label = document.createElement("b"); label.textContent = run.test_name;
     const result = document.createElement("span");
     result.className = run.passed ? "ai-result-pass" : "ai-result-review";
-    result.textContent = `${run.passed ? "PASS" : "CHECK"} · ${run.actual_decision === "auto_reply" ? "Verified answer" : "Human review"}`;
+    result.textContent = `${run.passed ? "Passed" : "Check result"} · ${run.actual_decision === "auto_reply" ? "Answer from saved facts" : "Asked a person"}`;
     const date = document.createElement("small"); date.textContent = displayTime(run.created_at);
-    row.append(label, result, date); root.append(row);
+    row.append(label, result, date); history.append(row);
   }
+  root.append(history);
 }
 
 function renderSimulationResult(result) {
   const root = $("#aiSimulatorResult"); root.replaceChildren();
+  const evaluation = result.evaluation;
   const heading = document.createElement("b");
-  heading.className = result.evaluation.passed ? "ai-result-pass" : "ai-result-review";
-  heading.textContent = result.evaluation.passed ? "Expected behavior matched" : "Review this test result";
+  heading.className = evaluation.passed ? "ai-result-pass" : "ai-result-review";
+  heading.textContent = evaluation.passed ? "Your test passed" : "Take a closer look at this result";
   const decision = document.createElement("p");
-  decision.textContent = `Decision: ${result.evaluation.actual === "auto_reply" ? "answer from approved information" : "human review"}. ${result.evaluation.reason || ""}`;
-  const confidence = document.createElement("p");
-  confidence.textContent = `Model confidence: ${result.evaluation.confidence == null ? "not reported" : `${Math.round(result.evaluation.confidence * 100)}%`} · ${result.evaluation.confidencePassed ? "passed threshold" : "below threshold"}.`;
-  root.append(heading, decision, confidence);
-  const note = document.createElement("small"); note.className = "ai-empty-note";
-  note.textContent = result.evaluation.modelConfidenceNote || "Confidence is a model estimate, not a calibrated probability."; root.append(note);
+  const answers = evaluation.actual === "auto_reply";
+  decision.textContent = `${answers ? "The AI would answer using your saved information." : "The AI would ask a person to help."} ${evaluation.reason || ""}`;
+  const confidence = evaluation.confidence == null ? null : insightPercent(Number(evaluation.confidence) * 100);
+  const minimum = evaluation.minimumAutoReplyConfidence == null ? null : insightPercent(Number(evaluation.minimumAutoReplyConfidence) * 100);
+  root.append(heading, decision, insightGauge({
+    title: "AI confidence", percent: confidence, threshold: minimum, tone: "blue",
+    detail: confidence == null ? "The AI did not report a confidence score" : "How sure the AI says it is",
+    note: `This does not guarantee a correct answer.${minimum == null ? "" : ` The marker shows the ${Number(minimum.toFixed(1))}% minimum for an automatic answer.`}`
+  }));
+  const checks = insightNode("ul", "insight-checks");
+  const checkRows = [
+    ["Expected result", evaluation.expected === evaluation.actual ? "Matched" : "Did not match", evaluation.expected === evaluation.actual],
+    ["Saved source checked", answers ? (evaluation.evidenceVerified ? "Verified" : "Not verified") : "Not needed for a handover", !answers || evaluation.evidenceVerified],
+    ["Confidence check", answers ? (evaluation.confidencePassed ? "Passed" : "Below the minimum") : "Not needed for a handover", !answers || evaluation.confidencePassed]
+  ];
+  for (const [label, value, passed] of checkRows) {
+    const check = insightNode("li", "");
+    check.append(insightNode("span", "", label), insightNode("b", passed ? "ai-result-pass" : "ai-result-review", value));
+    checks.append(check);
+  }
+  root.append(checks);
   if (result.answer) {
     const answer = document.createElement("p"); answer.className = "ai-simulation-answer"; answer.textContent = result.answer; root.append(answer);
   }
-  const citationsTitle = document.createElement("b"); citationsTitle.textContent = "Verified source citations"; root.append(citationsTitle);
+  const citationsTitle = document.createElement("b"); citationsTitle.textContent = "Saved information used for this answer"; root.append(citationsTitle);
   if (!result.citations || !result.citations.length) {
-    const none = document.createElement("p"); none.className = "ai-empty-note"; none.textContent = "No source citation was accepted. OpenMail requires human review."; root.append(none);
+    const none = document.createElement("p"); none.className = "ai-empty-note"; none.textContent = "No saved source was used for an automatic answer. A person needs to review this message."; root.append(none);
   } else for (const citation of result.citations) {
     const citationNode = document.createElement("blockquote");
     const source = document.createElement("b"); source.textContent = citation.title;
@@ -618,7 +737,7 @@ async function loadAIWorkflows() {
   try {
     const result = await api(`/api/ai/workflows?mailboxId=${encodeURIComponent(selectedMailbox.id)}`);
     aiWorkflows = result.workflows || [];
-    if (!aiWorkflows.length) { const note = document.createElement("p"); note.className = "ai-empty-note"; note.textContent = "No workflows are configured. Existing Phase 1 mailbox reply settings continue to apply."; root.append(note); return; }
+    if (!aiWorkflows.length) { const note = document.createElement("p"); note.className = "ai-empty-note"; note.textContent = "No mail rules yet. Your saved automatic-reply setting still applies to this mailbox."; root.append(note); return; }
     for (const workflow of aiWorkflows) {
       const row = document.createElement("article"); row.className = "ai-workflow-row";
       const details = document.createElement("div");
@@ -674,6 +793,132 @@ function setAIWorkflowFields() {
   $("#aiWorkflowRepField").hidden = !needsRepresentative;
 }
 
+function renderTrustMetrics(result, metrics) {
+  const totals = result.summary && result.summary.totals || {};
+  const correct = insightCount(totals.markedCorrect);
+  const corrections = insightCount(totals.corrections);
+  const rated = correct + corrections;
+  const cases = insightCount(totals.simulatorCases);
+  const passed = insightCount(totals.simulatorPassed);
+  const days = insightCount(result.days) || 30;
+  const scope = insightNode("p", "insight-scope", `Last ${days} days · Real saved results. Mail activity follows the selected mailbox; practice tests cover your whole account.`);
+  metrics.append(scope);
+  metrics.append(insightGauge({
+    title: "Answers marked correct", percent: insightRate(correct, rated),
+    detail: rated ? `${correct} correct out of ${rated} reviewed answers` : "No answers rated yet",
+    note: "Based only on answers you marked Correct or Needs correction. Review an answer below to add feedback."
+  }));
+  metrics.append(insightGauge({
+    title: "Test pass rate", percent: insightRate(passed, cases), tone: "blue",
+    detail: cases ? `${passed} of ${cases} practice tests passed` : "No practice tests in this period",
+    note: "Account-wide tests in this period. A pass means the expected result and required checks matched; it is not a guarantee for future emails."
+  }));
+  const snapshot = insightNode("section", "insight-card insight-snapshot");
+  snapshot.append(insightNode("h4", "insight-title", "At a glance"));
+  const stats = insightNode("dl", "insight-stats");
+  for (const [label, value] of [["Replies sent automatically", totals.automaticReplies], ["Messages needing a person", totals.escalations], ["Marked resolved by you", totals.successfulResolutions], ["Drafts made by mail rules", totals.workflowDrafts]]) {
+    const stat = insightNode("div", "");
+    stat.append(insightNode("dt", "", label), insightNode("dd", "", insightCount(value).toLocaleString()));
+    stats.append(stat);
+  }
+  snapshot.append(stats);
+  metrics.append(snapshot);
+  const comparisons = insightNode("div", "insight-comparisons");
+  comparisons.append(insightBars("Recorded outcomes", "Counts can overlap: a reply can later be corrected or marked resolved. These are not percentages of all mail.", [
+    { label: "Automatic replies", value: totals.automaticReplies },
+    { label: "Needed a person", value: totals.escalations, tone: "amber" },
+    { label: "Marked correct", value: correct },
+    { label: "Needed a correction", value: corrections, tone: "rose" },
+    { label: "Marked resolved", value: totals.successfulResolutions, tone: "blue" },
+    { label: "Drafts from mail rules", value: totals.workflowDrafts, tone: "violet" },
+    { label: "Routed by mail rules", value: totals.workflowRoutes, tone: "blue" }
+  ], "Results appear after your AI handles mail. Automatic replies stay under your existing mailbox settings."));
+  const team = result.summary && result.summary.byRepresentative || [];
+  const teamItems = team.flatMap((rep) => [
+    { label: `${rep.name} · replies`, value: rep.automaticReplies },
+    { label: `${rep.name} · needed a person`, value: rep.escalations, tone: "amber" }
+  ]);
+  comparisons.append(insightBars("Your AI team", "Compare recorded automatic replies and handovers for each team member. All bars use the same count scale.", teamItems,
+    "No team activity in this period. Assign an enabled team member to a mailbox to get started."));
+  metrics.append(comparisons);
+}
+
+function trustDecisionLabel(status) {
+  return { auto_sent: "Reply sent", human_review: "Needs a person", draft_created: "Draft ready", workflow_applied: "Mail rule applied", failed: "Could not complete", ignored: "No reply needed", processing: "In progress" }[status] || "Other decision";
+}
+
+function renderTrustRecent(items, recent) {
+  if (!items.length) {
+    recent.append(insightNode("p", "ai-empty-note", "No AI decisions in this period. When your AI handles mail, you can review its answers here."));
+    return;
+  }
+  const controls = insightNode("div", "insight-filters");
+  const searchLabel = insightNode("label", "", "Search these decisions");
+  const search = insightNode("input", "");
+  search.type = "search";
+  search.placeholder = "Search subject or reason";
+  search.maxLength = 200;
+  searchLabel.append(search);
+  const filterLabel = insightNode("label", "", "Show");
+  const filter = insightNode("select", "");
+  for (const [value, label] of [["all", "All decisions"], ...[...new Set(items.map((item) => item.status))].map((status) => [status, trustDecisionLabel(status)])]) {
+    const option = insightNode("option", "", label);
+    option.value = value;
+    filter.append(option);
+  }
+  filterLabel.append(filter);
+  controls.append(searchLabel, filterLabel);
+  const count = insightNode("p", "insight-note");
+  count.setAttribute("role", "status");
+  const rows = insightNode("div", "insight-decision-list");
+  recent.append(controls, count, rows);
+  const render = () => {
+    rows.replaceChildren();
+    const term = search.value.trim().toLocaleLowerCase();
+    const matching = items.filter((item) => (filter.value === "all" || item.status === filter.value) && `${item.subject || ""} ${item.reason || ""}`.toLocaleLowerCase().includes(term));
+    count.textContent = `${matching.length} of ${items.length} loaded decisions · latest 30 available in this period. Search and filters apply to this list only.`;
+    if (!matching.length) rows.append(insightNode("p", "ai-empty-note", "No decisions match. Clear the search or choose All decisions."));
+    for (const item of matching) {
+      const row = insightNode("article", "ai-trust-row");
+      const detail = insightNode("div", "insight-decision-copy");
+      const status = insightNode("span", `insight-status ${item.status === "auto_sent" ? "insight-status-sent" : ""}`, trustDecisionLabel(item.status));
+      const title = insightNode("b", "", item.subject || "(no subject)");
+      const summary = insightNode("small", "", `${item.reason || "No additional reason"} · ${displayTime(item.createdAt)}`);
+      detail.append(status, title, summary);
+      const feedback = insightNode("div", "ai-row-actions");
+      const existingFeedback = item.feedback && item.feedback.event_type;
+      const answerCanBeRated = ["auto_sent", "draft_created"].includes(item.status);
+      const canBeLabeled = ["human_review", "failed", "workflow_applied"].includes(item.status);
+      const choices = answerCanBeRated
+        ? [["correct", "Correct"], ["correction", "Needs correction"], ["resolved", "Resolved"], ["escalated", "Needs a person"]]
+        : canBeLabeled ? [["resolved", "Resolved"], ["escalated", "Needs a person"]] : [];
+      if (existingFeedback) {
+        const labels = { feedback_correct: "Correct", feedback_correction: "Needs correction", feedback_resolved: "Resolved", feedback_escalated: "Needs a person" };
+        feedback.append(insightNode("small", "", `You marked: ${labels[existingFeedback] || "Feedback saved"}`));
+      }
+      for (const [outcome, label] of choices) {
+        const button = insightNode("button", "quiet-button", label);
+        button.type = "button";
+        button.disabled = Boolean(existingFeedback);
+        button.setAttribute("aria-label", `${label} for ${item.subject || "this AI decision"}`);
+        button.addEventListener("click", async () => {
+          let correctionNote = "";
+          if (outcome === "correction") { correctionNote = window.prompt("What needs correcting? This note is saved only for your account.") || ""; if (!correctionNote.trim()) return; }
+          button.disabled = true;
+          try { await api("/api/ai/trust", { method: "POST", body: { messageId: item.messageId, outcome, correctionNote } }); await loadAITrust(); toast("Feedback saved."); }
+          catch (error) { toast(error.message); button.disabled = false; }
+        });
+        feedback.append(button);
+      }
+      row.append(detail, feedback);
+      rows.append(row);
+    }
+  };
+  search.addEventListener("input", render);
+  filter.addEventListener("change", render);
+  render();
+}
+
 async function loadAITrust() {
   const metrics = $("#aiTrustMetrics"); const recent = $("#aiTrustRecent");
   metrics.replaceChildren(); recent.replaceChildren();
@@ -681,48 +926,8 @@ async function loadAITrust() {
     const days = $("#aiTrustDays").value || "30";
     const query = new URLSearchParams({ days }); if (selectedMailbox) query.set("mailboxId", selectedMailbox.id);
     const result = await api(`/api/ai/trust?${query}`);
-    const totals = result.summary && result.summary.totals || {};
-    const cards = [
-      ["Automatic replies", totals.automaticReplies], ["Human handovers", totals.escalations],
-      ["Corrections", totals.corrections], ["Marked correct", totals.markedCorrect],
-      ["Resolved", totals.successfulResolutions], ["Labeled accuracy", totals.labeledAccuracy == null ? "Not enough feedback" : `${totals.labeledAccuracy}%`],
-      ["Workflow drafts", totals.workflowDrafts], ["Workflow routes", totals.workflowRoutes]
-    ];
-    for (const [label, value] of cards) { const card = document.createElement("article"); card.className = "ai-metric-card"; const b = document.createElement("b"); b.textContent = value == null ? "0" : String(value); const small = document.createElement("small"); small.textContent = label; card.append(b, small); metrics.append(card); }
-    for (const rep of result.summary && result.summary.byRepresentative || []) {
-      const card = document.createElement("article"); card.className = "ai-metric-card ai-representative-metric";
-      const b = document.createElement("b"); b.textContent = rep.name;
-      const small = document.createElement("small");
-      small.textContent = "Replies " + (rep.automaticReplies || 0) + " · handovers " + (rep.escalations || 0) + " · corrections " + (rep.corrections || 0) + " · resolved " + (rep.resolutions || 0);
-      card.append(b, small); metrics.append(card);
-    }
-    if (!result.recent || !result.recent.length) { const note = document.createElement("p"); note.className = "ai-empty-note"; note.textContent = "No AI decisions have been recorded for this period."; recent.append(note); return; }
-    for (const item of result.recent) {
-      const row = document.createElement("article"); row.className = "ai-trust-row";
-      const detail = document.createElement("div"); const title = document.createElement("b"); title.textContent = item.subject || "(no subject)";
-      const summary = document.createElement("small"); summary.textContent = `${item.status.replaceAll("_", " ")} · ${item.reason || "No additional reason"} · ${displayTime(item.createdAt)}`; detail.append(title, summary);
-      const feedback = document.createElement("div"); feedback.className = "ai-row-actions";
-      const existingFeedback = item.feedback && item.feedback.event_type;
-      const answerCanBeRated = ["auto_sent", "draft_created"].includes(item.status);
-      const canBeLabeled = item.status !== "ignored";
-      const choices = answerCanBeRated
-        ? [["correct", "Correct"], ["correction", "Correction"], ["resolved", "Resolved"], ["escalated", "Escalated"]]
-        : canBeLabeled ? [["resolved", "Resolved"], ["escalated", "Escalated"]] : [];
-      if (existingFeedback) {
-        const label = document.createElement("small");
-        label.textContent = "Owner marked: " + String(existingFeedback).replace("feedback_", "").replaceAll("_", " ");
-        feedback.append(label);
-      }
-      for (const [outcome, label] of choices) { const button = document.createElement("button"); button.type = "button"; button.className = "quiet-button"; button.textContent = label; button.disabled = Boolean(existingFeedback); button.setAttribute("aria-label", `${label} for ${item.subject || "this AI decision"}`);
-        button.addEventListener("click", async () => {
-          let correctionNote = "";
-          if (outcome === "correction") { correctionNote = window.prompt("Briefly describe the correction. This note is stored for this account.") || ""; if (!correctionNote.trim()) return; }
-          button.disabled = true;
-          try { await api("/api/ai/trust", { method: "POST", body: { messageId: item.messageId, outcome, correctionNote } }); await loadAITrust(); toast("Feedback saved."); }
-          catch (error) { toast(error.message); button.disabled = false; }
-        }); feedback.append(button); }
-      row.append(detail, feedback); recent.append(row);
-    }
+    renderTrustMetrics(result, metrics);
+    renderTrustRecent(result.recent || [], recent);
   } catch (error) { const note = document.createElement("p"); note.className = "ai-empty-note error"; note.textContent = error.message; metrics.append(note); }
 }
 
@@ -900,6 +1105,13 @@ $("#aiBackToInbox").addEventListener("click", () => {
 });
 
 document.querySelectorAll("[data-ai-tab]").forEach((button) => button.addEventListener("click", () => setAIView(button.dataset.aiTab)));
+document.querySelectorAll("[data-ai-open]").forEach((link) => link.addEventListener("click", (event) => {
+  event.preventDefault();
+  setAIView(link.dataset.aiOpen);
+  const tab = document.querySelector(`[data-ai-tab="${link.dataset.aiOpen}"]`);
+  tab.focus({ preventScroll: true });
+  $("#aiToolsTitle").scrollIntoView({ block: "start", behavior: "instant" });
+}));
 
 $("#saveMailboxRepresentative").addEventListener("click", async () => {
   if (!selectedMailbox) return toast("Choose a mailbox first.");
@@ -1218,7 +1430,7 @@ async function loadMessages() {
     categoryCounts.spam = currentMessages.length;
   }
   $("#currentMailboxHeading").textContent = selectedMailbox.address.toUpperCase();
-  const viewLabels = { inbox: "All mail", ...inboxCategoryNames, sent: "Sent", ai_sent: "AI Sent", needs_review: "Needs human", archive: "Archive", spam: "Spam", trash: "Trash", starred: "Starred", drafts: "Drafts" };
+  const viewLabels = { inbox: "All mail", ...inboxCategoryNames, sent: "Sent", ai_sent: "AI replies", needs_review: "Needs your help", archive: "Archive", spam: "Spam", trash: "Trash", starred: "Starred", drafts: "Drafts" };
   $("#currentViewHeading").textContent = viewLabels[selectedView] || "All mail";
   renderCategoryCounts();
   renderMessages();
@@ -1291,7 +1503,7 @@ function renderMessages() {
       : message.folder === "archive" ? "Archive"
       : message.folder === "trash" ? "Trash"
       : message.ai_auto_sent && message.status === "sent" ? "AI Sent"
-      : message.ai_handoff_status === "pending" ? "Needs human"
+      : message.ai_handoff_status === "pending" ? "Needs your help"
       : selectedView === "sent" ? "Sent"
       : inboxCategoryNames[categorizeMessage(message)] || "Inbox";
     senderWrap.append(senderName, category);
@@ -1582,6 +1794,9 @@ document.querySelectorAll(".mail-side-link[data-view], .mail-tab[data-view], .mo
   $("#mobileMailNav").hidden = false;
   messageDetail.hidden = true;
   inboxPane.hidden = false;
+  $("#composeButton").disabled = !selectedMailbox || !systemStatus.mailReady;
+  $("#headingCompose").disabled = !selectedMailbox || !systemStatus.mailReady;
+  $("#mobileComposeButton").disabled = !selectedMailbox || !systemStatus.mailReady;
   loadMessages().catch((error) => toast(error.message));
 }));
 

@@ -556,6 +556,226 @@ main {
   line-height: 1.9;
   margin-bottom: 6px;
 }
+.hero-description strong {
+  color: #d3e8df;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.address-section .section-heading h2 {
+  font-size: clamp(36px, 3.8vw, 58px);
+}
+.address-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  border: 1px solid #31473f;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0b1411;
+}
+.address-builder {
+  padding: 32px;
+  min-width: 0;
+  background: radial-gradient(ellipse at 0% 100%, #25504033, transparent 65%);
+}
+.address-builder > .panel-ruler {
+  margin-bottom: 44px;
+}
+.address-label {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 15px;
+  color: #d6e6df;
+}
+.address-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 1px solid #58796a;
+  border-radius: 5px;
+  background: #09110e;
+  min-width: 0;
+  overflow: hidden;
+}
+.address-input-wrap:focus-within {
+  outline: 2px solid var(--mint);
+  outline-offset: 4px;
+}
+.address-input-wrap.has-error {
+  border-color: #d3a16e;
+}
+.address-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  color: #d7faeb;
+  font-size: 22px;
+  border: 0;
+  padding: 20px;
+  outline: none;
+}
+.address-input-wrap input:focus-visible {
+  outline: none;
+}
+.address-input-wrap input::placeholder {
+  color: #839b8f;
+}
+.address-input-wrap > span {
+  flex-shrink: 0;
+  font-size: 17px;
+  color: #9ab2a5;
+  padding-right: 20px;
+}
+.address-help {
+  margin-top: 13px;
+  font-size: 11px;
+  line-height: 1.8;
+  color: #99afa3;
+  max-width: 490px;
+}
+.address-examples {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 27px 0 33px;
+}
+.address-examples button {
+  border: 1px solid #324b3d;
+  border-radius: 4px;
+  background: #101e17;
+  text-align: left;
+  padding: 15px 17px;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.address-examples button:hover {
+  border-color: #7fab95;
+  background: #1d3326;
+}
+.address-examples button[aria-pressed="true"] {
+  background: #203c2d;
+  border-color: #92c3a9;
+}
+.address-examples button > span {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: #d0e9db;
+  font-size: 14px;
+}
+.address-examples small {
+  display: block;
+  color: #9eb5a7;
+  font-size: 10px;
+  margin-top: 7px;
+}
+.address-preview {
+  border: 1px solid #416a54;
+  border-radius: 5px;
+  padding: 24px 20px;
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  background: linear-gradient(110deg, #193c29, #11251b);
+}
+.address-preview-icon {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid #689978;
+  border-radius: 9px;
+  color: var(--mint);
+  background: #173522;
+}
+.address-preview > div:last-child {
+  min-width: 0;
+}
+.address-preview .mono {
+  display: block;
+  color: #a8ccb6;
+  font-size: 8px;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.address-preview output {
+  display: block;
+  font-size: clamp(16px, 1.7vw, 24px);
+  line-height: 1.6;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+  color: #9fbeab;
+}
+.address-preview output strong {
+  font-weight: 500;
+  color: #dafbe5;
+}
+.address-feedback {
+  font-size: 11px;
+  line-height: 1.8;
+  min-height: 40px;
+  margin-top: 13px;
+  color: #b4c8bc;
+}
+.address-builder:has(.has-error) .address-feedback {
+  color: #e8c49e;
+}
+.address-guide {
+  border-left: 1px solid #31473f;
+  padding: 34px 36px;
+  background: #0d1813;
+}
+.address-guide h3 {
+  font-size: clamp(26px, 2.7vw, 39px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  margin: 12px 0 20px;
+}
+.address-guide > p {
+  font-size: 13px;
+  color: #a2b9aa;
+  line-height: 1.9;
+}
+.address-steps {
+  list-style: none;
+  padding: 0;
+  margin: 30px 0;
+}
+.address-steps li {
+  display: flex;
+  gap: 16px;
+  margin: 0 0 22px;
+}
+.address-steps li > span {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  flex-shrink: 0;
+  border: 1px solid #395d47;
+  border-radius: 50%;
+  color: #b1d1bc;
+  font-size: 9px;
+}
+.address-steps h4 {
+  margin: 3px 0 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #d0e3d6;
+}
+.address-steps p {
+  font-size: 12px;
+  color: #a2b9aa;
+  line-height: 1.8;
+}
+.address-guide > .address-limit {
+  margin-top: 17px;
+  font-size: 11px;
+  color: #99b0a1;
+  line-height: 1.8;
+}
 .journey-layout {
   display: grid;
   grid-template-columns: 0.8fr 1fr;

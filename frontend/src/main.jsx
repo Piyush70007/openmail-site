@@ -35,27 +35,27 @@ import "./landing.css";
 
 const stages = [
   {
-    title: "It starts with your address.",
+    title: "A message finds your inbox.",
     short: "Receive",
-    text: "A customer writes to your domain. Their message arrives in the right mailbox, ready for you or your representative.",
+    text: "Someone writes to support@yourdomain.com. Their email arrives in that inbox, ready for you or your AI helper.",
     icon: Inbox,
   },
   {
-    title: "Context before a response.",
+    title: "Your AI checks what you shared.",
     short: "Understand",
-    text: "Company facts, FAQs and extracted document text give your representative something concrete to work with.",
+    text: "Share your services, prices and answers to common questions. Your AI uses that information to help with incoming mail.",
     icon: BookOpen,
   },
   {
-    title: "An answer with a source.",
+    title: "Simple questions get a reply.",
     short: "Respond",
-    text: "Routine questions can get a source-backed reply when you enable automation. You can also keep responses as editable drafts.",
+    text: "Turn on automatic replies for questions your saved information can answer. Or keep the AI reply as a draft to check and send yourself.",
     icon: Sparkles,
   },
   {
-    title: "Knowing when to step back.",
+    title: "You take over when it matters.",
     short: "Hand over",
-    text: "Sensitive requests and questions without supporting knowledge come back to a person. Every handover stays visible.",
+    text: "Requests that need your judgment, or an answer the AI cannot find, are set aside for you to review.",
     icon: ShieldCheck,
   },
 ];
@@ -94,10 +94,10 @@ function SignalVisual({ paused }) {
   return (
     <div
       className={`signal-visual ${paused ? "motion-paused" : ""}`}
-      aria-label="Illustration of an incoming message becoming a source-backed reply"
+      aria-label="Example of an AI reply using information you provided"
     >
       <div className="signal-grid" aria-hidden="true" />
-      <div className="signal-coordinate mono">MESSAGE PATH / ILLUSTRATION</div>
+      <div className="signal-coordinate mono">ONE EMAIL / AN EXAMPLE</div>
       <svg
         className="signal-orbit"
         viewBox="0 0 600 590"
@@ -179,7 +179,7 @@ function SignalVisual({ paused }) {
       <div className="signal-card signal-knowledge">
         <FileText size={16} />
         <div>
-          <span className="mono">KNOWLEDGE MATCH</span>
+          <span className="mono">FOUND IN YOUR GUIDE</span>
           <b>Service guide · section 02</b>
         </div>
         <Check size={14} />
@@ -187,7 +187,7 @@ function SignalVisual({ paused }) {
       <div className="signal-card signal-answer">
         <div className="answer-top">
           <Sparkles size={16} />
-          <span className="mono">SOURCE-BACKED REPLY</span>
+          <span className="mono">ANSWER FROM YOUR GUIDE</span>
           <span className="signal-tag">READY</span>
         </div>
         <p>
@@ -203,11 +203,181 @@ function SignalVisual({ paused }) {
       </div>
       <div className="signal-bottom mono">
         <span>
-          <i className="tiny-dot" /> CONTEXT → RESPONSE
+          <i className="tiny-dot" /> YOUR INFORMATION → A REPLY
         </span>
-        <span>HUMAN CONTROL / ALWAYS</span>
+        <span>YOU STAY IN CHARGE</span>
       </div>
     </div>
+  );
+}
+
+const addressExamples = [
+  { name: "support", purpose: "Help & questions" },
+  { name: "sales", purpose: "New business" },
+  { name: "contact", purpose: "A simple hello" },
+  { name: "yourname", purpose: "Your own name" },
+];
+
+function AddressBuilder() {
+  const [name, setName] = useState("support");
+  const addressName = name.trim().toLowerCase();
+  // Match the real mailbox endpoint. This preview only renders text locally.
+  const valid =
+    /^[a-z0-9](?:[a-z0-9._+-]{0,62}[a-z0-9])?$/.test(addressName) &&
+    !addressName.includes("..");
+  const invalid = addressName.length > 0 && !valid;
+
+  return (
+    <section
+      className="address-section section-space"
+      id="your-address"
+      aria-labelledby="address-title"
+    >
+      <Reveal className="section-heading">
+        <div>
+          <p className="eyebrow">
+            <span className="tiny-dot" /> 01 / MAKE IT YOURS
+          </p>
+          <h2 id="address-title">
+            Your domain.
+            <br />
+            <span>Choose the name before @.</span>
+          </h2>
+        </div>
+        <p>
+          For your business, your projects or just you.
+          <br />
+          Try an address below. No signup needed to explore.
+        </p>
+      </Reveal>
+      <Reveal className="address-workspace">
+        <div className="address-builder">
+          <div className="panel-ruler mono">
+            <span>YOUR NEXT EMAIL ADDRESS</span>
+            <Mail size={16} aria-hidden="true" />
+          </div>
+          <label className="address-label" htmlFor="address-name">
+            What would you like before the @?
+          </label>
+          <div className={`address-input-wrap ${invalid ? "has-error" : ""}`}>
+            <input
+              id="address-name"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              maxLength={64}
+              autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-describedby={
+                invalid ? "address-help address-error" : "address-help"
+              }
+              aria-invalid={invalid}
+              placeholder="yourname"
+            />
+            <span aria-hidden="true">@yourdomain.com</span>
+          </div>
+          <p className="address-help" id="address-help">
+            Choose 1–64 letters or numbers. Dots, +, _ and - can go in the
+            middle. Start and end with a letter or number; use no spaces or
+            double dots.
+          </p>
+          <div className="address-examples" aria-label="Try an example name">
+            {addressExamples.map((example) => (
+              <button
+                type="button"
+                key={example.name}
+                onClick={() => setName(example.name)}
+                aria-pressed={addressName === example.name}
+              >
+                <span>
+                  {example.name}
+                  <ArrowUpRight size={13} aria-hidden="true" />
+                </span>
+                <small>{example.purpose}</small>
+              </button>
+            ))}
+          </div>
+          <div className="address-preview">
+            <div className="address-preview-icon" aria-hidden="true">
+              <Inbox size={23} />
+            </div>
+            <div>
+              <span className="mono">
+                {valid
+                  ? "THIS COULD BE YOURS"
+                  : "YOUR ADDRESS WILL LOOK LIKE THIS"}
+              </span>
+              <output
+                htmlFor="address-name"
+                aria-live="polite"
+                aria-label="Example email address"
+              >
+                <strong>{valid ? addressName : "yourname"}</strong>
+                <span>@yourdomain.com</span>
+              </output>
+            </div>
+          </div>
+          <p className="address-feedback" id="address-error" role="status">
+            {invalid
+              ? "That name needs a small change. Follow the naming guide above to see your address."
+              : "Just a preview. Nothing is created, saved or sent."}
+          </p>
+        </div>
+        <div className="address-guide">
+          <span className="outlined-label mono">
+            ONE DOMAIN / SEPARATE INBOXES
+          </span>
+          <h3>
+            A name for every
+            <br />
+            kind of conversation.
+          </h3>
+          <p>
+            Create support@, sales@, contact@ or your own name on a domain you
+            own. Each address gets its own inbox inside your OpenMail account.
+          </p>
+          <ol className="address-steps">
+            <li>
+              <span className="mono">01</span>
+              <div>
+                <h4>Connect your domain</h4>
+                <p>Use a domain you own, such as yourdomain.com.</p>
+              </div>
+            </li>
+            <li>
+              <span className="mono">02</span>
+              <div>
+                <h4>Add its email settings</h4>
+                <p>
+                  OpenMail shows the records to add at your domain provider,
+                  then checks them.
+                </p>
+              </div>
+            </li>
+            <li>
+              <span className="mono">03</span>
+              <div>
+                <h4>Choose a name and start</h4>
+                <p>
+                  Once the domain is verified, create an available address and
+                  use its inbox.
+                </p>
+              </div>
+            </li>
+          </ol>
+          <a className="om-button solid" href="/app.html">
+            Set up a real address
+            <ArrowUpRight size={17} />
+          </a>
+          <p className="address-limit">
+            Add up to 20 new addresses per account each day. These are separate
+            inboxes, not forwarding aliases.
+          </p>
+        </div>
+      </Reveal>
+    </section>
   );
 }
 
@@ -249,7 +419,7 @@ function JourneyPanel({ step, onStep }) {
           <div className="scene-title">
             <Icon size={19} />
             <span>{stages[step].short}</span>
-            <span className="mono">SAMPLE SCENARIO</span>
+            <span className="mono">AN EXAMPLE</span>
           </div>
           {step === 0 && (
             <>
@@ -286,14 +456,16 @@ function JourneyPanel({ step, onStep }) {
                 <div>
                   <FileText size={20} />
                   <span>
-                    Service guide.pdf<small>Extracted document text</small>
+                    Service guide.pdf
+                    <small>Information from your document</small>
                   </span>
                   <Check size={15} />
                 </div>
                 <div>
                   <BookOpen size={20} />
                   <span>
-                    Company profile<small>Services, tone and boundaries</small>
+                    About your business
+                    <small>What you do and how you help</small>
                   </span>
                   <Check size={15} />
                 </div>
@@ -301,7 +473,7 @@ function JourneyPanel({ step, onStep }) {
                   <FileText size={20} />
                   <span>
                     Frequently asked questions
-                    <small>Approved knowledge note</small>
+                    <small>Answers you have saved</small>
                   </span>
                   <Check size={15} />
                 </div>
@@ -315,12 +487,12 @@ function JourneyPanel({ step, onStep }) {
           {step === 2 && (
             <>
               <span className="scene-badge">
-                <Sparkles size={13} /> Reply with supporting evidence
+                <Sparkles size={13} /> An answer from your own guide
               </span>
               <h3>
                 Useful. Specific.
                 <br />
-                Grounded in your words.
+                Based on your words.
               </h3>
               <div className="reply-paper">
                 <p>
@@ -333,14 +505,14 @@ function JourneyPanel({ step, onStep }) {
                 </span>
               </div>
               <div className="scene-foot">
-                <Check size={14} /> Automatic replies require mailbox opt-in
+                <Check size={14} /> Sent automatically only when you turn it on
               </div>
             </>
           )}
           {step === 3 && (
             <>
               <span className="scene-badge amber">
-                <Users size={13} /> Human review
+                <Users size={13} /> Needs your help
               </span>
               <h3>
                 Some decisions
@@ -353,10 +525,10 @@ function JourneyPanel({ step, onStep }) {
               <div className="review-reason">
                 <ShieldCheck size={20} />
                 <div>
-                  <b>A sensitive financial request.</b>
+                  <b>A decision for you to make.</b>
                   <p>
-                    The representative hands it over for human review. No
-                    automatic reply is sent.
+                    Your AI leaves this message for you to review. It does not
+                    send a reply on its own.
                   </p>
                 </div>
               </div>
@@ -368,7 +540,7 @@ function JourneyPanel({ step, onStep }) {
         </motion.div>
       </AnimatePresence>
       <div className="journey-panel-bottom mono">
-        <span>FICTIONAL COMPANY / ILLUSTRATIVE FLOW</span>
+        <span>EXAMPLE COMPANY / SAMPLE MESSAGES</span>
         <span>OM—02</span>
       </div>
     </div>
@@ -394,18 +566,18 @@ function Journey() {
       <Reveal className="section-heading">
         <div>
           <p className="eyebrow">
-            <span className="tiny-dot" /> 01 / THE MESSAGE JOURNEY
+            <span className="tiny-dot" /> 02 / MEET YOUR AI HELPER
           </p>
           <h2 id="journey-title">
-            A little more intelligence.
+            Your inbox gets a hand.
             <br />
-            <span>A lot more space.</span>
+            <span>You keep the final say.</span>
           </h2>
         </div>
         <p>
-          From the first hello to the next step.
+          Here is how a simple question gets answered.
           <br />
-          See what happens behind your inbox.
+          You choose when your AI can reply for you.
         </p>
       </Reveal>
       <div className="journey-layout" ref={ref}>
@@ -444,34 +616,34 @@ function SystemSection() {
       <Reveal className="section-heading">
         <div>
           <p className="eyebrow">
-            <span className="tiny-dot" /> 03 / BUILT TO WORK TOGETHER
+            <span className="tiny-dot" /> 04 / A LITTLE HELP WITH YOUR MAIL
           </p>
           <h2 id="system-title">
-            One inbox.
+            Less busywork.
             <br />
-            <span>A considered system.</span>
+            <span>More time for you.</span>
           </h2>
         </div>
         <p>
-          Five connected tools around your mail.
+          Give your AI the details. Try it out.
           <br />
-          Each with a clear role. Each under your control.
+          Decide what it can do, and see how it is doing.
         </p>
       </Reveal>
       <div className="capability-grid">
         <Reveal className="capability capability-main">
           <div className="panel-ruler mono">
-            <span>01 / REPRESENTATIVES</span>
+            <span>01 / YOUR AI TEAM</span>
             <Users size={16} />
           </div>
           <h3>
-            The right context.
+            Different questions.
             <br />
-            For the right conversation.
+            The right helper.
           </h3>
           <p>
-            Separate support, sales, billing and careers. Give each role
-            relevant knowledge and decide where it can help.
+            Set up AI helpers for support, sales, billing and careers. Choose
+            which information each one can use to answer questions.
           </p>
           <div className="role-network">
             <div className="role-core">
@@ -485,12 +657,12 @@ function SystemSection() {
             ))}
           </div>
           <span className="mono capability-bottom">
-            FOUR ROLES / SHARED OVERSIGHT
+            FOUR HELPERS / YOU ARE IN CHARGE
           </span>
         </Reveal>
         <Reveal className="capability">
           <div className="panel-ruler mono">
-            <span>02 / KNOWLEDGE</span>
+            <span>02 / WHAT YOUR AI KNOWS</span>
             <BookOpen size={16} />
           </div>
           <h3>
@@ -499,8 +671,8 @@ function SystemSection() {
             In its own words.
           </h3>
           <p>
-            Add company facts, notes and document text. Replies can point back
-            to the sources you supplied.
+            Add your services, prices, FAQs and documents. Your AI can use this
+            information and show you where an answer came from.
           </p>
           <div className="file-types mono">
             {["PDF", "DOCX", "TXT", "MD", "CSV"].map((x) => (
@@ -508,12 +680,12 @@ function SystemSection() {
             ))}
           </div>
           <span className="mono capability-bottom">
-            TEXT EXTRACTION / NO MODEL TRAINING
+            YOUR SAVED INFORMATION / READY TO USE
           </span>
         </Reveal>
         <Reveal className="capability">
           <div className="panel-ruler mono">
-            <span>03 / TRAINING SIMULATOR</span>
+            <span>03 / TEST YOUR AI</span>
             <Sparkles size={16} />
           </div>
           <h3>
@@ -522,32 +694,31 @@ function SystemSection() {
             questions first.
           </h3>
           <p>
-            Try sample emails, inspect source quotes and review confidence
-            before you turn on automatic replies.
+            Try a sample email before switching on automatic replies. Check its
+            answer, the information it used and whether it needs your help.
           </p>
           <div className="test-lines">
             <span>
-              <i />
-              Routine enquiry<b>REPLY</b>
+              <i />A simple question<b>REPLY</b>
             </span>
             <span>
               <i />
-              Unsupported request<b>REVIEW</b>
+              Missing information<b>ASK YOU</b>
             </span>
           </div>
           <span className="mono capability-bottom">
-            EVALUATION / NO EMAIL SENT
+            PRACTICE FIRST / NO EMAIL SENT
           </span>
         </Reveal>
         <Reveal className="capability capability-workflow">
           <div className="panel-ruler mono">
-            <span>04 / WORKFLOWS</span>
+            <span>04 / MAIL RULES</span>
             <GitBranch size={16} />
           </div>
-          <h3>A path for the repeatable parts.</h3>
+          <h3>You decide what happens next.</h3>
           <p>
-            Set mail rules to route, prepare a draft, send a verified reply or
-            request human review.
+            Make rules for incoming mail: choose an AI helper, prepare a draft,
+            reply using checked information or leave the message for you.
           </p>
           <div className="workflow-mini">
             <span>
@@ -562,24 +733,25 @@ function SystemSection() {
             <ArrowRight size={15} />
             <span>
               <ShieldCheck size={17} />
-              Approved action
+              Next step
             </span>
           </div>
-          <span className="mono capability-bottom">BUILT-IN MAIL ACTIONS</span>
+          <span className="mono capability-bottom">YOUR MAIL / YOUR RULES</span>
         </Reveal>
         <Reveal className="capability capability-trust">
           <div className="panel-ruler mono">
-            <span>05 / TRUST DASHBOARD</span>
+            <span>05 / RESULTS</span>
             <ShieldCheck size={16} />
           </div>
           <h3>
             See what happened.
             <br />
-            Make the next answer better.
+            Keep improving your setup.
           </h3>
           <p>
-            Review replies and handovers. Record corrections, resolutions and
-            feedback in one place.
+            See what your AI answered and what it left for you. Mark helpful
+            replies, record corrections and keep track of questions you
+            resolved.
           </p>
           <div className="trust-visual" aria-hidden="true">
             {[26, 42, 36, 60, 48, 72, 66, 85, 77, 94, 83, 99].map((x, i) => (
@@ -587,7 +759,7 @@ function SystemSection() {
             ))}
           </div>
           <span className="mono capability-bottom">
-            VISIBLE DECISIONS / OWNER FEEDBACK
+            SEE THE REPLIES / ADD YOUR FEEDBACK
           </span>
         </Reveal>
       </div>
@@ -597,28 +769,40 @@ function SystemSection() {
 
 const faqs = [
   [
+    "Can I choose any name for my email address?",
+    "Yes—choose an available, valid name before @ on a domain you own. For example, support@yourdomain.com, sales@yourdomain.com, contact@yourdomain.com or yourname@yourdomain.com. Names can use 1–64 letters, numbers, dots, plus signs, underscores or hyphens. Start and end with a letter or number, and avoid spaces or double dots.",
+  ],
+  [
     "Do I need my own domain?",
-    "Yes. Connect a domain you control and verify its email DNS records before creating addresses. Changing MX records can move incoming mail away from an existing provider, so a separate subdomain is a good way to try OpenMail first.",
+    "Yes. Your domain is the part after @, such as yourdomain.com. OpenMail shows the email settings to add in your domain provider’s account, then checks them. These settings are called DNS records. Changing where mail is delivered can affect an existing email service. To try OpenMail separately, you can use a subdomain such as mail.yourdomain.com first.",
+  ],
+  [
+    "Are these separate inboxes or forwarding aliases?",
+    "Each address you create has its own inbox in your OpenMail account. You switch between them in the app. They are not forwarding aliases that send everything to another email address, and they do not create separate user accounts for teammates.",
+  ],
+  [
+    "How many addresses can I create?",
+    "You can create up to 20 new addresses per account each day. OpenMail currently has no fixed total-address cap, but email, storage and AI usage limits still apply. It is not an unlimited email service.",
   ],
   [
     "Will the AI send email without me?",
-    "Only when you explicitly enable automatic replies for a mailbox. Eligible incoming mail is processed on the server, even with the browser closed. Source checks, sensitive-request rules, quotas and sender cooldowns still apply. You can keep automation off and work with editable drafts instead.",
+    "Only after you turn on automatic replies for that inbox. It can answer supported questions even when your browser is closed. It checks your saved information, leaves sensitive or unsupported requests for you, and limits how often it replies. You can leave automatic replies off and review AI drafts yourself instead.",
   ],
   [
-    "What data goes to the AI provider?",
-    "For enabled AI processing, relevant email text and saved company knowledge are sent to the configured provider, currently Groq. Document text is extracted in the browser; original document files are not uploaded by that feature. Do not add information you do not want processed.",
+    "What does the AI see?",
+    "When you use AI, the relevant email text and saved business information are sent to our AI provider, currently Groq, to prepare an answer. When you add a document, the app reads its text in your browser and saves that text; this feature does not upload the original file. Only add information you are comfortable having processed this way.",
   ],
   [
     "Is the preview connected to my account?",
-    "No. The interactive preview uses fictional Northline Studio messages and fixed illustrative AI results. It sends no email, calls no AI model and does not read your mailbox. Open the mailbox app to use your real account.",
+    "No. The address builder and app tour use examples only. The tour shows sample Northline Studio messages and prepared AI answers. It sends no email, calls no AI service and does not read your inbox. Open the mailbox app to set up real addresses and use your account.",
   ],
   [
-    "Is OpenMail unlimited or fully self-hosted?",
-    "No. The current hosted service relies on email, database and AI providers, and their usage limits apply. The application source is on GitHub. Running your own deployment still requires configured services and a verified domain.",
+    "Can I run my own copy of OpenMail?",
+    "The code is available on GitHub. Running your own copy still needs hosting, a database, email and AI services, plus a domain you own. Those services have their own setup requirements and usage limits.",
   ],
   [
     "What should I know before using it?",
-    "AI can make mistakes. Confidence is a model signal, not a guarantee. Review your knowledge, test representative scenarios and check the trust dashboard. External business-tool integrations and email attachment sending are not available in the current app.",
+    "AI can make mistakes, even when it sounds sure. Keep your saved information accurate, try sample questions and review its replies. The app does not currently send email attachments or connect mail rules to outside business tools. Adding documents for your AI is a separate feature.",
   ],
 ];
 
@@ -690,14 +874,14 @@ function Landing() {
           className={menu ? "om-nav is-open" : "om-nav"}
           aria-label="Main navigation"
         >
-          <a href="#how-it-works" onClick={() => setMenu(false)}>
-            How it works
+          <a href="#your-address" onClick={() => setMenu(false)}>
+            Your email address
           </a>
           <a href="#preview" onClick={() => setMenu(false)}>
-            Explore the app
+            Try the app
           </a>
           <a href="#system" onClick={() => setMenu(false)}>
-            The system
+            Your AI helper
           </a>
           <a
             href="https://github.com/Piyush70007/openmail-site"
@@ -729,60 +913,68 @@ function Landing() {
           <div className="hero-main">
             <div className="hero-copy">
               <p className="eyebrow">
-                <span className="tiny-dot" /> CUSTOM-DOMAIN EMAIL. CONSIDERED
-                AI.
+                <span className="tiny-dot" /> YOUR OWN EMAIL. AI WHEN YOU WANT
+                IT.
               </p>
               <h1 id="hero-title">
-                Your inbox,
+                Your email.
                 <br />
-                with a mind
+                Your name.
                 <br />
-                <span>of its own.</span>
+                <span>AI on hand.</span>
               </h1>
               <p className="hero-description">
-                Your address. Your knowledge. A representative that handles the
-                routine—and knows when to hand over.
+                Create <strong>support@yourdomain.com</strong>, sales@ or an
+                address with your own name. Keep each inbox separate, with AI
+                replies when you choose.
               </p>
               <div className="hero-actions">
                 <a className="om-button solid" href="/app.html">
-                  {signedIn
-                    ? "Back to your mailbox"
-                    : "Make room for better mail"}
+                  {signedIn ? "Back to your mailbox" : "Set up your email"}
                   <ArrowUpRight size={18} />
                 </a>
-                <a className="om-button text-button" href="#preview">
-                  Take a look inside
+                <a className="om-button text-button" href="#your-address">
+                  Try your address
                   <ArrowDownRight size={17} />
                 </a>
               </div>
               <span className="hero-note mono">
-                YOUR DOMAIN / YOUR DECISIONS
+                CHOOSE THE NAME / BRING YOUR DOMAIN
               </span>
             </div>
             <div className="hero-visual-wrap">
               <SignalVisual paused={paused || reduce} />
               <button
                 className="motion-toggle"
+                disabled={reduce}
                 onClick={() => setPaused(!paused)}
                 aria-label={
-                  paused ? "Play ambient animation" : "Pause ambient animation"
+                  reduce
+                    ? "Animation is off to match your device settings"
+                    : paused
+                      ? "Play ambient animation"
+                      : "Pause ambient animation"
                 }
               >
-                {paused ? <Play size={12} /> : <Pause size={12} />}
+                {paused && !reduce ? <Play size={12} /> : <Pause size={12} />}
                 <span className="mono">
-                  {paused ? "PLAY MOTION" : "PAUSE MOTION"}
+                  {reduce
+                    ? "MOTION OFF"
+                    : paused
+                      ? "PLAY MOTION"
+                      : "PAUSE MOTION"}
                 </span>
               </button>
             </div>
           </div>
           <div className="hero-bottom mono">
             <span>
-              <span className="tiny-dot" /> BUILT AROUND THE MESSAGE
+              <span className="tiny-dot" /> EMAIL THAT FEELS LIKE YOURS
             </span>
             <span className="hero-bottom-center">
-              RECEIVE <i>→</i> UNDERSTAND <i>→</i> RESPOND
+              YOUR NAME <i>→</i> YOUR DOMAIN <i>→</i> YOUR INBOX
             </span>
-            <a href="#how-it-works">
+            <a href="#your-address">
               SCROLL TO EXPLORE <ArrowDown size={14} />
             </a>
           </div>
@@ -793,12 +985,13 @@ function Landing() {
             <br />
             <span>Help that knows your business.</span>
           </p>
-          <span>Custom-domain inboxes</span>
+          <span>Email with your own name</span>
           <i />
-          <span>Knowledge-backed replies</span>
+          <span>AI that uses your information</span>
           <i />
-          <span>Human handover</span>
+          <span>You stay in control</span>
         </div>
+        <AddressBuilder />
         <Journey />
         <section
           className="preview-section section-space"
@@ -808,22 +1001,20 @@ function Landing() {
           <Reveal className="section-heading">
             <div>
               <p className="eyebrow">
-                <span className="tiny-dot" /> 02 / LOOK INSIDE
+                <span className="tiny-dot" /> 03 / TAKE A LOOK INSIDE
               </p>
               <h2 id="preview-title">
-                Less imagining.
+                A little less reading.
                 <br />
-                <span>More exploring.</span>
+                <span>A little more trying.</span>
               </h2>
             </div>
             <div className="preview-intro">
-              <span className="outlined-label mono">
-                INTERACTIVE PRODUCT PREVIEW
-              </span>
+              <span className="outlined-label mono">TRY IT / SAMPLE INBOX</span>
               <p>
-                Open a message. Inspect a reply. Try a scenario.
+                Open an email. See an AI reply. Try a question.
                 <br />
-                Meet the tools that are now in OpenMail.
+                Get a feel for OpenMail before you sign up.
               </p>
             </div>
           </Reveal>
@@ -832,9 +1023,9 @@ function Landing() {
           </PreviewBoundary>
           <div className="preview-caption">
             <p>
-              Fictional company. Sample messages. No email is sent.
+              Example company. Sample messages. No email is sent.
               <br />
-              The real app uses your account, domain and configured services.
+              To use real email, open the app and connect your own domain.
             </p>
             <a href="/app.html">
               Open the real mailbox <ArrowUpRight size={16} />
@@ -849,7 +1040,7 @@ function Landing() {
         >
           <Reveal className="faq-heading">
             <p className="eyebrow">
-              <span className="tiny-dot" /> 04 / A FEW USEFUL DETAILS
+              <span className="tiny-dot" /> 05 / GOOD TO KNOW
             </p>
             <h2 id="faq-title">
               Clear from
@@ -857,9 +1048,9 @@ function Landing() {
               <span>the beginning.</span>
             </h2>
             <p>
-              What it does. What it needs.
+              A few answers before you start.
               <br />
-              What stays in your hands.
+              No technical background needed to explore.
             </p>
             <a
               className="source-link"
@@ -867,7 +1058,8 @@ function Landing() {
               target="_blank"
               rel="noreferrer"
             >
-              <CodeXml size={17} /> Explore the source <ArrowUpRight size={15} />
+              <CodeXml size={17} /> Explore the source{" "}
+              <ArrowUpRight size={15} />
             </a>
           </Reveal>
           <div className="faq-list">
@@ -885,18 +1077,18 @@ function Landing() {
         </section>
         <Reveal className="closing-panel">
           <p className="eyebrow">
-            <span className="tiny-dot" /> OPENMAIL / ROOM TO THINK
+            <span className="tiny-dot" /> OPENMAIL / YOUR NEXT ADDRESS
           </p>
           <h2>
-            Let the routine flow.
+            Make it your address.
             <br />
-            <span>Keep the human part.</span>
+            <span>Make room for you.</span>
           </h2>
           <div>
             <p>
               Start with your domain.
               <br />
-              Build from what you know.
+              Choose a name. Let your inbox help.
             </p>
             <a className="om-button solid" href="/app.html">
               {appLabel}
@@ -912,7 +1104,7 @@ function Landing() {
       </main>
       <footer className="om-footer">
         <Brand footer />
-        <span className="mono">DOMAIN MAIL / HUMAN OVERSIGHT</span>
+        <span className="mono">YOUR EMAIL / YOUR CHOICE</span>
         <a href="#top">
           Back to top <ArrowUpRight size={14} />
         </a>

@@ -35,12 +35,12 @@ import "./demo.css";
 
 const VIEWS = [
   { id: "inbox", title: "Inbox", icon: Mail },
-  { id: "representative", title: "AI representative", icon: Bot },
-  { id: "knowledge", title: "Company knowledge", icon: BookOpen },
-  { id: "training", title: "Training simulator", icon: FlaskConical },
-  { id: "team", title: "Representatives", icon: UsersRound },
-  { id: "workflows", title: "Workflows", icon: GitBranch },
-  { id: "trust", title: "Trust dashboard", icon: ShieldCheck },
+  { id: "representative", title: "AI replies", icon: Bot },
+  { id: "knowledge", title: "What your AI knows", icon: BookOpen },
+  { id: "training", title: "Test your AI", icon: FlaskConical },
+  { id: "team", title: "Your AI team", icon: UsersRound },
+  { id: "workflows", title: "Mail rules", icon: GitBranch },
+  { id: "trust", title: "Results", icon: ShieldCheck },
 ];
 const CATEGORIES = [
   ["all", "All mail"],
@@ -68,6 +68,89 @@ function Avatar({ initials, color = "mint", size = "" }) {
     >
       {initials}
     </span>
+  );
+}
+
+function InsightGauge({ value, label, detail, note }) {
+  const valid = value != null && Number.isFinite(value);
+  const amount = valid ? Math.min(100, Math.max(0, value)) : 0;
+  return (
+    <div className="demo-insight-gauge">
+      <p>{label}</p>
+      <div
+        className="demo-gauge-drawing"
+        role="img"
+        aria-label={`${label}: ${valid ? `${Math.round(amount)}%` : "not reported"}. ${detail}`}
+      >
+        <svg viewBox="0 0 240 150" aria-hidden="true">
+          <path
+            className="demo-gauge-track"
+            d="M 25 123 A 95 95 0 0 1 215 123"
+            pathLength="100"
+          />
+          <path
+            className="demo-gauge-fill"
+            d="M 25 123 A 95 95 0 0 1 215 123"
+            pathLength="100"
+            strokeDasharray={`${amount} 100`}
+            style={{ opacity: amount ? 1 : 0 }}
+          />
+          <text
+            x="120"
+            y="108"
+            textAnchor="middle"
+            className="demo-gauge-value"
+          >
+            {valid ? `${Math.round(amount)}%` : "—"}
+          </text>
+          <text x="25" y="147" textAnchor="middle" className="demo-gauge-end">
+            0
+          </text>
+          <text x="215" y="147" textAnchor="middle" className="demo-gauge-end">
+            100
+          </text>
+        </svg>
+      </div>
+      <strong>{detail}</strong>
+      {note && <small>{note}</small>}
+    </div>
+  );
+}
+
+function SampleActivityChart() {
+  const values = [
+    { label: "Replied automatically", value: 24, color: "mint" },
+    { label: "Needed a person", value: 7, color: "amber" },
+    { label: "Drafts for you to review", value: 5, color: "blue" },
+  ];
+  return (
+    <div className="demo-activity-chart">
+      <div className="demo-chart-title">
+        <h4>What happened to the mail?</h4>
+        <span>36 sample conversations</span>
+      </div>
+      <div className="demo-horizontal-bars">
+        {values.map((item) => (
+          <div className="demo-chart-row" key={item.label}>
+            <div>
+              <span>{item.label}</span>
+              <b>{item.value}</b>
+            </div>
+            <div
+              className="demo-bar-track"
+              role="img"
+              aria-label={`${item.label}: ${item.value} of 36 sample conversations`}
+            >
+              <i
+                className={`demo-bar-${item.color}`}
+                style={{ width: `${(item.value / 36) * 100}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p>Fictional examples to show how the dashboard works.</p>
+    </div>
   );
 }
 
@@ -117,10 +200,12 @@ function ReplyExample({ scenario, openKnowledge, compact = false }) {
         <div className="demo-answer-label">
           {approved ? <Bot size={17} /> : <UsersRound size={17} />}
           <strong>
-            {approved ? "A grounded reply" : "A thoughtful handover"}
+            {approved
+              ? "An answer using saved information"
+              : "A request for your help"}
           </strong>
           <Status warning={!approved}>
-            {approved ? "Verified source" : "Needs a person"}
+            {approved ? "Information checked" : "Needs a person"}
           </Status>
         </div>
         {approved ? (
@@ -489,12 +574,12 @@ function RepresentativeView({ openKnowledge }) {
   return (
     <div className="demo-page">
       <SectionIntro
-        eyebrow="AI REPRESENTATIVE"
-        title="Know the answer. Know the boundary."
+        eyebrow="AI REPLIES"
+        title="Let your AI help with everyday questions."
         right={<Status>Illustrative example</Status>}
       >
-        A useful reply starts with your company’s facts. Everything else
-        deserves a thoughtful handover.
+        Your AI answers simple questions using information you have saved. When
+        it cannot safely answer, it asks you to take over.
       </SectionIntro>
       <div className="demo-case-switch" aria-label="Reply examples">
         {scenarios.slice(0, 2).map((item) => (
@@ -526,7 +611,7 @@ function RepresentativeView({ openKnowledge }) {
             <h4>{scenario.outcome}</h4>
             <p>
               {scenario.decision === "auto_reply"
-                ? "Only the approved source passage becomes the answer in this example."
+                ? "This answer uses the exact information saved in the studio handbook."
                 : "The team keeps control when a decision needs a person."}
             </p>
           </div>
@@ -546,12 +631,12 @@ function KnowledgeView({ sourceId, setSourceId }) {
   return (
     <div className="demo-page">
       <SectionIntro
-        eyebrow="COMPANY KNOWLEDGE"
-        title="A source of truth. In your words."
+        eyebrow="WHAT YOUR AI KNOWS"
+        title="Tell your AI about your business."
         right={<span className="demo-small-tag">3 sample sources</span>}
       >
-        Approved facts give every representative something concrete to work
-        from.
+        Add your opening hours, services and answers to common questions. Your
+        AI uses this information when it replies.
       </SectionIntro>
       <div className="demo-knowledge-layout">
         <div className="demo-source-list" aria-label="Sample company sources">
@@ -622,11 +707,12 @@ function TrainingView({ openKnowledge }) {
   return (
     <div className="demo-page">
       <SectionIntro
-        eyebrow="TRAINING SIMULATOR"
-        title="Try the question before the real conversation."
+        eyebrow="TEST YOUR AI"
+        title="See how your AI would answer."
       >
-        Explore three fixed test cases. These results explain the checks; they
-        are not live-model evaluations.
+        Try a simple question, a sensitive request or a question it cannot
+        answer. This preview shows example results. It does not run a real AI
+        test.
       </SectionIntro>
       <div className="demo-training-grid">
         <section className="demo-training-input">
@@ -664,11 +750,11 @@ function TrainingView({ openKnowledge }) {
             <ArrowRight size={15} />
           </button>
           <p className="demo-footnote">
-            Deterministic preview · no API request · no email sent
+            Sample answers only. No email is sent.
           </p>
         </section>
         <section className="demo-training-result" aria-live="polite">
-          <p className="demo-eyebrow">02 / INSPECT THE DECISION</p>
+          <p className="demo-eyebrow">02 / SEE WHAT HAPPENS</p>
           {result ? (
             <>
               <div className="demo-result-heading">
@@ -700,21 +786,22 @@ function TrainingView({ openKnowledge }) {
                   />
                 </blockquote>
               )}
-              {result.confidence && (
-                <div className="demo-confidence">
-                  <div>
-                    <span>Illustrative model confidence</span>
-                    <strong>{result.confidence}</strong>
-                  </div>
-                  <div className="demo-confidence-track">
-                    <i style={{ width: "94%" }} />
-                  </div>
-                  <p>
-                    A model’s self-estimate is not a calibrated probability.
-                    Exact source evidence is also required.
-                  </p>
-                </div>
-              )}
+              <InsightGauge
+                value={
+                  result.confidence ? Number(result.confidence) * 100 : null
+                }
+                label="AI confidence · example"
+                detail={
+                  result.confidence
+                    ? "The answer has supporting information."
+                    : "A person should handle this request."
+                }
+                note={
+                  result.confidence
+                    ? "How sure the AI says it is. This does not guarantee a correct answer."
+                    : "No confidence score is provided for this sample handover."
+                }
+              />
             </>
           ) : (
             <div className="demo-result-empty">
@@ -725,8 +812,8 @@ function TrainingView({ openKnowledge }) {
               </div>
               <h4>Make the reasoning visible.</h4>
               <p>
-                Choose a question and inspect the example outcome, source
-                evidence, and handover boundary.
+                Choose a question to see the example answer, the information
+                behind it, and whether a person needs to help.
               </p>
             </div>
           )}
@@ -742,11 +829,11 @@ function TeamView() {
   return (
     <div className="demo-page">
       <SectionIntro
-        eyebrow="MULTIPLE REPRESENTATIVES"
-        title="Different roles. One shared standard."
+        eyebrow="YOUR AI TEAM"
+        title="The right helper for each inbox."
       >
-        Give each representative a clear purpose, relevant knowledge, and
-        explicit limits.
+        Choose a helper for support, sales, billing or careers. Give each one
+        the information it needs and decide when it should ask you for help.
       </SectionIntro>
       <div className="demo-team-select" aria-label="Sample representatives">
         {sampleRepresentatives.map((item) => (
@@ -784,7 +871,7 @@ function TeamView() {
         </div>
         <div className="demo-rep-details">
           <section>
-            <p className="demo-eyebrow">APPROVED KNOWLEDGE</p>
+            <p className="demo-eyebrow">SAVED INFORMATION</p>
             {person.sources.map((name) => (
               <div className="demo-rep-source" key={name}>
                 <FileText size={16} />
@@ -794,15 +881,13 @@ function TeamView() {
             ))}
           </section>
           <section>
-            <p className="demo-eyebrow">HUMAN BOUNDARY</p>
+            <p className="demo-eyebrow">WHEN TO ASK YOU</p>
             <div className="demo-boundary">
               <ShieldCheck size={20} />
               <p>{person.boundary}</p>
             </div>
           </section>
-          <span className="demo-small-tag">
-            Fictional representative configuration
-          </span>
+          <span className="demo-small-tag">Sample AI team</span>
         </div>
       </div>
     </div>
@@ -816,11 +901,11 @@ function WorkflowsView() {
   return (
     <div className="demo-page">
       <SectionIntro
-        eyebrow="WORKFLOWS"
-        title="Clear rules for what happens next."
+        eyebrow="MAIL RULES"
+        title="Choose what happens to incoming mail."
       >
-        Explore the built-in actions: route, draft, verified reply, or human
-        handover.
+        Choose which helper handles a message, prepares a draft, sends an answer
+        using saved information, or asks a person to help.
       </SectionIntro>
       <div className="demo-workflow-layout">
         <div className="demo-rule-list">
@@ -912,8 +997,8 @@ function WorkflowsView() {
           <div className="demo-workflow-safety">
             <ShieldCheck size={15} />
             <span>
-              Workflow rules do not override evidence checks or the
-              automatic-reply opt-in.
+              A reply still needs supporting information, and automatic sending
+              must be turned on for that inbox.
             </span>
           </div>
         </section>
@@ -965,12 +1050,12 @@ function TrustView() {
   return (
     <div className="demo-page">
       <SectionIntro
-        eyebrow="TRUST DASHBOARD"
-        title="Every decision leaves a trail."
+        eyebrow="RESULTS"
+        title="See what your AI has been doing."
         right={<span className="demo-small-tag">Illustrative data</span>}
       >
-        See what was answered, what was handed over, and which source supported
-        the reply.
+        Check its replies, see which messages need you, and record which answers
+        were correct or needed fixing.
       </SectionIntro>
       <div className="demo-metrics">
         <div>
@@ -980,15 +1065,15 @@ function TrustView() {
           </strong>
         </div>
         <div>
-          <span>Verified replies</span>
+          <span>Automatic replies</span>
           <strong>
-            24<span>with evidence</span>
+            24<span>using saved information</span>
           </strong>
         </div>
         <div>
-          <span>Human handovers</span>
+          <span>Needed your help</span>
           <strong>
-            07<span>kept in control</span>
+            07<span>for a person to handle</span>
           </strong>
         </div>
         <div>
@@ -998,21 +1083,22 @@ function TrustView() {
           </strong>
         </div>
       </div>
-      <div
-        className="demo-outcome-chart"
-        aria-label="Illustrative distribution: 24 verified replies, 7 human handovers, 5 drafts"
-      >
-        <span className="demo-chart-answered" style={{ flex: 24 }} />
-        <span className="demo-chart-review" style={{ flex: 7 }} />
-        <span className="demo-chart-draft" style={{ flex: 5 }} />
+      <div className="demo-insight-board">
+        <InsightGauge
+          value={90}
+          label="Answers marked correct · sample"
+          detail="9 of 10 reviewed sample answers"
+          note="Based on a person’s feedback. Unreviewed answers do not count."
+        />
+        <SampleActivityChart />
       </div>
       <div className="demo-audit-heading">
-        <h4>Recent sample decisions</h4>
+        <h4>Recent sample activity</h4>
         <div className="demo-case-switch" aria-label="Filter sample decisions">
           {[
             ["all", "All"],
             ["answered", "Replies"],
-            ["review", "Handovers"],
+            ["review", "Needed a person"],
           ].map(([id, label]) => (
             <button
               key={id}
@@ -1047,8 +1133,8 @@ function TrustView() {
       </div>
       <p className="demo-footnote demo-trust-note">
         <ShieldCheck size={14} />
-        Sample metrics explain the interface. They are not measured production
-        results or an accuracy claim.
+        These are sample numbers. They are not your real account results or an
+        accuracy claim.
       </p>
     </div>
   );

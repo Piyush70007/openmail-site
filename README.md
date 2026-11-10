@@ -15,6 +15,8 @@ OpenMail combines a Python/FastAPI backend for custom-domain email and grounded 
 - Automatic replies are off by default. An owner must explicitly enable them for each verified mailbox after enabling the AI profile; the UI asks for confirmation before saving. Candidate inbound text and approved company context may then go to Groq. Attachments and original uploaded files are never sent. Sensitive, automated, uncertain, or unsupported emails are held for review or ignored; eligible automatic replies must cite exact source passages and pass a high confidence threshold. The server constructs outbound content from those exact quotes and ignores the model's free-form reply, avoiding unsupported generated claims. Replies use the normal account send quota, have an idempotency key, and are capped at 10 AI requests per user and 25 per OpenMail project per UTC day. A 24-hour per-sender reply cooldown helps limit loops.
 - Server-side AI safeguards: Groq and Supabase secret keys never reach the browser; profile, knowledge, documents, settings, message views, and handoffs are scoped to the signed-in owner. Database tables and the document RPC are restricted to `service_role`. Uploaded documents are extracted in the browser, bounded to 5 MB/50 PDF pages/40,000 characters, and stored as text only. Human-review and failed-send cases do not appear as AI Sent.
 - The actual app lives at `/app.html`. The React homepage contains a labeled interactive product preview with fictional mail, representative setup, training, workflows and trust reporting. Preview interactions do not access real accounts or send mail.
+- Custom address examples explain separate inboxes such as `support@yourdomain.com`, `sales@yourdomain.com` and a personal name. These are not forwarding aliases; creation and provider quotas still apply.
+- The signed-in workspace uses the same dark visual style, readable controls and full-window layout. AI results include semicircle gauges and count bars. Reviewed accuracy counts only Correct/Needs correction feedback; AI confidence is a separate model estimate. Empty datasets display no data instead of a success percentage.
 
 ### My AI representative — Phase 1
 
@@ -71,7 +73,7 @@ npm test
 npm run dev:api
 ```
 
-Open [localhost:3000](http://localhost:3000) to use the compiled React homepage and the unchanged mailbox through Python. `npm run build` compiles the homepage into `landing-dist/` and packages it with the explicit mailbox assets into `public/`. The old root `index.html` is retained as a reference and is never used as a deployment fallback. A missing homepage build fails packaging and returns HTTP 503 locally instead of showing stale content.
+Open [localhost:3000](http://localhost:3000) to use the compiled React homepage and the mailbox through Python. `npm run build` compiles the homepage into `landing-dist/` and packages it with the explicit mailbox assets into `public/`. The old root `index.html` is retained as a reference and is never used as a deployment fallback. A missing homepage build fails packaging and returns HTTP 503 locally instead of showing stale content.
 
 For homepage development with live updates, keep `npm run dev:api` running in the first terminal and run `npm run dev` in a second terminal. Open [127.0.0.1:5173](http://127.0.0.1:5173). Vite proxies `/api`, `/app.html` and the mailbox assets to Python on port 3000, preserving the browser origin for CSRF checks. Add `http://127.0.0.1:5173/app.html` to the **development** Supabase redirect allowlist if testing email confirmation through Vite. Use development credentials for these local flows.
 
@@ -84,8 +86,8 @@ For a runtime-only Python installation, use `requirements.txt` instead of `requi
 - `frontend/` — React homepage, styling and interactions, built by Vite.
 - `vite.config.mjs` — homepage output and local proxy to Python; no public directory or source maps are copied into the build.
 - `index.html`, `app.js` — retained legacy homepage references, excluded from deployment.
-- `styles.css` — shared stylesheet still used by the unchanged mailbox.
-- `app.html`, `app.css`, `workspace.css`, `app-ui.js` — existing real mailbox interface.
+- `styles.css` — shared base stylesheet used by the mailbox.
+- `app.html`, `app.css`, `workspace.css`, `app-ui.js`, `insights.css` — real mailbox, AI setup and saved-results charts. The interface keeps its browser JavaScript handlers and Python APIs.
 - `app-ai-documents.js`, `vendor/` — local browser document extraction.
 - `supabase/` — unchanged tables, access policies, quotas and migration history.
 - `tests/python/` — Python API, security, AI and compatibility tests.

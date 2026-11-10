@@ -4,7 +4,7 @@ import { fileURLToPath, URL } from 'node:url';
 
 const root = fileURLToPath(new URL('./frontend', import.meta.url));
 const python = { target: 'http://127.0.0.1:3000', changeOrigin: false };
-const mailboxPaths = ['/api', '/app.html', '/app.css', '/styles.css', '/workspace.css',
+const mailboxPaths = ['/api', '/app.html', '/app.css', '/styles.css', '/workspace.css', '/insights.css',
   '/app-ui.js', '/app-ai-documents.js', '/vendor', '/favicon.svg'];
 
 export default defineConfig({
