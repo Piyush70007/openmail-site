@@ -51,7 +51,7 @@
             <button class="auth-tab active" id="signInTab" type="button" role="tab" aria-selected="true">Sign in</button>
             <button class="auth-tab" id="signUpTab" type="button" role="tab" aria-selected="false">Create account</button>
           </div>
-          <form id="authForm" class="auth-form">
+          <form id="authForm" class="auth-form" method="post">
             <label>Email address<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
             <label>Password<input name="password" type="password" autocomplete="current-password" minlength="12" placeholder="At least 12 characters" required /></label>
             <p class="auth-hint" id="passwordHint">Use your OpenMail account email and password.</p>
@@ -137,12 +137,12 @@
             <div class="domain-workspace">
               <div class="domain-card add-domain-card">
                 <div class="domain-card-heading"><span class="domain-icon">＋</span><div><b>Connect a domain</b><small>Use a domain you own or manage.</small></div></div>
-                <form id="domainForm" class="inline-form"><label for="domainInput">YOUR DOMAIN</label><div class="input-row"><input id="domainInput" name="domain" type="text" placeholder="yourdomain.com" autocomplete="url" required /><button class="button button-solid" type="submit">Check domain <span>↗</span></button></div></form>
+                <form id="domainForm" class="inline-form" method="post"><label for="domainInput">YOUR DOMAIN</label><div class="input-row"><input id="domainInput" name="domain" type="text" placeholder="yourdomain.com" autocomplete="url" required /><button class="button button-solid" type="submit">Check domain <span>↗</span></button></div></form>
                 <p class="form-inline-message" id="domainMessage" role="status"></p>
               </div>
               <div class="domain-card mailbox-create-card">
                 <div class="domain-card-heading"><span class="domain-icon">＠</span><div><b>Create a mailbox</b><small>Each address gets an OpenMail inbox.</small></div></div>
-                <form id="mailboxForm" class="inline-form"><label>NEW ADDRESS</label><div class="address-composer"><input id="localPartInput" name="localPart" type="text" placeholder="support" autocomplete="off" required /><span>@</span><select id="domainPicker" name="domainId" aria-label="Domain for new mailbox" required></select></div><button class="button button-solid" type="submit">Create mailbox <span>↗</span></button></form>
+                <form id="mailboxForm" class="inline-form" method="post"><label>NEW ADDRESS</label><div class="address-composer"><input id="localPartInput" name="localPart" type="text" placeholder="support" autocomplete="off" required /><span>@</span><select id="domainPicker" name="domainId" aria-label="Domain for new mailbox" required></select></div><button class="button button-solid" type="submit">Create mailbox <span>↗</span></button></form>
                 <p class="form-inline-message" id="mailboxMessage" role="status"></p>
               </div>
             </div>
@@ -157,7 +157,7 @@
             <div class="ai-workspace">
               <section class="ai-card" aria-labelledby="aiCompanyTitle">
                 <div class="domain-card-heading"><span class="domain-icon">⌂</span><div><b id="aiCompanyTitle">Company profile</b><small>The approved facts your AI can rely on later.</small></div></div>
-                <form id="aiProfileForm" class="ai-form">
+                <form id="aiProfileForm" class="ai-form" method="post">
                   <label>COMPANY NAME<input id="aiCompanyName" name="companyName" type="text" maxlength="120" placeholder="Example Studio" required /></label>
                   <label>WHAT YOUR COMPANY DOES<textarea id="aiCompanyDescription" name="companyDescription" rows="3" maxlength="4000" placeholder="Describe your company in a few clear sentences."></textarea></label>
                   <label>PRODUCTS AND SERVICES<textarea id="aiProductsServices" name="productsServices" rows="4" maxlength="6000" placeholder="List your services, what each includes, and any important limits."></textarea></label>
@@ -170,7 +170,7 @@
               </section>
               <section class="ai-card ai-knowledge-card" aria-labelledby="aiKnowledgeTitle">
                   <div class="domain-card-heading"><span class="domain-icon">⌘</span><div><b id="aiKnowledgeTitle">Knowledge notes</b><small>Replies use your approved notes and newest document text, within a fixed context limit.</small></div></div>
-                <form id="aiKnowledgeForm" class="ai-form">
+                <form id="aiKnowledgeForm" class="ai-form" method="post">
                   <label>NOTE TITLE<input id="aiKnowledgeTitleInput" name="title" type="text" maxlength="120" placeholder="Website development pricing" required /></label>
                   <label>TYPE<select id="aiKnowledgeType" name="type"><option value="faq">FAQ / answer</option><option value="service">Service</option><option value="pricing">Pricing</option><option value="policy">Policy</option></select></label>
                   <label>KNOWLEDGE SCOPE<select id="aiKnowledgeRepresentative"><option value="">Shared with all representatives</option></select></label>
@@ -181,7 +181,7 @@
                 <section class="ai-documents-section" aria-labelledby="aiDocumentsTitle">
                   <div class="ai-documents-heading"><div><b id="aiDocumentsTitle">Company documents</b><small>PDF, DOCX, TXT, Markdown or CSV · 10 files · 40,000 text characters each</small></div></div>
                   <p class="ai-document-privacy">Files are read in this browser. OpenMail stores extracted text in your account; the original file is not uploaded. Text can be sent to Groq while your AI representative is enabled.</p>
-                  <form id="aiDocumentForm" class="ai-document-form"><label class="ai-field">KNOWLEDGE SCOPE<select id="aiDocumentRepresentative"><option value="">Shared with all representatives</option></select></label><input id="aiDocumentFile" type="file" accept=".pdf,.docx,.txt,.md,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/csv" required /><button class="button button-outline" type="submit">Add document <span>＋</span></button><span id="aiDocumentStatus" role="status" aria-live="polite"></span></form>
+                  <form id="aiDocumentForm" class="ai-document-form" method="post"><label class="ai-field">KNOWLEDGE SCOPE<select id="aiDocumentRepresentative"><option value="">Shared with all representatives</option></select></label><input id="aiDocumentFile" type="file" accept=".pdf,.docx,.txt,.md,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/csv" required /><button class="button button-outline" type="submit">Add document <span>＋</span></button><span id="aiDocumentStatus" role="status" aria-live="polite"></span></form>
                   <div id="aiDocumentList" class="ai-document-list" aria-live="polite"><p class="ai-empty-note">Loading your documents…</p></div>
                 </section>
               </section>
@@ -202,7 +202,7 @@
               <div class="ai-feature-title"><div><p class="eyebrow">PHASE 02 / TRAIN BEFORE LIVE</p><h3 id="aiTrainingTitle">AI training simulator</h3></div><p>Run a synthetic email through the same grounded decision checks. The simulator never sends email and does not save the test message text.</p></div>
               <div class="ai-feature-grid">
                 <section class="ai-card">
-                  <form id="aiSimulatorForm" class="ai-form">
+                  <form id="aiSimulatorForm" class="ai-form" method="post">
                     <label>TEST NAME<input id="aiSimulatorName" maxlength="100" placeholder="Known pricing question" required /></label>
                     <label>REPRESENTATIVE<select id="aiSimulatorRepresentative" required></select></label>
                     <label>SUBJECT<input id="aiSimulatorSubject" maxlength="200" required /></label>
@@ -223,7 +223,7 @@
             <section class="ai-feature-view" data-ai-view="workflows" hidden aria-labelledby="aiWorkflowsTitle">
               <div class="ai-feature-title"><div><p class="eyebrow">PHASE 04 / APPROVED MAIL TOOLS</p><h3 id="aiWorkflowsTitle">AI workflow builder</h3></div><p>Build rules for this mailbox using OpenMail’s connected mail tools: route to a representative, create an unsent draft, send only a verified reply after mailbox opt-in, or hand off to a person. No arbitrary URLs or external credentials are accepted.</p></div>
               <div class="ai-safety-notice"><span class="notice-mark">i</span><div><b>Sending remains gated by Phase 1 approval</b><p>“Verified AI reply” cannot send unless automatic replies are separately enabled for this mailbox. If workflows are active, unmatched messages are not automatically replied to.</p></div></div>
-              <section class="ai-card"><form id="aiWorkflowForm" class="ai-form ai-workflow-form">
+              <section class="ai-card"><form id="aiWorkflowForm" class="ai-form ai-workflow-form" method="post">
                 <input id="aiWorkflowId" type="hidden" />
                 <label>WORKFLOW NAME<input id="aiWorkflowName" maxlength="100" placeholder="Route invoice questions" required /></label>
                 <label>WHEN<select id="aiWorkflowTrigger"><option value="contains_any">Subject or message contains any phrase</option><option value="all_inbound">Every incoming message</option></select></label>
@@ -251,7 +251,7 @@
     </main>
 
     <dialog class="compose-dialog" id="composeDialog" aria-labelledby="composeTitle">
-      <form id="composeForm" class="compose-form">
+      <form id="composeForm" class="compose-form" method="post">
         <div class="compose-header"><div><p class="eyebrow"><span id="composeModeLabel">NEW MESSAGE</span> / <span id="composeFromLabel"></span></p><h2 id="composeTitle">Compose</h2></div><button class="dialog-close" id="closeCompose" type="button" aria-label="Close compose">×</button></div>
         <p class="ai-draft-review-note" id="aiDraftReviewNotice" hidden>AI-generated draft — please review and edit before sending.</p>
         <label>To<input id="composeTo" name="to" type="text" inputmode="email" placeholder="name@example.com" required /></label>

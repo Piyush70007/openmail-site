@@ -356,7 +356,7 @@ function openCompose(draftId, reply) {
   dialogContent.innerHTML =
     '<p class="dialog-eyebrow">OPENMAIL / COMPOSE PREVIEW</p>' +
     '<h2 class="dialog-title" id="dialogTitle">' + (draft ? "Edit draft" : reply ? "Write a reply" : "Write a message") + '</h2>' +
-    '<form class="compose-form" id="composeForm">' +
+    '<form class="compose-form" id="composeForm" method="post">' +
       '<label>TO<input id="composeTo" type="email" value="' + escapeHtml(to) + '" placeholder="name@example.com" autocomplete="off" required /></label>' +
       '<label>SUBJECT<input id="composeSubject" type="text" value="' + escapeHtml(subject) + '" placeholder="A thoughtful subject" /></label>' +
       '<label>MESSAGE<textarea id="composeBody" placeholder="Write something here…">' + escapeHtml(body) + '</textarea></label>' +

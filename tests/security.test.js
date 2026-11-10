@@ -1,6 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
+const fs = require("node:fs");
 const { Readable } = require("node:stream");
 const { json, readJson, requireSameOrigin, logSafeError } = require("../server/http");
 const { timedFetch, cookieOptions, currentUser, forwardedAuthOptions, supabaseAuth } = require("../server/services");
@@ -252,6 +253,15 @@ test("production security headers include HTTPS, framing, and same-origin form p
   assert.match(headers.get("content-security-policy"), /form-action 'self'/);
   assert.match(headers.get("content-security-policy"), /frame-ancestors 'none'/);
   assert.match(headers.get("content-security-policy"), /object-src 'none'/);
+});
+
+test("client-handled forms never fall back to GET and expose form fields in the URL", () => {
+  const html = fs.readFileSync(require.resolve("../app.html"), "utf8");
+  const formTags = [...html.matchAll(/<form\b[^>]*>/gi)].map(([tag]) => tag);
+  assert.ok(formTags.length > 0);
+  assert.ok(formTags.every((tag) => /\bmethod\s*=\s*["']post["']/i.test(tag)));
+  const demoScript = fs.readFileSync(require.resolve("../app.js"), "utf8");
+  assert.match(demoScript, /<form class="compose-form" id="composeForm" method="post">/);
 });
 
 test("JSON API responses are not cached", () => {
