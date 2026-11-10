@@ -1,4 +1,5 @@
 const crypto = require("node:crypto");
+const net = require("node:net");
 
 function config() {
   const url = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
@@ -27,6 +28,14 @@ function readiness() {
   return { authReady: authMissing.length === 0, mailReady: authMissing.length === 0 && mailMissing.length === 0, authMissing, mailMissing };
 }
 
+function forwardedAuthOptions(req) {
+  const c = config();
+  const value = req && req.headers && req.headers["x-forwarded-for"];
+  const ip = typeof value === "string" ? value.trim() : "";
+  if (process.env.VERCEL !== "1" || !c.secretKey.startsWith("sb_secret_") || net.isIP(ip) === 0) return {};
+  return { useSecretApiKey: true, forwardedClientIp: ip };
+}
+
 async function timedFetch(url, options = {}, timeoutMs = 10000) {
   try {
     return await fetch(url, { ...options, signal: AbortSignal.timeout(timeoutMs) });
@@ -42,9 +51,12 @@ async function timedFetch(url, options = {}, timeoutMs = 10000) {
 async function supabaseAuth(path, options = {}) {
   const c = config();
   if (!c.supabaseUrl || !c.publishableKey) throw Object.assign(new Error("Account services are not configured yet."), { status: 503 });
+  const useSecretApiKey = options.useSecretApiKey === true && c.secretKey.startsWith("sb_secret_");
+  const apiKey = useSecretApiKey ? c.secretKey : c.publishableKey;
+  const forwardedIp = useSecretApiKey && typeof options.forwardedClientIp === "string" && net.isIP(options.forwardedClientIp) ? options.forwardedClientIp : "";
   const response = await timedFetch(`${c.supabaseUrl}/auth/v1${path}`, {
     method: options.method || "GET",
-    headers: { apikey: c.publishableKey, "Content-Type": "application/json", ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}) },
+    headers: { apikey: apiKey, "Content-Type": "application/json", ...(forwardedIp ? { "Sb-Forwarded-For": forwardedIp } : {}), ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}) },
     body: options.body ? JSON.stringify(options.body) : undefined
   });
   const data = await response.json().catch(() => ({}));
@@ -155,16 +167,17 @@ async function currentUser(req, res) {
   let session = readSignedSession(req);
   if (!session) return null;
   const c = config();
+  const authForwarding = forwardedAuthOptions(req);
   if (session.expires_at && session.expires_at < Math.floor(Date.now() / 1000) + 45) {
     try {
-      const refreshed = await supabaseAuth("/token?grant_type=refresh_token", { method: "POST", body: { refresh_token: session.refresh_token } });
+      const refreshed = await supabaseAuth("/token?grant_type=refresh_token", { ...authForwarding, method: "POST", body: { refresh_token: session.refresh_token } });
       session = { access_token: refreshed.access_token, refresh_token: refreshed.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (refreshed.expires_in || 3600) };
       setSession(res, session);
     } catch { return null; }
   }
   if (!session.access_token) return null;
   try {
-    const user = await supabaseAuth("/user", { accessToken: session.access_token });
+    const user = await supabaseAuth("/user", { ...authForwarding, accessToken: session.access_token });
     return {
       id: user.id,
       email: user.email,
@@ -180,4 +193,4 @@ function rememberAuthResponse(res, auth) {
   return true;
 }
 
-module.exports = { config, readiness, timedFetch, supabaseAuth, database, resend, consumeQuota, consumeAIDraftQuota, cookieOptions, currentUser, rememberAuthResponse, clearSession };
+module.exports = { config, readiness, timedFetch, forwardedAuthOptions, supabaseAuth, database, resend, consumeQuota, consumeAIDraftQuota, cookieOptions, currentUser, rememberAuthResponse, clearSession };

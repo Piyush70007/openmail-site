@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
 const { Readable } = require("node:stream");
 const { json, readJson, requireSameOrigin, logSafeError } = require("../server/http");
-const { timedFetch, cookieOptions, currentUser } = require("../server/services");
+const { timedFetch, cookieOptions, currentUser, forwardedAuthOptions, supabaseAuth } = require("../server/services");
 const authHandler = require("../api/auth");
 const authValidation = authHandler._test;
 const authCallbackHandler = require("../api/auth/callback");
@@ -79,6 +79,64 @@ test("confirmation callback hides upstream token-validation details", async () =
   } finally {
     global.fetch = originalFetch;
     for (const [key, value] of env) if (value === undefined) delete process.env[key]; else process.env[key] = value;
+  }
+});
+
+test("Supabase Auth forwarding trusts only Vercel's single validated client IP and a new secret key", () => {
+  const oldVercel = process.env.VERCEL;
+  const oldSecret = process.env.SUPABASE_SECRET_KEY;
+  try {
+    process.env.VERCEL = "1";
+    process.env.SUPABASE_SECRET_KEY = "sb_secret_test-only";
+    assert.deepEqual(forwardedAuthOptions({ headers: { "x-forwarded-for": "203.0.113.7" } }), {
+      useSecretApiKey: true,
+      forwardedClientIp: "203.0.113.7"
+    });
+    assert.deepEqual(forwardedAuthOptions({ headers: { "x-forwarded-for": "2001:db8::1" } }), {
+      useSecretApiKey: true,
+      forwardedClientIp: "2001:db8::1"
+    });
+    for (const value of ["203.0.113.7, 198.51.100.3", "not-an-ip", ""]) {
+      assert.deepEqual(forwardedAuthOptions({ headers: { "x-forwarded-for": value } }), {});
+    }
+    process.env.SUPABASE_SECRET_KEY = "legacy-service-role-key";
+    assert.deepEqual(forwardedAuthOptions({ headers: { "x-forwarded-for": "203.0.113.7" } }), {});
+    process.env.SUPABASE_SECRET_KEY = "sb_secret_test-only";
+    process.env.VERCEL = "0";
+    assert.deepEqual(forwardedAuthOptions({ headers: { "x-forwarded-for": "203.0.113.7" } }), {});
+  } finally {
+    if (oldVercel === undefined) delete process.env.VERCEL; else process.env.VERCEL = oldVercel;
+    if (oldSecret === undefined) delete process.env.SUPABASE_SECRET_KEY; else process.env.SUPABASE_SECRET_KEY = oldSecret;
+  }
+});
+
+test("Supabase Auth uses the new secret key and validated forwarded IP only when enabled", async () => {
+  const keys = ["VERCEL", "SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "SUPABASE_SECRET_KEY"];
+  const previous = keys.map((key) => [key, process.env[key]]);
+  const originalFetch = global.fetch;
+  const calls = [];
+  process.env.VERCEL = "1";
+  process.env.SUPABASE_URL = "https://supabase.example.test";
+  process.env.SUPABASE_PUBLISHABLE_KEY = "sb_publishable_test-only";
+  process.env.SUPABASE_SECRET_KEY = "sb_secret_test-only";
+  global.fetch = async (url, options) => {
+    calls.push({ url, options });
+    return new Response("{}", { status: 200 });
+  };
+  try {
+    const req = { headers: { "x-forwarded-for": "203.0.113.7" } };
+    await supabaseAuth("/user", { ...forwardedAuthOptions(req), accessToken: "user-token" });
+    assert.equal(calls[0].options.headers.apikey, "sb_secret_test-only");
+    assert.equal(calls[0].options.headers["Sb-Forwarded-For"], "203.0.113.7");
+    assert.equal(calls[0].options.headers.Authorization, "Bearer user-token");
+
+    process.env.SUPABASE_SECRET_KEY = "legacy-service-role-key";
+    await supabaseAuth("/user", { ...forwardedAuthOptions(req), accessToken: "user-token" });
+    assert.equal(calls[1].options.headers.apikey, "sb_publishable_test-only");
+    assert.equal(calls[1].options.headers["Sb-Forwarded-For"], undefined);
+  } finally {
+    global.fetch = originalFetch;
+    for (const [key, value] of previous) if (value === undefined) delete process.env[key]; else process.env[key] = value;
   }
 });
 
