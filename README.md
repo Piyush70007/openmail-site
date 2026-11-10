@@ -1,6 +1,6 @@
 # OpenMail
 
-OpenMail is a cinematic public site with a separate, server-backed mailbox app. A signed-in account owner can connect a domain, review the mail provider's DNS records, create addresses on a verified domain, and use an inbox in OpenMail.
+OpenMail combines a Python/FastAPI backend for custom-domain email and grounded AI representatives with an interactive browser interface. The Python migration is prepared on a separate branch; see [the migration guide](PYTHON_MIGRATION.md) for verification and rollout status. A signed-in account owner can connect a domain, review the mail provider's DNS records, create addresses on a verified domain, and use an inbox in OpenMail.
 
 ## What is implemented
 
@@ -24,7 +24,7 @@ Create a free Groq API key in the Groq console, then add `GROQ_API_KEY` as a **s
 
 In **My AI**, save the company profile and approved notes. Documents are parsed locally in the browser; only extracted text is stored, and files over 40,000 extracted characters must be split. When the owner enables the AI profile and clicks **Generate AI draft**, the opened inbound email and approved context go to Groq; the result appears in the normal editable compose window and the owner decides whether to send. To enable automatic replies, the owner must separately confirm the selected verified mailbox. Eligible inbound messages are then processed by Groq; rule-matched sensitive/automated messages are filtered or sent to **Needs human**, and uncertain or unsupported answers are held for review. The AI must provide exact evidence quotes from approved sources and meet the confidence threshold. Attachments are never passed to the model. Groq says inference inputs and outputs are not retained by default, but may be retained up to 30 days for reliability or abuse investigations; review [Groq's data policy](https://console.groq.com/docs/your-data).
 
-The AI draft action and all AI setup routes reuse the existing authenticated message function, keeping the project at 12 Vercel Function files for Hobby deployments. Automatic replies run as a signed-webhook background task and continue to respect the existing account send limits. Mailbox selection, Sent, and draft behavior remain within the existing app.
+The Python backend serves the existing API routes through one FastAPI application and one Vercel Function. Automatic replies run as a signed-webhook background task and continue to respect the existing account send limits. Mailbox selection, Sent, and draft behavior remain within the existing app.
 
 ## Before using live mail
 
@@ -35,11 +35,11 @@ This version uses an API and webhook mail transport. OpenMail stores the inbox m
 ### Required services and configuration
 
 1. Create a Supabase project and run [`supabase/schema.sql`](supabase/schema.sql) in its SQL editor, then run [`supabase/security-quotas.sql`](supabase/security-quotas.sql). For an existing project, also apply the additive migrations for drafts and AI: [`supabase/migrations/20261031_mailbox_drafts.sql`](supabase/migrations/20261031_mailbox_drafts.sql), [`supabase/migrations/20261104_ai_representative_setup.sql`](supabase/migrations/20261104_ai_representative_setup.sql), and [`supabase/migrations/20261104_ai_representative_phase1.sql`](supabase/migrations/20261104_ai_representative_phase1.sql). Copy the project URL, publishable key, and secret key from the Supabase dashboard. The secret key bypasses row-level security and must stay server-side. OpenMail also accepts the legacy `anon` and `service_role` key variable names.
-2. In Supabase Auth, enable email/password sign-in, keep email confirmation enabled, and allow `https://openmail-site.vercel.app/app.html` plus the local `/app.html` URL in the redirect list. Hosted Supabase's built-in email sender is limited to organization team addresses and two emails per hour; configure a [custom SMTP sender](https://supabase.com/docs/guides/auth/auth-smtp) for signup confirmations.
+2. In Supabase Auth, enable email/password sign-in, keep email confirmation enabled, and allow `https://freeopenmail.tech/app.html` and keep any existing Vercel redirect used by the deployment, plus the local `/app.html` URL in the redirect list. Hosted Supabase's built-in email sender is limited to organization team addresses and two emails per hour; configure a [custom SMTP sender](https://supabase.com/docs/guides/auth/auth-smtp) for signup confirmations.
 3. Create a Resend API key with **Full access**. Resend currently offers Full access or Sending access; domain creation, verification, and retrieving inbound message contents need Full access. Treat it like a master key for that Resend workspace: use a workspace dedicated to OpenMail, store the key only in Vercel's server-side Production variables, and never return it from an API or put it in browser code. Users can invoke only authenticated, owner-scoped OpenMail actions; they cannot read the key. The key remains available to the deployed server, so a server compromise could expose it. The [Resend Free tier](https://www.resend.com/pricing?product=transactional) has provider-level quotas; no paid plan is selected here.
 4. For Supabase Auth email, configure custom SMTP with host `smtp.resend.com`, port `465`, username `resend`, and a domain-scoped Sending Access key as the password ([Resend SMTP details](https://resend.com/changelog/smtp-service)). Use a sender address on a verified sending domain. Keep this key separate from the Full Access key.
-5. In Resend, add a webhook for `email.received` at `https://openmail-site.vercel.app/api/webhooks/resend`. Copy its signing secret.
-6. Add the variables from [`.env.example`](.env.example) to the Vercel project's Production environment. Set `OPENMAIL_PUBLIC_URL` to `https://openmail-site.vercel.app`. Keep `SUPABASE_SECRET_KEY`, `SESSION_SECRET`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, and `GROQ_API_KEY` server-only; never prefix them with `NEXT_PUBLIC_` or place them in browser code. Vercel applies environment variable changes to new deployments, so redeploy after saving them.
+5. In Resend, add a webhook for `email.received` at `https://freeopenmail.tech/api/webhooks/resend`. Copy its signing secret.
+6. Add the variables from [`.env.example`](.env.example) to the Vercel project's Production environment. Set `OPENMAIL_PUBLIC_URL` to `https://freeopenmail.tech`. Keep `SUPABASE_SECRET_KEY`, `SESSION_SECRET`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, and `GROQ_API_KEY` server-only; never prefix them with `NEXT_PUBLIC_` or place them in browser code. Vercel applies environment variable changes to new deployments, so redeploy after saving them.
 7. Sign up at `/app.html`, confirm the account email, and sign in.
 8. In the app, connect a domain you control. OpenMail checks whether it already has a mail route, then asks Resend for the records needed to send and receive. A domain owner must approve those records with the DNS provider; OpenMail does not make DNS changes. Use **Check DNS records** after approval. Creating a mailbox becomes available when the provider reports the domain as verified.
 9. Create the address (for example, `support`) and use that mailbox in OpenMail.
@@ -59,30 +59,38 @@ Run npm test for the automated security and workflow checks.
 
 ## Run locally
 
-Use Node.js and the Vercel CLI because the account and mail APIs run as Vercel Functions. Create `.env.local` from [`.env.example`](.env.example), fill in development credentials, and allow `http://localhost:3000/app.html` in Supabase Auth redirects.
+Use Python 3.14. Create `.env.local` from [`.env.example`](.env.example) using development credentials. Allow `http://localhost:3000/app.html` in the development Supabase Auth redirects.
 
 ```sh
-npm install
+python3.14 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+npm ci --ignore-scripts
+.venv/bin/python -m pytest -q
 npm test
-npx vercel dev
+.venv/bin/uvicorn main:app --reload --port 3000 --env-file .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Webhook delivery from Resend needs a publicly reachable HTTPS URL; use a deployed preview URL for inbound testing.
+Open [localhost:3000](http://localhost:3000). For a runtime-only installation, use `requirements.txt` instead of `requirements-dev.txt`; Node is needed only for browser dependency maintenance and the retained compatibility tests. Resend webhook delivery needs a public HTTPS endpoint.
 
 ## Project structure
 
-- `index.html`, `styles.css`, `app.js` — cinematic public site and the clearly labeled, fictional category interface sample.
-- `app.html`, `app.css`, `app-ui.js` — signed-in mailbox app, domain onboarding, inbox, and compose flow.
-- `api/` — Vercel Functions for authentication, domains, mailboxes, message actions, send, and inbound webhooks.
-- `server/` — server-only session, provider, AI draft/automation, database, and ownership helpers.
-- `supabase/schema.sql`, `supabase/security-quotas.sql`, `supabase/migrations/` — tables, indexes, row-level security policies, atomic per-account usage limits, and additive features.
-- `.env.example` — required server configuration names (no secrets).
+- `backend/` — Python authentication, mail APIs, AI reasoning and citation validation, workflow processing, simulator and trust reporting.
+- `main.py` — FastAPI entry point for Uvicorn and Vercel.
+- `index.html`, `styles.css`, `app.js` — public site and labeled fictional mailbox sample.
+- `app.html`, `app.css`, `workspace.css`, `app-ui.js` — existing real mailbox interface.
+- `app-ai-documents.js`, `vendor/` — local browser document extraction.
+- `supabase/` — unchanged tables, access policies, quotas and migration history.
+- `tests/python/` — Python API, security, AI and compatibility tests.
+- `tests/node_baseline/` — historical Node backend used only for regression comparisons; excluded from deployment.
+- `scripts/build_static.py` — copies only approved public assets to the generated CDN directory.
+- `requirements.txt`, `requirements-dev.txt` — pinned runtime and verification dependencies.
 
-The Node test suite uses mocked database and provider calls. It covers opt-in gates, verified citations, confidence checks, sensitive-message handoff, representative ownership and scoping, simulator evaluations, workflow routing and draft-only actions, reply consent, trust-feedback eligibility, quotas, webhook validation, duplicate processing, and same-origin write checks. Tests do not send email, call Groq, or access a live Supabase project.
+The tests use synthetic data and mocked providers; they do not send email, call Groq or access production Supabase. [PYTHON_MIGRATION.md](PYTHON_MIGRATION.md) explains the architecture, preserved contracts and remaining deployment checks.
 
 ## GitHub and Vercel
 
 - GitHub repository: [Piyush70007/openmail-site](https://github.com/Piyush70007/openmail-site)
-- Vercel site: [openmail-site.vercel.app](https://openmail-site.vercel.app/)
+- Production website: [freeopenmail.tech](https://freeopenmail.tech/)
+- Vercel project: `openmail-site` (the hosting project name remains unchanged)
 
 The repository is connected to Vercel and deploys from `main`. Add the services and environment variables above in Vercel before expecting the account app to accept sign-ups or handle mail. Configure a webhook against the final HTTPS deployment URL after the API routes are deployed.

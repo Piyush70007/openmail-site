@@ -1,0 +1,30 @@
+[project]
+name = "openmail"
+version = "1.0.0"
+description = "Custom-domain email with grounded AI representatives, evaluations and human handover"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+  "fastapi==0.162.4",
+  "httpx==0.28.1",
+  "uvicorn==0.54.0",
+  "dnspython==2.9.2",
+  "idna==3.20",
+  "python-dotenv==1.2.4",
+]
+
+[project.optional-dependencies]
+test = ["pytest==9.2.0", "pytest-asyncio==1.4.1.post1", "pip-audit==2.10.1"]
+
+[tool.vercel]
+entrypoint = "main:app"
+
+[tool.vercel.scripts]
+build = "python scripts/build_static.py"
+
+[tool.pytest.ini_options]
+testpaths = ["tests/python"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.setuptools]
+packages = ["backend"]

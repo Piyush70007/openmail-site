@@ -1,29 +1,40 @@
 {
-  "rewrites": [
-    { "source": "/api/ai/profile", "destination": "/api/messages?aiResource=profile" },
-    { "source": "/api/ai/knowledge", "destination": "/api/messages?aiResource=knowledge" },
-    { "source": "/api/ai/documents", "destination": "/api/messages?aiResource=documents" },
-    { "source": "/api/ai/mailbox-settings", "destination": "/api/messages?aiResource=mailbox-settings" },
-    { "source": "/api/ai/simulator", "destination": "/api/messages?aiResource=simulator" },
-    { "source": "/api/ai/representatives", "destination": "/api/messages?aiResource=representatives" },
-    { "source": "/api/ai/workflows", "destination": "/api/messages?aiResource=workflows" },
-    { "source": "/api/ai/trust", "destination": "/api/messages?aiResource=trust" }
-  ],
   "functions": {
-    "api/webhooks/resend.js": { "maxDuration": 60 },
-    "api/messages.js": { "maxDuration": 30 }
+    "main.py": {
+      "maxDuration": 60
+    }
   },
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; form-action 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; form-action 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+        }
       ]
     }
-  ]
+  ],
+  "framework": "fastapi",
+  "buildCommand": "python scripts/build_static.py"
 }
