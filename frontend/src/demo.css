@@ -104,6 +104,7 @@
   display: inline-block;
 }
 .demo-app-shell {
+  /* Shared rail sizing and navigation live in workspace-navigation.css. */
   display: grid;
   grid-template-columns: 212px minmax(0, 1fr);
   min-height: 655px;

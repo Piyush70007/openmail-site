@@ -63,7 +63,7 @@ test('opening a mail folder restores Compose after leaving AI or domain settings
   const controls = new Map();
   let click;
   const button = {dataset:{view:'inbox'},addEventListener:(_, callback)=>{click=callback;}};
-  const state = vm.createContext({document:{querySelectorAll:()=>[button]}, selectedMessageIds:new Set(), selectedMailbox:{id:'owned-mailbox'}, systemStatus:{mailReady:true}, syncViewControls:()=>{}, domainsPanel:{}, aiPanel:{}, messageDetail:{}, inboxPane:{}, loadMessages:()=>Promise.resolve(), toast:()=>{}, $:id=>{ if(!controls.has(id)) controls.set(id,{disabled:true}); return controls.get(id); }});
+  const state = vm.createContext({document:{querySelectorAll:()=>[button]}, closeNavigationMenu:()=>{}, selectedMessageIds:new Set(), selectedMailbox:{id:'owned-mailbox'}, systemStatus:{mailReady:true}, syncViewControls:()=>{}, domainsPanel:{}, aiPanel:{}, messageDetail:{}, inboxPane:{}, loadMessages:()=>Promise.resolve(), toast:()=>{}, $:id=>{ if(!controls.has(id)) controls.set(id,{disabled:true}); return controls.get(id); }});
   const start = source.indexOf('document.querySelectorAll(".mail-side-link[data-view], .mail-tab[data-view], .mobile-folder-scroll [data-view]")');
   vm.runInContext(source.slice(start, source.indexOf('$("#selectAll").addEventListener',start)),state);
   click();

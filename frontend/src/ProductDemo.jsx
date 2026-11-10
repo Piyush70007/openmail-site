@@ -32,6 +32,7 @@ import {
   SAMPLE_COMPANY,
 } from "./demo-data";
 import "./demo.css";
+import "../../workspace-navigation.css";
 
 const VIEWS = [
   { id: "inbox", title: "Inbox", icon: Mail },
@@ -1329,18 +1330,22 @@ export default function ProductDemo() {
             <span className="demo-compose-shortcut">sample</span>
           </button>
           <p className="demo-sidebar-label">YOUR WORKSPACE</p>
-          <nav className="demo-view-nav" aria-label="Product preview views">
+          <nav
+            className="demo-view-nav om-workspace-nav"
+            aria-label="Workspace sections"
+          >
             {VIEWS.map((item) => (
               <button
                 key={item.id}
-                className={view === item.id ? "is-active" : ""}
+                className={`om-workspace-link${view === item.id ? " is-active" : ""}`}
+                data-workspace-view={item.id}
                 aria-current={view === item.id ? "page" : undefined}
                 onClick={() => navigate(item.id)}
               >
-                <item.icon size={16} />
+                <item.icon size={18} aria-hidden="true" />
                 <span>{item.title}</span>
                 {item.id === "inbox" && (
-                  <small>
+                  <small className="om-workspace-count">
                     {
                       messages.filter(
                         (message) => message.unread && !message.archived,
@@ -1348,7 +1353,6 @@ export default function ProductDemo() {
                     }
                   </small>
                 )}
-                {item.id === "representative" && <i />}
               </button>
             ))}
           </nav>

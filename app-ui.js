@@ -34,6 +34,72 @@ let aiMailReady = false;
 let aiRepresentatives = [];
 let aiWorkflows = [];
 let selectedAITab = "training";
+let aiPanelLoadPromise = null;
+let aiPanelLoadMailbox = null;
+let aiSetupLoadVersion = 0;
+const workspaceSections = { inbox: "Inbox", representative: "AI replies", knowledge: "What your AI knows", training: "Test your AI", team: "Your AI team", workflows: "Mail rules", trust: "Results" };
+
+function syncWorkspaceNavigation(view) {
+  document.querySelectorAll("button[data-workspace-view]").forEach((button) => {
+    const active = button.dataset.workspaceView === view;
+    button.classList.toggle("is-active", active);
+    if (active) button.setAttribute("aria-current", "page");
+    else button.removeAttribute("aria-current");
+  });
+  $("#mobileWorkspaceCurrent").textContent = workspaceSections[view] || "Domains & mailboxes";
+}
+
+function closeNavigationMenu(selector) {
+  const menu = $(selector);
+  if (!menu.open) return;
+  if (menu.contains(document.activeElement)) menu.querySelector("summary").focus({ preventScroll: true });
+  menu.open = false;
+}
+
+function renderAIWorkspaceView(view, load = true) {
+  aiPanel.dataset.workspaceView = view;
+  $(".ai-workspace").hidden = view !== "knowledge";
+  $(".ai-automation-card").hidden = view !== "representative";
+  for (const selector of [".ai-panel-title", ".ai-safety-notice", ".ai-data-disclosure"]) {
+    $(selector).hidden = !["knowledge", "representative"].includes(view);
+  }
+  $(".ai-setup-nav").hidden = true;
+  $("#aiToolsTitle").hidden = true;
+  $("#aiPanelTitle").textContent = workspaceSections[view];
+  $(".ai-panel-title > p").textContent = view === "knowledge"
+    ? "Give your AI clear company facts, useful answers, and documents it can learn from."
+    : "Choose who answers for this mailbox and whether it may send checked replies automatically.";
+  setAIView(({ training: "training", team: "representatives", workflows: "workflows", trust: "trust" })[view] || null, load);
+  syncWorkspaceNavigation(view);
+  aiPanel.scrollTop = 0;
+}
+
+function navigateWorkspace(view) {
+  if (!Object.hasOwn(workspaceSections, view)) return;
+  closeNavigationMenu(".mobile-workspace-menu");
+  if (view === "inbox") { openInbox(); return; }
+  const entering = aiPanel.hidden;
+  const mailboxId = selectedMailbox ? selectedMailbox.id : null;
+  domainsPanel.hidden = true;
+  inboxPane.hidden = true;
+  messageDetail.hidden = true;
+  aiPanel.hidden = false;
+  $("#refreshMessages").disabled = true;
+  $("#mobileMailNav").hidden = true;
+  $("#currentViewHeading").textContent = workspaceSections[view];
+  $("#currentMailboxHeading").textContent = selectedMailbox ? selectedMailbox.address.toUpperCase() : "AI SETUP";
+  for (const selector of ["#composeButton", "#headingCompose", "#mobileComposeButton"]) $(selector).disabled = true;
+  // Switching tools keeps the mounted forms and their unsaved edits intact.
+  const needsLoad = (entering && !aiPanelLoadPromise) || aiPanelLoadMailbox !== mailboxId;
+  renderAIWorkspaceView(view, !needsLoad && !aiPanelLoadPromise);
+  if (needsLoad) {
+    aiPanelLoadMailbox = mailboxId;
+    document.dispatchEvent(new Event("openmail:ai-panel-open"));
+    const loading = loadAISetup();
+    aiPanelLoadPromise = loading;
+    loading.finally(() => { if (aiPanelLoadPromise === loading) aiPanelLoadPromise = null; });
+  }
+}
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -128,6 +194,7 @@ function renderCategoryCounts() {
   }));
   $("#allTabCount").textContent = String(categoryCounts.all).padStart(2, "0");
   $("#inboxCount").textContent = categoryCounts.unread ? String(categoryCounts.unread).padStart(2, "0") : "—";
+  $("#workspaceInboxCount").textContent = categoryCounts.unread ? String(categoryCounts.unread) : "";
 }
 
 function showAuth(message = "") {
@@ -296,6 +363,7 @@ async function loadDomainsAndMailboxes() {
 }
 
 function openDomains() {
+  syncWorkspaceNavigation(null);
   domainsPanel.hidden = false;
   aiPanel.hidden = true;
   $("#refreshMessages").disabled = false;
@@ -379,21 +447,7 @@ async function refreshAICapability() {
 }
 
 function openAIPanel() {
-  domainsPanel.hidden = true;
-  inboxPane.hidden = true;
-  messageDetail.hidden = true;
-  aiPanel.hidden = false;
-  $("#refreshMessages").disabled = true;
-  $("#mobileMailNav").hidden = false;
-  $("#currentViewHeading").textContent = "My AI";
-  $("#currentMailboxHeading").textContent = selectedMailbox ? selectedMailbox.address.toUpperCase() : "AI SETUP";
-  $("#composeButton").disabled = true;
-  $("#headingCompose").disabled = true;
-  $("#mobileComposeButton").disabled = true;
-  $("#myAIButton").classList.add("active");
-  $("#mobileMyAIButton").classList.add("active");
-  document.dispatchEvent(new Event("openmail:ai-panel-open"));
-  loadAISetup();
+  navigateWorkspace("representative");
 }
 
 function renderAIKnowledge(entries) {
@@ -545,7 +599,7 @@ function refreshRepresentativeSelects(mailboxRepresentativeId = "") {
   $("#saveMailboxRepresentative").disabled = !selectedMailbox || !aiRepresentatives.some((item) => item.id === $("#aiMailboxRepresentative").value && item.enabled);
 }
 
-function setAIView(view) {
+function setAIView(view, load = true) {
   selectedAITab = view;
   document.querySelectorAll("[data-ai-tab]").forEach((button) => {
     const active = button.dataset.aiTab === view;
@@ -553,8 +607,8 @@ function setAIView(view) {
     button.setAttribute("aria-pressed", String(active));
   });
   document.querySelectorAll("[data-ai-view]").forEach((panel) => { panel.hidden = panel.dataset.aiView !== view; });
-  if (view === "workflows") loadAIWorkflows();
-  if (view === "trust") loadAITrust();
+  if (load && view === "workflows") loadAIWorkflows();
+  if (load && view === "trust") loadAITrust();
 }
 
 // Charts describe saved results only; confidence is never treated as accuracy.
@@ -932,6 +986,10 @@ async function loadAITrust() {
 }
 
 async function loadAISetup() {
+  const version = ++aiSetupLoadVersion;
+  const mailboxId = selectedMailbox ? selectedMailbox.id : null;
+  const isCurrent = () => version === aiSetupLoadVersion && mailboxId === (selectedMailbox ? selectedMailbox.id : null);
+  $("#aiWorkspaceLoadNotice").hidden = true;
   $("#aiProfileStatus").classList.remove("error");
   $("#aiKnowledgeStatus").classList.remove("error");
   $("#aiProfileStatus").textContent = "Loading saved information…";
@@ -940,9 +998,10 @@ async function loadAISetup() {
     const [profileResult, knowledgeResult, mailboxResult] = await Promise.all([
       api("/api/ai/profile"),
       api("/api/ai/knowledge"),
-      selectedMailbox ? api(`/api/ai/mailbox-settings?mailboxId=${encodeURIComponent(selectedMailbox.id)}`) : Promise.resolve(null)
+      mailboxId ? api(`/api/ai/mailbox-settings?mailboxId=${encodeURIComponent(mailboxId)}`) : Promise.resolve(null)
     ]);
-    const representativeResult = await api("/api/ai/representatives" + (selectedMailbox ? "?mailboxId=" + encodeURIComponent(selectedMailbox.id) : "")).catch((error) => ({ error }));
+    const representativeResult = await api("/api/ai/representatives" + (mailboxId ? "?mailboxId=" + encodeURIComponent(mailboxId) : "")).catch((error) => ({ error }));
+    if (!isCurrent()) return;
     aiRepresentatives = representativeResult.representatives || [];
     window.openmailMailboxSetting = mailboxResult && mailboxResult.settings || representativeResult.mailboxSetting || null;
     renderAIRepresentatives();
@@ -991,6 +1050,10 @@ async function loadAISetup() {
     if (selectedAITab === "workflows") loadAIWorkflows();
     if (selectedAITab === "trust") loadAITrust();
   } catch (error) {
+    if (!isCurrent()) return;
+    aiPanelLoadMailbox = undefined;
+    $("#aiWorkspaceLoadNotice").hidden = false;
+    $("#aiWorkspaceLoadStatus").textContent = `We couldn’t load your AI workspace. ${error.message}`;
     $("#aiProfileStatus").textContent = error.message;
     $("#aiProfileStatus").classList.add("error");
     $("#aiKnowledgeList").replaceChildren();
@@ -1096,7 +1159,19 @@ $("#aiKnowledgeForm").addEventListener("submit", async (event) => {
   } finally { button.disabled = false; }
 });
 
-$("#myAIButton").addEventListener("click", openAIPanel);
+document.querySelectorAll("button[data-workspace-view]").forEach((button) => button.addEventListener("click", () => navigateWorkspace(button.dataset.workspaceView)));
+$("#retryAISetup").addEventListener("click", () => navigateWorkspace(aiPanel.dataset.workspaceView));
+document.addEventListener("click", (event) => {
+  for (const selector of [".mobile-workspace-menu", ".mail-folder-menu"]) {
+    if (!$(selector).contains(event.target)) closeNavigationMenu(selector);
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeNavigationMenu(".mobile-workspace-menu");
+    closeNavigationMenu(".mail-folder-menu");
+  }
+});
 $("#mobileMyAIButton").addEventListener("click", openAIPanel);
 $("#domainsMyAIButton").addEventListener("click", openAIPanel);
 $("#aiBackToInbox").addEventListener("click", () => {
@@ -1107,10 +1182,7 @@ $("#aiBackToInbox").addEventListener("click", () => {
 document.querySelectorAll("[data-ai-tab]").forEach((button) => button.addEventListener("click", () => setAIView(button.dataset.aiTab)));
 document.querySelectorAll("[data-ai-open]").forEach((link) => link.addEventListener("click", (event) => {
   event.preventDefault();
-  setAIView(link.dataset.aiOpen);
-  const tab = document.querySelector(`[data-ai-tab="${link.dataset.aiOpen}"]`);
-  tab.focus({ preventScroll: true });
-  $("#aiToolsTitle").scrollIntoView({ block: "start", behavior: "instant" });
+  navigateWorkspace(link.dataset.aiOpen === "representatives" ? "team" : link.dataset.aiOpen);
 }));
 
 $("#saveMailboxRepresentative").addEventListener("click", async () => {
@@ -1371,6 +1443,7 @@ $("#mailboxPicker").addEventListener("change", () => selectMailbox($("#mailboxPi
 $("#mobileMailboxPicker").addEventListener("change", () => selectMailbox($("#mobileMailboxPicker").value));
 
 function syncViewControls() {
+  syncWorkspaceNavigation("inbox");
   document.querySelectorAll(".mail-side-link[data-view], .mobile-folder-scroll [data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === selectedView));
   $("#myAIButton").classList.remove("active");
   $("#mobileMyAIButton").classList.remove("active");
@@ -1408,6 +1481,8 @@ async function bulkMoveMessages(target) {
 
 async function loadMessages() {
   if (!selectedMailbox || domainsPanel.hidden === false) return;
+  const mailboxId = selectedMailbox.id;
+  const requestedView = selectedView;
   const sourceView = Object.prototype.hasOwnProperty.call(inboxCategoryNames, selectedView) ? "inbox" : selectedView;
   const params = new URLSearchParams({ mailboxId: selectedMailbox.id, view: sourceView });
   const [result, starredResult, draftsResult, aiSentResult, needsReviewResult] = await Promise.all([
@@ -1417,6 +1492,7 @@ async function loadMessages() {
     sourceView === "ai_sent" ? Promise.resolve(null) : api(`/api/messages?${new URLSearchParams({ mailboxId: selectedMailbox.id, view: "ai_sent" })}`),
     sourceView === "needs_review" ? Promise.resolve(null) : api(`/api/messages?${new URLSearchParams({ mailboxId: selectedMailbox.id, view: "needs_review" })}`)
   ]);
+  if (!selectedMailbox || selectedMailbox.id !== mailboxId || selectedView !== requestedView || !aiPanel.hidden || !domainsPanel.hidden) return;
   currentMessages = result.messages || [];
   categoryCounts.starred = sourceView === "starred" ? currentMessages.length : ((starredResult && starredResult.messages) || []).length;
   categoryCounts.drafts = sourceView === "drafts" ? currentMessages.length : ((draftsResult && draftsResult.messages) || []).length;
@@ -1432,6 +1508,7 @@ async function loadMessages() {
   $("#currentMailboxHeading").textContent = selectedMailbox.address.toUpperCase();
   const viewLabels = { inbox: "All mail", ...inboxCategoryNames, sent: "Sent", ai_sent: "AI replies", needs_review: "Needs your help", archive: "Archive", spam: "Spam", trash: "Trash", starred: "Starred", drafts: "Drafts" };
   $("#currentViewHeading").textContent = viewLabels[selectedView] || "All mail";
+  $("#folderMenuCurrent").textContent = viewLabels[selectedView] || "All mail";
   renderCategoryCounts();
   renderMessages();
 }
@@ -1785,6 +1862,7 @@ $("#composeForm").addEventListener("submit", async (event) => {
 });
 
 document.querySelectorAll(".mail-side-link[data-view], .mail-tab[data-view], .mobile-folder-scroll [data-view]").forEach((button) => button.addEventListener("click", () => {
+  closeNavigationMenu(".mail-folder-menu");
   selectedMessageIds.clear();
   selectedView = button.dataset.view;
   syncViewControls();
