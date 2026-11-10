@@ -44,6 +44,10 @@ coercions and emoji host labels are rejected by the Python IDNA validation.
 
 ## Verification and rollout
 
+The production website is **https://freeopenmail.tech**. Its Vercel project is
+`openmail-site`; the project name and preview hostname do not replace the custom
+domain. Production remains on the existing `main` deployment during verification.
+
 The Python tests cover HTTP routes, private data access, CSRF, session compatibility
 with Node, bounded inputs, signed webhook delivery, duplicate events, mail actions,
 AI decisions and failure handling. Differential tests compare the original Node
@@ -59,6 +63,12 @@ Local verification on November 10, 2026: 150 Python tests and 328 subtests passe
 all 50 original Node tests passed; the runtime dependency audit found no known
 vulnerabilities. The local Uvicorn server returned the mailbox page and session
 API successfully. Git confirmed no changes to any browser asset.
+
+The pushed migration commit also passed GitHub Actions. Vercel built its preview
+successfully as one Python 3.14 function (15.7 MB, 60-second maximum). The preview
+mailbox page and session API were checked in Chrome, and requesting backend
+source returned the expected missing-route response. Preview account services are
+intentionally unconfigured; no production secrets were copied into Preview.
 
 Before replacing the production backend:
 
