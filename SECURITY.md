@@ -2,7 +2,7 @@
 
 **Review date:** 2026-11-10
 
-**Scope:** Repository review and automated tests for the browser app, Vercel API routes, Supabase access patterns and migrations, Resend webhook, and Groq-assisted email handling.
+**Scope:** Repository review, automated tests, manual browser DAST against the production app, a production two-account authorization check, and Supabase/Vercel dashboard settings for the browser app, API routes, database access, Resend webhook, and Groq-assisted email handling.
 
 This is an engineering review, not a certification or an independent penetration test. It covers repository controls and the provider settings that were read back in the Supabase and Vercel dashboards.
 
@@ -11,7 +11,7 @@ This is an engineering review, not a certification or an independent penetration
 | Area | Controls checked or added |
 | --- | --- |
 | Authentication and sessions | Email/password length bounds; generic provider rejection errors; signed HMAC session cookies with `HttpOnly`, `Secure` in production, `SameSite=Lax`, no `Domain`, and a root path; tampered session signatures rejected before an upstream request. |
-| CSRF and HTTP | Mutating browser routes require an exact same-origin scheme and host; unsupported methods are rejected; JSON API responses use `Cache-Control: no-store`. |
+| CSRF and HTTP | Mutating browser routes require an exact same-origin scheme and host; unsupported methods are rejected; JSON API responses use `Cache-Control: no-store`. Client-handled forms explicitly use POST so a failed script cannot put form values in the URL. |
 | Authorization and data isolation | Mailbox, message, domain, AI profile, knowledge, and representative queries are scoped to the signed-in owner. AI notes/documents are scoped to the selected representative or shared entries. SQL migrations enable RLS and restrict server-only tables and RPCs to `service_role`; composite owner foreign keys protect mailbox, message, representative, and workflow relationships. Hosted RLS is enabled on the reviewed tables. Server-only tables without user policies deny access through normal client roles. |
 | Webhook handling | Resend signatures are checked against the raw body with a five-minute timestamp window and constant-time comparison; payloads are capped at 1 MiB; automated/list mail is detected; duplicate inbound email is constrained by database uniqueness. |
 | AI safety and privacy | Confidence floor is 0.80, with exact source-quote validation and a high-risk review gate still in force. Auto replies contain verified source text, not free-form model prose. Private routing notes are not citation sources. Explicitly test/demo/synthetic price-list documents are excluded. Citation validation rejects prompt-injection text and credential-shaped values. Attachments are not sent to Groq. |
@@ -21,7 +21,7 @@ This is an engineering review, not a certification or an independent penetration
 
 ## Automated test cases
 
-`npm test` currently passes **49 tests**. The suite includes:
+`npm test` currently passes **50 tests**. The suite includes:
 
 - invalid/oversized JSON and oversized webhook bodies;
 - missing, foreign, scheme-mismatched, and port-mismatched origins;
@@ -32,6 +32,7 @@ This is an engineering review, not a certification or an independent penetration
 - exact citation matching, confidence boundaries, prompt injection, sensitive/account/payment/cancellation cases, test-price exclusion, and internal-policy separation;
 - synthetic supported/unsupported question decisions, workflow opt-in, human handoff, quota exhaustion, and proof that failure paths do not send mail;
 - production header policy and no-store API responses.
+- explicit POST methods on every form in the account app and demo compose view.
 
 Additional checks run: `npm audit --omit=dev`, `git diff --check`, `vercel.json` JSON parsing, and JavaScript syntax checks.
 
@@ -44,6 +45,7 @@ Additional checks run: `npm audit --omit=dev`, `git diff --check`, `vercel.json`
 - Auth provider error text could reveal whether an account existed. Provider rejections now return the same generic response.
 - Exact source matching alone could have permitted an unsafe quote from an uploaded document. Credential-shaped strings and common prompt-injection instructions are now rejected as automatic evidence.
 - The hosted `public.rls_auto_enable()` SECURITY DEFINER event-trigger function was executable by `PUBLIC`, `anon`, and `authenticated`. Those grants were revoked while retaining the event trigger that enables RLS on newly created public tables. A repeatable migration records the privilege fix.
+- Browser DAST found that all nine account-app forms defaulted to GET. They now use POST, including the demo compose form, and a regression test prevents this from returning. If JavaScript fails, form values will not be added to the URL.
 
 ## Provider dashboard review
 
@@ -54,9 +56,18 @@ Additional checks run: `npm audit --omit=dev`, `git diff --check`, `vercel.json`
 
 ## Checks still needed
 
-- The local Supabase/Docker database stack was unavailable, so pgTAP and real two-account RLS isolation tests were not run. Hosted RLS state and the event-trigger function grants were read back, but this is not a substitute for exercising cross-account access with two real test identities.
-- No external penetration test, browser-based DAST, or production mailbox send/receive test was performed. Automated question tests use synthetic data and mock the model/provider. Five synthetic prompts were run against the live Groq simulator: supported project/profile and short education facts returned verified citations; unsupported pricing/service requests and prompt injection went to human review. All five matched their expected outcomes, and the simulator sent no email.
+- The production two-account check exercised OpenMail's mailbox API with two real authenticated identities. A raw SQL `SELECT` as `authenticated` was denied by the database grant layer before RLS policy evaluation. The local Supabase/Docker stack is unavailable, so pgTAP and direct policy evaluation with test fixtures are still outstanding.
+- Manual browser DAST covered the public app and non-mutating/unauthenticated API checks; it is not a full scanner run. An authenticated cross-origin request was not exercised live; the same-origin helper has automated negative tests.
+- No independent external penetration test or production mailbox send/receive test was performed. Automated AI question tests use synthetic data and mock the model/provider. Five synthetic prompts were run against the live Groq simulator: supported project/profile and short education facts returned verified citations; unsupported pricing/service requests and prompt injection went to human review. All five matched expected outcomes, and the simulator sent no email.
 - Enable Vercel account-level 2FA in the account settings. This requires the account owner to complete their authenticator setup; the setting was not changed during this review.
+
+## Production DAST and tenant-isolation results
+
+- `https://freeopenmail.tech/app.html` and `/api/status` returned HTTP 200 after deployment. The app response included HSTS, CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, a strict referrer policy, and a restrictive permissions policy.
+- The live app had nine forms, all explicitly POST; browser inspection found no third-party scripts, mixed-content URLs, or console errors. A harmless script-shaped query parameter was not reflected into the page.
+- Unauthenticated `GET /api/messages` and `GET /api/ai/profile` returned 401; `GET /api/auth` returned 405; `POST /api/auth` without an Origin header returned 403. An unauthenticated cross-origin message POST returned 401 before reaching the origin check, so this was not counted as a live authenticated CSRF test.
+- A temporary, auto-confirmed Supabase test identity signed into OpenMail. Using that session, a request for an existing account's mailbox ID returned 404 (`Mailbox not found`); the test identity's domain and mailbox lists were empty. No mail was sent or records were created. The temporary identity was deleted after the test.
+- The database denied direct `SELECT` on `public.messages` to the `authenticated` role because that role has no table grant. The denial occurred before RLS evaluation and is an additional access barrier; it does not prove the owner policies themselves with positive and negative test fixtures.
 
 ## References
 
