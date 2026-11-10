@@ -2,7 +2,7 @@ const crypto = require("node:crypto");
 const { json, method, readJson, requireSameOrigin, fail } = require("./http");
 const { signedIn, requireConfirmedEmail, ownedRow } = require("./account");
 const { config, database, consumeAIDraftQuota } = require("./services");
-const { generateAutomaticDecision, AUTO_REPLY_MIN_CONFIDENCE } = require("./ai");
+const { generateAutomaticDecision, AUTO_REPLY_MIN_CONFIDENCE, isTestOnlyPricingMaterial } = require("./ai");
 
 const UUID = /^[0-9a-f-]{36}$/i;
 const WORKFLOW_ACTIONS = new Set(["route_to_rep", "create_draft", "verified_reply", "human_review"]);
@@ -53,16 +53,18 @@ async function approvedContext(ownerId, representativeId, db = database) {
     db(`ai_knowledge_documents?select=id,file_name,mime_type,extracted_text&${scoped}`)
   ]);
   const sources = [];
-  for (const key of ["company_name", "company_description", "products_services", "pricing", "business_hours", "policies"]) {
+  for (const key of ["company_name", "company_description", "products_services", "pricing", "business_hours"]) {
     const text = clean(profile[key], key === "company_name" ? 120 : 1800);
     if (text) sources.push({ id: `profile:${key}`, kind: "company_profile", title: key.replaceAll("_", " "), text });
   }
   for (const item of notes || []) {
     const text = clean(item.content, 2500);
+    if (isTestOnlyPricingMaterial(item.title, text)) continue;
     if (text) sources.push({ id: `note:${item.id}`, kind: clean(item.entry_type, 24), title: clean(item.title, 120), text });
   }
   for (const item of documents || []) {
     const text = clean(item.extracted_text, 5000);
+    if (isTestOnlyPricingMaterial(item.file_name, text)) continue;
     if (text) sources.push({ id: `document:${item.id}`, kind: "approved_document", title: clean(item.file_name, 160), text });
   }
   let budget = 22000;
@@ -73,7 +75,7 @@ async function approvedContext(ownerId, representativeId, db = database) {
     if (text) boundedSources.push({ ...source, text });
     budget -= text.length;
   }
-  return { settings, profile, representative, sources: boundedSources };
+  return { settings, profile, representative, sources: boundedSources, operationalPolicies: clean(profile.policies, 5000) };
 }
 
 function evaluateSimulation(expectedDecision, decision) {

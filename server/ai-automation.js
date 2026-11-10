@@ -1,5 +1,6 @@
 const crypto = require("node:crypto");
 const { database, readiness, consumeQuota, resend } = require("./services");
+const { logSafeError } = require("./http");
 const { generateAutomaticDecision, generateReplyDraft, highRiskReason, messageAddress } = require("./ai");
 const { workflowMatches } = require("./ai-platform");
 
@@ -39,7 +40,7 @@ async function recordTrust(inbound, eventType, fields = {}, db = database) {
     });
   } catch (error) {
     // Metrics are best-effort and must never interrupt mail handling.
-    console.error("Could not record OpenMail AI trust event:", error && error.message || error);
+    logSafeError("Could not record OpenMail AI trust event", error);
   }
 }
 
@@ -308,7 +309,7 @@ async function processAutomaticReply(messageId, overrides = {}) {
       evidenceSourceIds: (decision && decision.citations || []).map((item) => item.source_id)
     }); }
     catch (saveError) {
-      console.error("Could not record OpenMail AI handoff:", saveError && saveError.message || saveError);
+      logSafeError("Could not record OpenMail AI handoff", saveError);
       try { await patchJob(inbound.id, inbound.owner_id, { status: "failed", reason }, db); } catch {}
       await recordTrust(inbound, "automation_failed", { representativeId, workflowId: matchedWorkflow && matchedWorkflow.id }, db);
       return { status: "failed" };

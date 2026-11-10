@@ -27,10 +27,22 @@ function readiness() {
   return { authReady: authMissing.length === 0, mailReady: authMissing.length === 0 && mailMissing.length === 0, authMissing, mailMissing };
 }
 
+async function timedFetch(url, options = {}, timeoutMs = 10000) {
+  try {
+    return await fetch(url, { ...options, signal: AbortSignal.timeout(timeoutMs) });
+  } catch (error) {
+    const timedOut = error && (error.name === "TimeoutError" || error.name === "AbortError");
+    throw Object.assign(new Error(timedOut ? "Upstream service timed out." : "Upstream service unavailable."), {
+      status: timedOut ? 504 : 502,
+      code: timedOut ? "UPSTREAM_TIMEOUT" : "UPSTREAM_UNAVAILABLE"
+    });
+  }
+}
+
 async function supabaseAuth(path, options = {}) {
   const c = config();
   if (!c.supabaseUrl || !c.publishableKey) throw Object.assign(new Error("Account services are not configured yet."), { status: 503 });
-  const response = await fetch(`${c.supabaseUrl}/auth/v1${path}`, {
+  const response = await timedFetch(`${c.supabaseUrl}/auth/v1${path}`, {
     method: options.method || "GET",
     headers: { apikey: c.publishableKey, "Content-Type": "application/json", ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}) },
     body: options.body ? JSON.stringify(options.body) : undefined
@@ -50,7 +62,7 @@ async function database(path, options = {}) {
     ...(options.prefer ? { Prefer: options.prefer } : {}),
     ...(options.headers || {})
   };
-  const response = await fetch(`${c.supabaseUrl}/rest/v1/${path}`, {
+  const response = await timedFetch(`${c.supabaseUrl}/rest/v1/${path}`, {
     method: options.method || "GET",
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body)
@@ -68,7 +80,7 @@ async function database(path, options = {}) {
 async function resend(path, options = {}) {
   const c = config();
   if (!c.resendKey) throw Object.assign(new Error("Email transport is not configured yet."), { status: 503 });
-  const response = await fetch(`https://api.resend.com${path}`, {
+  const response = await timedFetch(`https://api.resend.com${path}`, {
     method: options.method || "GET",
     headers: { Authorization: `Bearer ${c.resendKey}`, ...(options.body ? { "Content-Type": "application/json" } : {}), ...(options.headers || {}) },
     body: options.body ? JSON.stringify(options.body) : undefined
@@ -168,4 +180,4 @@ function rememberAuthResponse(res, auth) {
   return true;
 }
 
-module.exports = { config, readiness, supabaseAuth, database, resend, consumeQuota, consumeAIDraftQuota, cookieOptions, currentUser, rememberAuthResponse, clearSession };
+module.exports = { config, readiness, timedFetch, supabaseAuth, database, resend, consumeQuota, consumeAIDraftQuota, cookieOptions, currentUser, rememberAuthResponse, clearSession };

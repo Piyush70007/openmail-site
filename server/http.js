@@ -53,8 +53,16 @@ function requireSameOrigin(req, res) {
 function fail(res, error) {
   const status = Number.isInteger(error && error.status) ? error.status : 500;
   const message = status >= 500 ? "OpenMail could not complete that request." : error.message;
-  if (status >= 500) console.error("OpenMail API error:", error && error.message ? error.message : error);
+  if (status >= 500) logSafeError("OpenMail API error", error);
   json(res, status, { error: message });
 }
 
-module.exports = { json, method, readJson, requireSameOrigin, fail };
+function logSafeError(label, error) {
+  const details = {};
+  if (Number.isInteger(error && error.status)) details.status = error.status;
+  const code = error && (error.code || error.providerCode);
+  if (typeof code === "string" && /^[A-Za-z0-9_.-]{1,64}$/.test(code)) details.code = code;
+  console.error(label, details);
+}
+
+module.exports = { json, method, readJson, requireSameOrigin, fail, logSafeError };

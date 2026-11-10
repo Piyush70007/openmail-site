@@ -14,5 +14,10 @@ module.exports = async (req, res) => {
     const expiresIn = Math.max(60, Math.min(86400, Number(body.expiresIn) || 3600));
     rememberAuthResponse(res, { access_token: accessToken, refresh_token: refreshToken, expires_in: expiresIn });
     json(res, 200, { ok: true, user: { id: user.id, email: user.email } });
-  } catch (error) { fail(res, error); }
+  } catch (error) {
+    if (Number.isInteger(error && error.status) && error.status >= 400 && error.status < 500) {
+      return json(res, 400, { error: "Email confirmation could not be completed. Sign in and try again." });
+    }
+    fail(res, error);
+  }
 };

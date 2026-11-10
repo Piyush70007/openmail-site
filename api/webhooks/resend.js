@@ -1,5 +1,5 @@
 const crypto = require("node:crypto");
-const { json, method } = require("../../server/http");
+const { json, method, logSafeError } = require("../../server/http");
 const { config, database, resend } = require("../../server/services");
 const { waitUntil } = require("@vercel/functions");
 const { processAutomaticReply } = require("../../server/ai-automation");
@@ -60,7 +60,7 @@ async function rawBody(req) {
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > 1024 * 1024) throw new Error("Webhook payload is too large.");
+    if (size > 1024 * 1024) throw Object.assign(new Error("Webhook payload is too large."), { status: 413 });
     chunks.push(chunk);
   }
   return Buffer.concat(chunks).toString("utf8");
@@ -111,17 +111,17 @@ module.exports = async (req, res) => {
       if (message && message.id) backgroundTasks.push(processAutomaticReply(message.id));
     }
     const settledTasks = backgroundTasks.map((task) => task.catch((error) => {
-      console.error("OpenMail AI automation failed safely:", error && error.message ? error.message : error);
+      logSafeError("OpenMail AI automation failed safely", error);
     }));
     if (process.env.VERCEL === "1") settledTasks.forEach((task) => waitUntil(task));
     else await Promise.all(settledTasks);
     json(res, 200, { ok: true });
   } catch (error) {
-    console.error("OpenMail inbound webhook error:", error && error.message ? error.message : error);
-    json(res, 500, { error: "OpenMail could not store this incoming message." });
+    logSafeError("OpenMail inbound webhook error", error);
+    json(res, error && error.status === 413 ? 413 : 500, { error: error && error.status === 413 ? "Webhook payload is too large." : "OpenMail could not store this incoming message." });
   }
 };
 
 module.exports.config = { api: { bodyParser: false } };
 
-module.exports._test = { verifySignature, headerValue, isAutoSubmitted, htmlToText };
+module.exports._test = { verifySignature, headerValue, isAutoSubmitted, htmlToText, rawBody };
