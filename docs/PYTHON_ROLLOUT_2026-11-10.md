@@ -7,11 +7,13 @@
 | Production website | https://freeopenmail.tech |
 | Vercel project | `openmail-site` |
 | Promoted Python commit | `955d605` |
-| Candidate deployment reference | `F2z16Lckd` |
+| Candidate deployment reference | `F2z16LckdBj8Qzkox7S64y5THGgh` |
 | Promotion time | 2026-11-10 21:57:40 UTC |
 | Previous production deployment | `2cCQQHm8HD6KhmiUnLw2Eo652Xe7` |
 | Previous Node commit | `611f128` |
-| Repository rollout status | Final merge into `main` pending |
+| Repository rollout status | [PR #1](https://github.com/Piyush70007/openmail-site/pull/1) merged into `main` |
+| Merge commit | `5795eb6fd8ca75ef58fe6a4b973726a9a97623d7` |
+| Verified deployment from `main` | `G5qHbiUrKUUURpgf8RFwH84mJ83p`, Ready and serving the production domain |
 
 The production backend is Python 3.14/FastAPI. Browser assets, public API URLs,
 database schema, DNS, environment variables, company knowledge and mailbox
@@ -109,7 +111,7 @@ The second controlled message requested sensitive account information.
 The explicit human-review result and zero linked outbound records are the
 negative-test evidence; absence of a visible reply alone would not establish it.
 
-## Duplicate-delivery check and remaining work
+## Duplicate-delivery check
 
 The positive Resend event was manually replayed and the live duplicate-delivery
 check passed:
@@ -125,10 +127,15 @@ check passed:
 These observations confirm that replaying this event did not generate or send a
 second reply. They do not represent a concurrent-delivery stress test.
 
-Before closing the rollout record:
+## Source integration
 
-1. Record the final merge commit and the production deployment serving it.
-2. Recheck the production session/status and mailbox after the final deployment.
+PR #1 was merged after the live checks. The merge build passed GitHub Actions and
+Vercel confirmed deployment `G5qHbiUrKUUURpgf8RFwH84mJ83p` from `main` as the
+Ready production deployment for the unchanged custom domain. Only rollout
+documentation differs from the runtime commit used for the live mail tests.
+The signed-in mailbox showed the factual reply under AI Sent and the safety
+request under Needs human with its explicit review reason. The two tagged test
+messages and their outcomes were retained as verification records.
 
 ## Failure handling and rollback
 

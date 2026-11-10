@@ -85,7 +85,7 @@ Open [localhost:3000](http://localhost:3000). For a runtime-only installation, u
 - `scripts/build_static.py` — copies only approved public assets to the generated CDN directory.
 - `requirements.txt`, `requirements-dev.txt` — pinned runtime and verification dependencies.
 
-The tests use synthetic data and mocked providers; they do not send email, call Groq or access production Supabase. [PYTHON_MIGRATION.md](PYTHON_MIGRATION.md) explains the architecture, preserved contracts and remaining deployment checks.
+The tests use synthetic data and mocked providers; they do not send email, call Groq or access production Supabase. [PYTHON_MIGRATION.md](PYTHON_MIGRATION.md) explains the architecture and preserved contracts. The [production rollout record](docs/PYTHON_ROLLOUT_2026-11-10.md) documents separate live login, automatic-reply, human-handoff and replay checks.
 
 ## GitHub and Vercel
 

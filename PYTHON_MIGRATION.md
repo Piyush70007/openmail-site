@@ -47,9 +47,10 @@ coercions are not performed, and IDNA-invalid emoji labels are rejected.
 The production website is **https://freeopenmail.tech**. Its Vercel project is
 `openmail-site`; the project name and preview hostname do not replace the custom
 domain. Python commit `955d605` was promoted to this domain on November 10, 2026,
-at 21:57:40 UTC. The final merge into `main` is still pending. The detailed
-[production rollout record](docs/PYTHON_ROLLOUT_2026-11-10.md) records completed
-checks and the remaining final merge/deployment confirmation.
+at 21:57:40 UTC. [Pull request #1](https://github.com/Piyush70007/openmail-site/pull/1)
+was then merged as `5795eb6`; Vercel deployment `G5qHbiUrKUUURpgf8RFwH84mJ83p`
+from `main` was confirmed Ready and serving the production domain. The detailed
+[production rollout record](docs/PYTHON_ROLLOUT_2026-11-10.md) records the evidence.
 
 The Python tests cover HTTP routes, private data access, CSRF, session compatibility
 with Node, bounded inputs, signed webhook delivery, duplicate events, mail actions,
@@ -95,8 +96,9 @@ and environment-file paths, rejected origin-less logout and unsigned webhooks,
 and included the configured security headers. Resend showed two delivery attempts
 for the positive webhook and confirmed its manual replay returned HTTP 200 and
 `{"ok":true}`. The database still showed exactly one outbound reply
-and an unchanged completed-job timestamp. The live replay check passed; the final
-merge and deployment state remain to be recorded.
+and an unchanged completed-job timestamp. The live replay check passed. The merge
+build also passed GitHub Actions, and the live mailbox displayed the test reply in
+AI Sent and the safety case in Needs human.
 
 Rollback target: Vercel deployment `2cCQQHm8HD6KhmiUnLw2Eo652Xe7`, the previous
 Node implementation at commit `611f128`. The schema and session format are
