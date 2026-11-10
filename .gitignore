@@ -6,7 +6,9 @@ node_modules
 __pycache__/
 *.py[cod]
 .pytest_cache/
+pytest-of-*/
 public/
+landing-dist/
 *.egg-info/
 .codex-npm-cache/
 output/

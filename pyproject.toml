@@ -19,7 +19,7 @@ test = ["pytest==9.2.0", "pytest-asyncio==1.4.1.post1", "pip-audit==2.10.1"]
 entrypoint = "main:app"
 
 [tool.vercel.scripts]
-build = "python scripts/build_static.py"
+build = "npm run build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests/python"]

@@ -8,10 +8,12 @@ from fastapi.responses import FileResponse
 
 from . import auth, ai_platform, ai_setup, mail_routes, webhook
 from .core import fail, json_response, method, readiness
+from .static_assets import MAILBOX_FILES, landing_path, safe_file
 
 ROOT = Path(__file__).resolve().parent.parent
 SECURITY_HEADERS = {h['key']: h['value'] for h in json.loads((ROOT / 'vercel.json').read_text())['headers'][0]['headers']}
-PUBLIC_FILES = frozenset(('index.html', 'app.html', 'styles.css', 'app.css', 'workspace.css', 'app.js', 'app-ui.js', 'app-ai-documents.js', 'favicon.svg', 'vendor/MAMMOTH-LICENSE.txt', 'vendor/PDFJS-LICENSE.txt', 'vendor/mammoth.browser.min.js', 'vendor/pdf.min.mjs', 'vendor/pdf.worker.min.mjs'))
+PUBLIC_FILES = MAILBOX_FILES
+LANDING_DIR = ROOT / 'landing-dist'
 app = FastAPI(title='OpenMail', docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
 
 
@@ -73,8 +75,12 @@ for resource, handler in AI_ROUTES.items():
 @app.api_route('/{path:path}', methods=['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'])
 async def static_or_missing(request: Request, path: str):
     name = path or 'index.html'
-    if name in PUBLIC_FILES and request.method in ('GET', 'HEAD'):
-        response = FileResponse(ROOT / name)
+    if request.method in ('GET', 'HEAD') and name in PUBLIC_FILES and (source := safe_file(ROOT, name)):
+        response = FileResponse(source)
+    elif request.method in ('GET', 'HEAD') and (built := landing_path(LANDING_DIR, name)):
+        response = FileResponse(built)
+    elif name == 'index.html' and request.method in ('GET', 'HEAD'):
+        response = json_response(503, {'error': 'The homepage build is not available.'})
     else:
         response = json_response(404, {'error': 'That OpenMail route was not found.'})
     return secure_response(request, response)
