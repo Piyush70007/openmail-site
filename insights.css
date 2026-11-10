@@ -1,0 +1,104 @@
+/* Saved AI results: count comparisons and clearly labeled semicircle gauges. */
+#mailView #aiTrustMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+#mailView .insight-scope,
+#mailView .insight-comparisons { grid-column: 1 / -1; }
+#mailView .insight-scope { margin: 0; color: #96aaa6; font-size: 12px; line-height: 1.65; }
+#mailView .insight-card {
+  --insight-color: #a4e9d8;
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid rgba(167, 206, 198, .14);
+  border-radius: 12px;
+  background: linear-gradient(145deg, #111c1d, #0d1517);
+}
+#mailView .insight-title { margin: 0 0 8px; color: #e6f2ed; font: 600 15px/1.4 var(--font); letter-spacing: -.015em; }
+#mailView .insight-note { margin: 0; color: #99aaa7; font: 12px/1.65 var(--font); overflow-wrap: anywhere; }
+#mailView .insight-detail { margin: 0 0 8px; color: #d9e8e2; font: 500 13px/1.5 var(--font); }
+#mailView .insight-tone-mint { --insight-color: #a4e9d8; }
+#mailView .insight-tone-blue { --insight-color: #8db9ef; }
+#mailView .insight-tone-amber { --insight-color: #edc38c; }
+#mailView .insight-tone-rose { --insight-color: #e9a3ac; }
+#mailView .insight-tone-violet { --insight-color: #b4a7e9; }
+#mailView .insight-gauge-card { text-align: center; }
+#mailView .insight-gauge-card .insight-title { text-align: left; }
+#mailView .insight-gauge { position: relative; width: min(100%, 260px); margin: 14px auto 6px; }
+#mailView .insight-gauge svg { display: block; width: 100%; height: auto; overflow: visible; }
+#mailView .insight-gauge-track,
+#mailView .insight-gauge-fill { fill: none; stroke-width: 14; stroke-linecap: round; }
+#mailView .insight-gauge-track { stroke: #263536; }
+#mailView .insight-gauge-fill { stroke: var(--insight-color); }
+#mailView .insight-gauge-marker { stroke: #f0f5ef; stroke-width: 2; }
+#mailView .insight-gauge-value { position: absolute; left: 0; right: 0; bottom: 22%; color: #f0f6f2; font: 500 clamp(30px, 3vw, 42px)/1 var(--font); letter-spacing: -.05em; }
+#mailView .insight-gauge-scale { display: flex; justify-content: space-between; margin: -15px 10px 18px; color: #95a5a2; font: 10px var(--mono); }
+#mailView .insight-test-overview,
+#mailView .insight-comparisons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+#mailView .insight-test-overview { margin: 2px 0 14px; }
+#mailView .insight-bars { display: grid; gap: 18px; list-style: none; margin: 24px 0 0; padding: 0; }
+#mailView .insight-bar-label { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 7px; font: 13px/1.5 var(--font); }
+#mailView .insight-bar-label span { min-width: 0; overflow-wrap: anywhere; color: #c6d7d0; }
+#mailView .insight-bar-label b { flex: 0 0 auto; color: #eaf4ee; font: 12px var(--mono); }
+#mailView .insight-bar-track { height: 9px; overflow: hidden; border-radius: 99px; background: #253234; }
+#mailView .insight-bar-fill { display: block; height: 100%; border-radius: inherit; background: var(--insight-color); transition: width .25s ease; }
+#mailView .insight-axis { margin: 18px 0 0; color: #8c9d99; font: 10px/1.5 var(--mono); text-align: right; }
+#mailView .insight-empty { margin: 20px 0 0; padding-top: 14px; border-top: 1px solid rgba(167, 206, 198, .12); color: #b1c5bd; font: 12px/1.65 var(--font); }
+#mailView .insight-stats { display: grid; gap: 0; margin: 8px 0 0; }
+#mailView .insight-stats > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 18px 0; border-bottom: 1px solid rgba(167, 206, 198, .12); }
+#mailView .insight-stats > div:last-child { border: 0; padding-bottom: 0; }
+#mailView .insight-stats dt { color: #b1c4bc; font: 13px/1.5 var(--font); }
+#mailView .insight-stats dd { margin: 0; color: #eef7f1; font: 500 28px/1 var(--font); letter-spacing: -.04em; }
+#mailView .insight-checks { display: grid; gap: 0; list-style: none; margin: 2px 0 8px; padding: 0; }
+#mailView .insight-checks li { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(167, 206, 198, .12); font: 12px/1.5 var(--font); }
+#mailView .insight-checks span { color: #a8bdb4; }
+#mailView .insight-checks b { text-align: right; font-weight: 500; }
+#mailView .insight-test-history,
+#mailView .insight-decision-list { display: grid; gap: 10px; }
+#mailView .insight-test-history .ai-metric-row { border-radius: 8px; padding: 15px; }
+#mailView .insight-test-history .ai-metric-row b { font-size: 13px; overflow-wrap: anywhere; }
+#mailView .insight-test-history .ai-metric-row > span { font: 11px/1.5 var(--font); }
+#mailView .insight-test-history .ai-metric-row > small { font-size: 11px; white-space: nowrap; }
+#mailView .insight-filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, .5fr); gap: 14px; }
+#mailView .insight-filters label { display: grid; gap: 7px; color: #b4c8be; font: 12px/1.4 var(--font); }
+#mailView .insight-filters input,
+#mailView .insight-filters select { width: 100%; min-width: 0; min-height: 42px; padding: 10px 12px; border: 1px solid rgba(167, 206, 198, .22); border-radius: 7px; background: #0d1517; color: #dfede5; font: 13px var(--font); }
+#mailView .insight-filters input:focus-visible,
+#mailView .insight-filters select:focus-visible { outline: 2px solid #a4e9d8; outline-offset: 2px; }
+#mailView .insight-decision-list .ai-trust-row { padding: 18px; border-radius: 9px; gap: 20px; }
+#mailView .insight-decision-copy { flex: 1; }
+#mailView .insight-decision-copy > b { margin-top: 8px; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+#mailView .insight-decision-copy > small { font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+#mailView .insight-status { display: inline-flex; border: 1px solid rgba(237, 195, 140, .2); border-radius: 30px; padding: 4px 9px; background: rgba(237, 195, 140, .04); color: #e2c49c; font: 10px/1.3 var(--font); }
+#mailView .insight-status-sent { border-color: rgba(164, 233, 216, .2); background: rgba(164, 233, 216, .05); color: #b4ecda; }
+#mailView .insight-decision-list .ai-row-actions { max-width: 280px; gap: 6px; }
+#mailView .insight-decision-list .quiet-button { min-height: 34px; padding: 7px 10px; font-size: 12px; border: 1px solid rgba(167, 206, 198, .15); border-radius: 5px; }
+#mailView .insight-decision-list .ai-row-actions > small { flex-basis: 100%; color: #afc9bc; font-size: 12px; text-align: right; }
+#mailView #aiSimulatorResult > p { font-size: 13px; }
+#mailView #aiSimulatorResult > b { font-size: 15px; }
+#mailView #aiSimulatorResult blockquote b { font-size: 12px; }
+#mailView #aiSimulatorResult blockquote p { font-size: 12px; overflow-wrap: anywhere; }
+@media (max-width: 1100px) {
+  #mailView #aiTrustMetrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #mailView .insight-snapshot { grid-column: 1 / -1; }
+  #mailView .insight-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; }
+  #mailView .insight-stats > div { padding-bottom: 18px; }
+  #mailView .insight-decision-list .ai-trust-row { flex-direction: column; }
+  #mailView .insight-decision-list .ai-row-actions { max-width: 100%; justify-content: flex-start; }
+  #mailView .insight-decision-list .ai-row-actions > small { text-align: left; }
+}
+@media (max-width: 700px) {
+  #mailView #aiTrustMetrics,
+  #mailView .insight-test-overview,
+  #mailView .insight-comparisons { grid-template-columns: minmax(0, 1fr); }
+  #mailView .insight-card { padding: 20px; }
+  #mailView .insight-filters { grid-template-columns: minmax(0, 1fr); }
+  #mailView .insight-stats { grid-template-columns: minmax(0, 1fr); }
+  #mailView .insight-stats > div:last-child { padding-bottom: 0; }
+  #mailView .insight-gauge-value { font-size: 38px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #mailView .insight-bar-fill { transition: none; }
+}

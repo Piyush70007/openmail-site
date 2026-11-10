@@ -36,5 +36,5 @@
     }
   ],
   "framework": "fastapi",
-  "buildCommand": "python scripts/build_static.py"
+  "buildCommand": "npm run build"
 }

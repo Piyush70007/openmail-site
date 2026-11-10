@@ -1,6 +1,6 @@
 # OpenMail
 
-OpenMail combines a Python/FastAPI backend for custom-domain email and grounded AI representatives with an interactive browser interface. The Python migration is prepared on a separate branch; see [the migration guide](PYTHON_MIGRATION.md) for verification and rollout status. A signed-in account owner can connect a domain, review the mail provider's DNS records, create addresses on a verified domain, and use an inbox in OpenMail.
+OpenMail combines a Python/FastAPI backend for custom-domain email and grounded AI representatives with an interactive browser interface. The Python backend is live in production; the [rollout record](docs/PYTHON_ROLLOUT_2026-11-10.md) documents the verified login, automatic-reply, human-handoff and replay checks. A signed-in account owner can connect a domain, review the mail provider's DNS records, create addresses on a verified domain, and use an inbox in OpenMail.
 
 ## What is implemented
 
@@ -14,7 +14,9 @@ OpenMail combines a Python/FastAPI backend for custom-domain email and grounded 
 - **My AI, Phases 1–5**: grounded editable drafts and opt-in automatic replies; a synthetic email simulator with verified citations, expected-answer evaluation, and a confidence gate; separate Support, Sales, Billing, and Careers representatives with scoped knowledge; a restricted mailbox workflow builder; and an owner-only trust dashboard with corrections, escalations, resolutions, and labeled accuracy.
 - Automatic replies are off by default. An owner must explicitly enable them for each verified mailbox after enabling the AI profile; the UI asks for confirmation before saving. Candidate inbound text and approved company context may then go to Groq. Attachments and original uploaded files are never sent. Sensitive, automated, uncertain, or unsupported emails are held for review or ignored; eligible automatic replies must cite exact source passages and pass a high confidence threshold. The server constructs outbound content from those exact quotes and ignores the model's free-form reply, avoiding unsupported generated claims. Replies use the normal account send quota, have an idempotency key, and are capped at 10 AI requests per user and 25 per OpenMail project per UTC day. A 24-hour per-sender reply cooldown helps limit loops.
 - Server-side AI safeguards: Groq and Supabase secret keys never reach the browser; profile, knowledge, documents, settings, message views, and handoffs are scoped to the signed-in owner. Database tables and the document RPC are restricted to `service_role`. Uploaded documents are extracted in the browser, bounded to 5 MB/50 PDF pages/40,000 characters, and stored as text only. Human-review and failed-send cases do not appear as AI Sent.
-- The actual app lives at `/app.html`. The landing page also contains a separate fictional category interface sample.
+- The actual app lives at `/app.html`. The React homepage contains a labeled interactive product preview with fictional mail, representative setup, training, workflows and trust reporting. Preview interactions do not access real accounts or send mail.
+- Custom address examples explain separate inboxes such as `support@yourdomain.com`, `sales@yourdomain.com` and a personal name. These are not forwarding aliases; creation and provider quotas still apply.
+- The signed-in workspace uses the same dark visual style, readable controls and full-window layout. AI results include semicircle gauges and count bars. Reviewed accuracy counts only Correct/Needs correction feedback; AI confidence is a separate model estimate. Empty datasets display no data instead of a success percentage.
 
 ### My AI representative — Phase 1
 
@@ -59,30 +61,39 @@ Run npm test for the automated security and workflow checks.
 
 ## Run locally
 
-Use Python 3.14. Create `.env.local` from [`.env.example`](.env.example) using development credentials. Allow `http://localhost:3000/app.html` in the development Supabase Auth redirects.
+Use Python 3.14 and Node 24. Create `.env.local` from [`.env.example`](.env.example) using development credentials. Allow `http://localhost:3000/app.html` in the development Supabase Auth redirects.
 
 ```sh
 python3.14 -m venv .venv
 .venv/bin/python -m pip install -r requirements-dev.txt
 npm ci --ignore-scripts
+npm run build
 .venv/bin/python -m pytest -q
 npm test
-.venv/bin/uvicorn main:app --reload --port 3000 --env-file .env.local
+npm run dev:api
 ```
 
-Open [localhost:3000](http://localhost:3000). For a runtime-only installation, use `requirements.txt` instead of `requirements-dev.txt`; Node is needed only for browser dependency maintenance and the retained compatibility tests. Resend webhook delivery needs a public HTTPS endpoint.
+Open [localhost:3000](http://localhost:3000) to use the compiled React homepage and the mailbox through Python. `npm run build` compiles the homepage into `landing-dist/` and packages it with the explicit mailbox assets into `public/`. The old root `index.html` is retained as a reference and is never used as a deployment fallback. A missing homepage build fails packaging and returns HTTP 503 locally instead of showing stale content.
+
+For homepage development with live updates, keep `npm run dev:api` running in the first terminal and run `npm run dev` in a second terminal. Open [127.0.0.1:5173](http://127.0.0.1:5173). Vite proxies `/api`, `/app.html` and the mailbox assets to Python on port 3000, preserving the browser origin for CSRF checks. Add `http://127.0.0.1:5173/app.html` to the **development** Supabase redirect allowlist if testing email confirmation through Vite. Use development credentials for these local flows.
+
+For a runtime-only Python installation, use `requirements.txt` instead of `requirements-dev.txt`. Node is required to build the homepage, while the deployed backend still runs in Python. Resend webhook delivery needs a public HTTPS endpoint.
 
 ## Project structure
 
 - `backend/` — Python authentication, mail APIs, AI reasoning and citation validation, workflow processing, simulator and trust reporting.
 - `main.py` — FastAPI entry point for Uvicorn and Vercel.
-- `index.html`, `styles.css`, `app.js` — public site and labeled fictional mailbox sample.
-- `app.html`, `app.css`, `workspace.css`, `app-ui.js` — existing real mailbox interface.
+- `frontend/` — React homepage, styling and interactions, built by Vite.
+- `vite.config.mjs` — homepage output and local proxy to Python; no public directory or source maps are copied into the build.
+- `index.html`, `app.js` — retained legacy homepage references, excluded from deployment.
+- `styles.css` — shared base stylesheet used by the mailbox.
+- `app.html`, `app.css`, `workspace.css`, `app-ui.js`, `insights.css` — real mailbox, AI setup and saved-results charts. The interface keeps its browser JavaScript handlers and Python APIs.
 - `app-ai-documents.js`, `vendor/` — local browser document extraction.
 - `supabase/` — unchanged tables, access policies, quotas and migration history.
 - `tests/python/` — Python API, security, AI and compatibility tests.
 - `tests/node_baseline/` — historical Node backend used only for regression comparisons; excluded from deployment.
-- `scripts/build_static.py` — copies only approved public assets to the generated CDN directory.
+- `scripts/build_static.py`, `backend/static_assets.py` — package and serve only compiled homepage files and approved mailbox assets.
+- `scripts/prepare_frontend.mjs` — installs locked Node build dependencies on Vercel without replacing its Python dependency installation.
 - `requirements.txt`, `requirements-dev.txt` — pinned runtime and verification dependencies.
 
 The tests use synthetic data and mocked providers; they do not send email, call Groq or access production Supabase. [PYTHON_MIGRATION.md](PYTHON_MIGRATION.md) explains the architecture and preserved contracts. The [production rollout record](docs/PYTHON_ROLLOUT_2026-11-10.md) documents separate live login, automatic-reply, human-handoff and replay checks.
@@ -93,4 +104,4 @@ The tests use synthetic data and mocked providers; they do not send email, call 
 - Production website: [freeopenmail.tech](https://freeopenmail.tech/)
 - Vercel project: `openmail-site` (the hosting project name remains unchanged)
 
-The repository is connected to Vercel and deploys from `main`. Add the services and environment variables above in Vercel before expecting the account app to accept sign-ups or handle mail. Configure a webhook against the final HTTPS deployment URL after the API routes are deployed.
+The repository is connected to Vercel and deploys from `main`. The framework remains FastAPI and the build command is `npm run build`. Vercel installs the locked Python environment first; the Vercel-only `prebuild` hook then installs the locked Node build tools. Do not replace the install command with only `npm ci`, because that would skip Python dependency installation. Add the services and environment variables above in Vercel before expecting the account app to accept sign-ups or handle mail. Configure a webhook against the final HTTPS deployment URL after the API routes are deployed.

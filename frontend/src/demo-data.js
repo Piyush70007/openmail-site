@@ -1,0 +1,311 @@
+// Fictional examples for the public product tour. Never used by the live mailbox.
+export const SAMPLE_COMPANY = "Northline Studio";
+
+export const sampleMessages = [
+  {
+    id: "m1",
+    sender: "Maya Chen",
+    address: "maya@example.test",
+    initials: "MC",
+    color: "sand",
+    subject: "A quick question about your studio hours",
+    preview: "We’re planning a project kickoff. When is your team available?",
+    body: "Hi Northline,\n\nWe’re planning a project kickoff and wanted to check your studio hours. What days and times is your team available?\n\nThanks,\nMaya",
+    category: "primary",
+    time: "10:42",
+    unread: true,
+    starred: false,
+    ai: "answered",
+  },
+  {
+    id: "m2",
+    sender: "Eli at Forming",
+    address: "eli@example.test",
+    initials: "EF",
+    color: "violet",
+    subject: "The first cut is ready",
+    preview: "The new identity is taking shape. Would love your thoughts.",
+    body: "Hey team,\n\nThe first round of concepts is ready for a look. We’ve explored a quieter direction with more space for the work to speak.\n\nLet me know a good time to walk through it.\n\nEli",
+    category: "primary",
+    time: "09:18",
+    unread: true,
+    starred: true,
+  },
+  {
+    id: "m3",
+    sender: "Jules Rivera",
+    address: "jules@example.test",
+    initials: "JR",
+    color: "sage",
+    subject: "A question about my last invoice",
+    preview: "Could you check a charge and arrange a refund for me?",
+    body: "Hello,\n\nI think my last invoice contains a duplicate charge. Could you look into my account and arrange a refund?\n\nThank you,\nJules",
+    category: "primary",
+    time: "Yesterday",
+    unread: false,
+    starred: false,
+    ai: "review",
+  },
+  {
+    id: "m4",
+    sender: "Orbit Community",
+    address: "hello@community.example.test",
+    initials: "OC",
+    color: "blue",
+    subject: "Your circle had a busy week",
+    preview: "A few new conversations from the people you follow.",
+    body: "Your weekly community roundup is here.\n\nDiscover a conversation about independent studios, an upcoming meetup, and a few thoughtful new projects from your circle.\n\nOrbit Community",
+    category: "social",
+    time: "Yesterday",
+    unread: false,
+    starred: false,
+  },
+  {
+    id: "m5",
+    sender: "Field Supply",
+    address: "studio@supply.example.test",
+    initials: "FS",
+    color: "ochre",
+    subject: "A little room for your next idea",
+    preview: "New tools for the things you’re making next.",
+    body: "Make room for a new idea.\n\nOur spring collection of studio supplies is now available. Browse notebooks, materials, and tools for your next project.\n\nField Supply",
+    category: "promotions",
+    time: "Tue",
+    unread: false,
+    starred: false,
+  },
+  {
+    id: "m6",
+    sender: "Northline Workspace",
+    address: "updates@workspace.example.test",
+    initials: "NW",
+    color: "mint",
+    subject: "Your monthly workspace note",
+    preview: "A short summary of what changed this month.",
+    body: "Your workspace summary\n\nYour latest project files are organized and your team directory is up to date. No action is needed.\n\nNorthline Workspace",
+    category: "updates",
+    time: "Mon",
+    unread: false,
+    starred: false,
+  },
+  {
+    id: "m7",
+    sender: "Unknown sender",
+    address: "offer@example.test",
+    initials: "?",
+    color: "muted",
+    subject: "An offer you didn’t ask for",
+    preview: "An unsolicited message, separated from the rest of your inbox.",
+    body: "This is a fictional unwanted message.\n\nIn this preview, it belongs in Spam and is never eligible for an automatic reply.",
+    category: "spam",
+    time: "Mon",
+    unread: false,
+    starred: false,
+  },
+];
+
+export const sampleSources = [
+  {
+    id: "hours",
+    title: "Studio handbook",
+    file: "studio-handbook.pdf",
+    kind: "Company document",
+    updated: "Updated today",
+    sections: [
+      {
+        heading: "Studio hours",
+        text: "Our studio is open Monday–Friday, 09:00–17:00 CET.",
+      },
+      {
+        heading: "Getting in touch",
+        text: "General project enquiries can be sent to hello@northline.example.test.",
+      },
+      {
+        heading: "Response policy",
+        text: "Questions about a specific account, invoice, refund, or contract require a member of the team.",
+      },
+    ],
+  },
+  {
+    id: "services",
+    title: "What we make",
+    file: "approved-services.md",
+    kind: "Approved company facts",
+    updated: "Updated yesterday",
+    sections: [
+      {
+        heading: "Services",
+        text: "Northline Studio offers brand identity, editorial design, and website design for independent businesses.",
+      },
+      {
+        heading: "Project enquiries",
+        text: "To discuss a project, share a short brief, your preferred timeline, and the scope of work.",
+      },
+      {
+        heading: "Estimates",
+        text: "Project estimates are prepared by the studio after reviewing the brief. The representative cannot promise a price or a delivery date.",
+      },
+    ],
+  },
+  {
+    id: "careers",
+    title: "Working with Northline",
+    file: "careers-faq.txt",
+    kind: "Approved FAQ",
+    updated: "Updated 3 days ago",
+    sections: [
+      {
+        heading: "Open applications",
+        text: "Designers can share a portfolio and a short introduction with careers@northline.example.test.",
+      },
+      {
+        heading: "Human decisions",
+        text: "The studio team reviews all applications. Automated replies do not assess candidates or make hiring decisions.",
+      },
+    ],
+  },
+];
+
+export const scenarios = [
+  {
+    id: "known",
+    label: "A routine question",
+    subject: "When is your studio open?",
+    question: "Hi! What are your studio hours?",
+    outcome: "Verified reply",
+    decision: "auto_reply",
+    quote: "Our studio is open Monday–Friday, 09:00–17:00 CET.",
+    sourceId: "hours",
+    sourceTitle: "Studio handbook · Studio hours",
+    confidence: "0.94",
+    reason:
+      "The answer is directly supported by an exact passage in the approved company knowledge.",
+    checks: [
+      "An approved source was found",
+      "The quoted text matches the source",
+      "No account-specific decision is needed",
+    ],
+  },
+  {
+    id: "refund",
+    label: "A sensitive request",
+    subject: "Please refund my last invoice",
+    question: "I was charged twice. Can you refund my last invoice?",
+    outcome: "Human review",
+    decision: "human_review",
+    reason:
+      "A refund needs access to a specific account and a financial decision. This message is handed to a person.",
+    checks: [
+      "An account-specific request was detected",
+      "Automatic sending is skipped",
+      "A person can investigate and reply",
+    ],
+  },
+  {
+    id: "unknown",
+    label: "An unknown answer",
+    subject: "Can you guarantee delivery by Friday?",
+    question:
+      "Can you guarantee our complete website will be delivered this Friday?",
+    outcome: "Human review",
+    decision: "human_review",
+    reason:
+      "The approved knowledge does not establish this project’s scope or delivery date. The representative cannot invent a commitment.",
+    checks: [
+      "No approved delivery commitment was found",
+      "No unsupported promise is generated",
+      "A person can confirm the next step",
+    ],
+  },
+];
+
+export const sampleRepresentatives = [
+  {
+    id: "support",
+    name: "Support",
+    role: "A helpful first reply.",
+    description:
+      "Answers routine questions using the studio handbook and approved service details.",
+    sources: ["Studio handbook", "What we make"],
+    boundary: "Account changes, complaints, and refunds go to a person.",
+    color: "mint",
+    sample: "When is your studio open?",
+  },
+  {
+    id: "sales",
+    name: "Sales",
+    role: "Clarity before a conversation.",
+    description:
+      "Shares approved services and asks for the details the studio needs to review a project.",
+    sources: ["What we make"],
+    boundary:
+      "No negotiated prices, availability promises, or signed commitments.",
+    color: "sand",
+    sample: "What should I include in a project enquiry?",
+  },
+  {
+    id: "billing",
+    name: "Billing",
+    role: "The right question, routed safely.",
+    description:
+      "Provides approved general billing information and hands account-specific requests to the team.",
+    sources: ["Studio handbook"],
+    boundary: "No payments, refunds, invoice changes, or account decisions.",
+    color: "violet",
+    sample: "I have a question about an invoice.",
+  },
+  {
+    id: "careers",
+    name: "Careers",
+    role: "A welcoming first contact.",
+    description:
+      "Explains the published application process using the approved careers FAQ.",
+    sources: ["Working with Northline"],
+    boundary: "People assess candidates and make every hiring decision.",
+    color: "blue",
+    sample: "Where can I share my portfolio?",
+  },
+];
+
+export const sampleWorkflows = [
+  {
+    id: "w1",
+    name: "Studio questions",
+    trigger: "Subject or body contains “hours”",
+    action: "Verified reply",
+    type: "verified_reply",
+    representative: "Support",
+    enabled: true,
+    note: "Sends only when automatic replies are enabled and the answer passes the evidence checks.",
+  },
+  {
+    id: "w2",
+    name: "A new project",
+    trigger: "Subject or body contains “project”",
+    action: "Create a draft",
+    type: "create_draft",
+    representative: "Sales",
+    enabled: true,
+    note: "Prepares an editable draft. A person decides whether to send it.",
+  },
+  {
+    id: "w3",
+    name: "Invoices & refunds",
+    trigger: "Subject or body contains “invoice” or “refund”",
+    action: "Human review",
+    type: "human_review",
+    representative: "Team handover",
+    enabled: true,
+    note: "Adds the message to human review. No automatic email is sent.",
+  },
+  {
+    id: "w4",
+    name: "Portfolio introductions",
+    trigger: "Subject or body contains “portfolio”",
+    action: "Route to representative",
+    type: "route_to_rep",
+    representative: "Careers",
+    enabled: false,
+    note: "Assigns a representative to the message. Routing alone does not send a reply.",
+  },
+];

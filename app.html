@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#111517" />
+    <meta name="theme-color" content="#080c0d" />
     <meta name="description" content="Create and manage mailboxes on a domain you own with OpenMail." />
     <title>OpenMail — Your mail, in its own space</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -12,14 +12,15 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="workspace.css?v=20261105-ai-phases2-5" />
-    <script defer src="app-ui.js?v=20261105-ai-phases2-5"></script>
+    <link rel="stylesheet" href="workspace.css?v=20261111-workspace" />
+    <link rel="stylesheet" href="/insights.css?v=20261111-workspace" />
+    <script defer src="app-ui.js?v=20261111-workspace"></script>
   </head>
   <body>
     <div class="ambient-grid" aria-hidden="true"></div>
     <header class="app-topbar">
       <a class="brand" href="index.html" aria-label="OpenMail home">
-        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <img class="workspace-brand-icon" src="/favicon.svg" width="28" height="28" alt="" />
         <span>openmail<span class="brand-period">.</span></span>
       </a>
       <div class="topbar-right"><span class="topbar-status"><i></i><span id="topbarState">PRIVATE MAIL SPACE</span></span><a href="index.html">About OpenMail <span aria-hidden="true">↗</span></a></div>
@@ -36,12 +37,12 @@
         <div class="auth-intro">
           <p class="eyebrow"><span class="live-dot"></span> OPENMAIL / YOUR DOMAIN</p>
           <h1 id="authTitle">Your address.<br /><span>Your own space.</span></h1>
-          <p class="auth-lede">Create a real mailbox on a domain you own. Add your domain, confirm its mail records, then make addresses like <b>support@yourdomain.com</b>.</p>
+          <p class="auth-lede">Bring your domain. Make an address like <b>support@yourdomain.com</b>, keep its mail in one place, and give your AI the knowledge to help.</p>
           <div class="signal-card" aria-hidden="true">
             <div class="signal-orbit orbit-a"></div><div class="signal-orbit orbit-b"></div><div class="signal-core"><span class="brand-mark"><i></i><i></i><i></i></span></div>
             <div class="signal-label label-a"><small>DOMAIN</small><b>OWNED BY YOU</b></div>
             <div class="signal-label label-b"><small>MAILBOX</small><b>PRIVATE TO YOUR ACCOUNT</b></div>
-            <span class="signal-coordinate">MX / DKIM / SPF</span>
+            <span class="signal-coordinate">YOUR NAME. YOUR ADDRESS.</span>
           </div>
           <div class="auth-footnotes"><span><i>01</i> Connect a domain you control</span><span><i>02</i> Create a mailbox address</span><span><i>03</i> Read and send mail in OpenMail</span></div>
         </div>
@@ -59,7 +60,7 @@
           </form>
           <div class="form-message" id="authMessage" role="status" aria-live="polite"></div>
           <div class="setup-notice" id="setupNotice" hidden>
-            <span class="notice-mark">!</span><div><b>Mail services are not connected yet.</b><p>Finish the one-time Vercel and Supabase setup in the project README before creating an account.</p><code id="missingConfig"></code></div>
+            <span class="notice-mark">!</span><div><b>Mail services are not connected yet.</b><p>The person who runs this OpenMail site needs to finish connecting its account and email services.</p><details class="connection-details"><summary>Connection details</summary><code id="missingConfig"></code></details></div>
           </div>
           <p class="auth-privacy">Your password is handled by the account service. OpenMail never stores it in this app.</p>
         </div>
@@ -69,10 +70,11 @@
         <div class="inbox-window-bar"><div class="window-lights" aria-hidden="true"><i></i><i></i><i></i></div><span>OPENMAIL <b>/</b> PRIVATE MAIL SPACE</span><span class="window-state"><i></i><span id="topbarStateChrome">CONNECTING</span></span></div>
         <div class="mail-app" id="liveMailApp">
           <aside class="mail-sidebar" aria-label="Mailbox navigation">
-            <div class="mail-brand"><span class="brand-mark mini" aria-hidden="true"><i></i><i></i><i></i></span><span>openmail<span class="brand-period">.</span></span></div>
-            <label class="mailbox-picker-label" for="mailboxPicker">CURRENT MAILBOX</label>
+            <div class="mail-brand"><img class="workspace-brand-icon" src="/favicon.svg" width="26" height="26" alt="" /><span>openmail<span class="brand-period">.</span></span></div>
+            <label class="mailbox-picker-label" for="mailboxPicker">YOUR MAILBOX</label>
             <select id="mailboxPicker" class="mailbox-picker" aria-label="Choose a mailbox"></select>
             <button class="compose-button" id="composeButton" type="button"><span>＋</span> Compose</button>
+            <button class="mail-side-link ai-nav-link" id="myAIButton" type="button"><span class="side-icon">✧</span> My AI <b>↗</b></button>
             <p class="mail-nav-label">INBOX VIEWS</p>
             <button class="mail-side-link active" type="button" data-view="inbox"><span class="side-icon">▤</span> All mail <b id="inboxCount">—</b></button>
             <button class="mail-side-link" type="button" data-view="primary"><span class="side-icon">⌂</span> Primary <b id="primaryCount">00</b></button>
@@ -83,12 +85,11 @@
             <p class="mail-nav-label mailbox-label">YOUR FOLDERS</p>
             <button class="mail-side-link" type="button" data-view="starred"><span class="side-icon">★</span> Starred <b id="starredCount">00</b></button>
             <button class="mail-side-link" type="button" data-view="sent"><span class="side-icon">↗</span> Sent</button>
-            <button class="mail-side-link" type="button" data-view="ai_sent"><span class="side-icon">✧</span> AI Sent <b id="aiSentCount">00</b></button>
-            <button class="mail-side-link" type="button" data-view="needs_review"><span class="side-icon">◌</span> Needs human <b id="aiHandoffCount">00</b></button>
+            <button class="mail-side-link" type="button" data-view="ai_sent"><span class="side-icon">✧</span> AI replies <b id="aiSentCount">00</b></button>
+            <button class="mail-side-link" type="button" data-view="needs_review"><span class="side-icon">◌</span> Needs your help <b id="aiHandoffCount">00</b></button>
             <button class="mail-side-link" type="button" data-view="drafts"><span class="side-icon">✎</span> Drafts <b id="draftsCount">00</b></button>
             <button class="mail-side-link" type="button" data-view="archive"><span class="side-icon">▱</span> Archive</button>
             <button class="mail-side-link" type="button" data-view="trash"><span class="side-icon">⌫</span> Trash</button>
-            <button class="mail-side-link ai-nav-link" id="myAIButton" type="button"><span class="side-icon">✧</span> My AI <b>SETUP</b></button>
             <button class="mail-side-link manage-domain-link" id="manageDomainButton" type="button"><span class="side-icon">⌘</span> Domains &amp; mailboxes <b>↗</b></button>
             <div class="sidebar-bottom"><span class="sidebar-avatar" id="accountInitials">OM</span><span><b id="accountEmail">Your account</b><small>PRIVATE ACCOUNT</small></span><button id="signOutButton" type="button" aria-label="Sign out" title="Sign out">↪</button></div>
           </aside>
@@ -100,7 +101,7 @@
               <button class="icon-button settings-button" id="headingCompose" type="button" aria-label="Compose a message" title="Compose a message">＋</button>
             </div>
             <div class="mobile-mail-nav" id="mobileMailNav" aria-label="Mailbox tools">
-              <div class="mobile-folder-scroll"><select id="mobileMailboxPicker" class="mobile-mailbox-picker" aria-label="Choose a mailbox"></select><button type="button" data-view="starred">Starred</button><button type="button" data-view="sent">Sent</button><button type="button" data-view="ai_sent">AI Sent</button><button type="button" data-view="needs_review">Needs human</button><button type="button" data-view="drafts">Drafts</button><button type="button" data-view="archive">Archive</button><button type="button" data-view="trash">Trash</button><button type="button" id="mobileMyAIButton">My AI</button><button type="button" id="mobileManageDomain">Domains</button></div>
+              <div class="mobile-folder-scroll"><select id="mobileMailboxPicker" class="mobile-mailbox-picker" aria-label="Choose a mailbox"></select><button type="button" data-view="starred">Starred</button><button type="button" data-view="sent">Sent</button><button type="button" data-view="ai_sent">AI replies</button><button type="button" data-view="needs_review">Needs your help</button><button type="button" data-view="drafts">Drafts</button><button type="button" data-view="archive">Archive</button><button type="button" data-view="trash">Trash</button><button type="button" id="mobileMyAIButton">My AI</button><button type="button" id="mobileManageDomain">Domains</button></div>
               <button type="button" class="mobile-compose" id="mobileComposeButton">＋ Compose</button>
             </div>
             <div class="inbox-pane" id="inboxPane">
@@ -116,7 +117,7 @@
               <div class="mail-actionbar" id="mailActionbar" hidden aria-live="polite"><span class="selection-summary" id="selectionSummary">0 selected</span><button type="button" id="bulkArchive">Archive</button><button type="button" id="bulkSpam">Mark spam</button><button type="button" id="bulkTrash">Move to trash</button><button type="button" id="clearSelection" aria-label="Clear selection" title="Clear selection">×</button></div>
               <div class="message-list" id="liveMessageList" aria-live="polite"></div>
               <div class="empty-state" id="emptyMail" hidden><span>⌕</span><b id="emptyTitle">Your inbox is clear.</b><p id="emptyCopy">New mail sent to this address will appear here.</p><button class="button button-solid" id="emptyCompose" type="button">Compose a message <span>↗</span></button></div>
-              <div class="mail-app-note"><span class="note-dot"></span> Starred, Drafts, bulk actions and Archive are available · Spam is filed manually</div>
+              <div class="mail-app-note"><span class="note-dot"></span> Keep what matters close. Star, archive, or select messages to organize your inbox.</div>
             </div>
           <article class="message-detail" id="messageDetail" hidden>
             <div class="detail-top"><button class="quiet-button" id="backToList" type="button">← Back to inbox</button><div class="detail-actions"><button class="quiet-button" id="detailStar" type="button">☆ Star</button><button class="quiet-button" id="detailSpam" type="button">Mark spam</button><button class="quiet-button" id="detailArchive" type="button">Archive ↗</button><button class="quiet-button" id="detailTrash" type="button">Move to trash</button></div></div>
@@ -131,118 +132,119 @@
             <button class="button button-outline reply-button" id="aiDraftButton" type="button" hidden>Generate AI draft <span>✧</span></button>
           </article>
           <section class="domains-panel" id="domainsPanel" hidden>
-            <div class="domains-panel-head"><button class="quiet-button" id="backToInbox" type="button">← Back to inbox</button><button class="quiet-button domains-ai-link" id="domainsMyAIButton" type="button">My AI ↗</button><span class="eyebrow">DOMAIN CONTROL / PRIVATE TO YOUR ACCOUNT</span></div>
-            <div class="domains-title"><div><p class="eyebrow">OPENMAIL / SETUP</p><h2>Your domains<br /><span>and mailboxes.</span></h2></div><p>Enter a domain you own. OpenMail checks whether it already receives email, then prepares the setup for addresses like support@yourdomain.com.</p></div>
-            <div class="setup-notice app-service-notice" id="mailServiceNotice" hidden><span class="notice-mark">!</span><div><b>Email services need configuration.</b><p>The database can be reached, but mailbox setup and mail delivery wait for the provider settings below.</p><code id="mailMissingConfig"></code></div></div>
+            <div class="domains-panel-head"><button class="quiet-button" id="backToInbox" type="button">← Back to inbox</button><button class="quiet-button domains-ai-link" id="domainsMyAIButton" type="button">My AI ↗</button><span class="eyebrow">YOUR DOMAIN / YOUR ADDRESSES</span></div>
+            <div class="domains-title"><div><p class="eyebrow">OPENMAIL / SETUP</p><h2>Your domains<br /><span>and mailboxes.</span></h2></div><p>One domain, different addresses for your work. Create support, sales, contact, or another available name—each with its own OpenMail inbox.</p></div>
+            <div class="setup-notice app-service-notice" id="mailServiceNotice" hidden><span class="notice-mark">!</span><div><b>Mail setup needs one more step.</b><p>Your account is connected. The site owner still needs to connect the email service before you can create mailboxes or send mail.</p><details class="connection-details"><summary>Connection details</summary><code id="mailMissingConfig"></code></details></div></div>
             <div class="domain-workspace">
               <div class="domain-card add-domain-card">
-                <div class="domain-card-heading"><span class="domain-icon">＋</span><div><b>Connect a domain</b><small>Use a domain you own or manage.</small></div></div>
+                <div class="domain-card-heading"><span class="domain-icon">＋</span><div><b>1. Connect your domain</b><small>Use a domain you own, like yourcompany.com.</small></div></div>
                 <form id="domainForm" class="inline-form" method="post"><label for="domainInput">YOUR DOMAIN</label><div class="input-row"><input id="domainInput" name="domain" type="text" placeholder="yourdomain.com" autocomplete="url" required /><button class="button button-solid" type="submit">Check domain <span>↗</span></button></div></form>
                 <p class="form-inline-message" id="domainMessage" role="status"></p>
               </div>
               <div class="domain-card mailbox-create-card">
-                <div class="domain-card-heading"><span class="domain-icon">＠</span><div><b>Create a mailbox</b><small>Each address gets an OpenMail inbox.</small></div></div>
-                <form id="mailboxForm" class="inline-form" method="post"><label>NEW ADDRESS</label><div class="address-composer"><input id="localPartInput" name="localPart" type="text" placeholder="support" autocomplete="off" required /><span>@</span><select id="domainPicker" name="domainId" aria-label="Domain for new mailbox" required></select></div><button class="button button-solid" type="submit">Create mailbox <span>↗</span></button></form>
-                <p class="form-inline-message" id="mailboxMessage" role="status"></p>
+                <div class="domain-card-heading"><span class="domain-icon">＠</span><div><b>2. Choose your address</b><small>Give support, sales, or your own name a separate inbox.</small></div></div>
+                <form id="mailboxForm" class="inline-form" method="post"><label for="localPartInput">ADDRESS NAME</label><div class="address-composer"><input id="localPartInput" name="localPart" type="text" placeholder="support" autocomplete="off" required /><span>@</span><select id="domainPicker" name="domainId" aria-label="Domain for new mailbox" required></select></div><button class="button button-solid" type="submit">Create mailbox <span>↗</span></button></form>
+                <p class="mailbox-address-help">Try <b>support</b>, <b>sales</b>, <b>contact</b>, or your name. These are separate mailboxes, not forwarding aliases. Your account’s mailbox and email limits still apply.</p><p class="form-inline-message" id="mailboxMessage" role="status"></p>
               </div>
             </div>
-            <div class="domain-list-wrap"><div class="domain-list-heading"><h3>Connected domains</h3><span id="domainCount">0 domains</span></div><div class="domain-list" id="domainList"></div><div class="domain-empty" id="domainEmpty"><span>◇</span><b>No domain connected yet.</b><p>Enter your domain above. OpenMail will check its current email route before preparing setup.</p></div></div>
-            <div class="setup-footnote"><span>YOUR APPROVAL IS REQUIRED</span><p>Email addresses use your domain, so its provider must point incoming mail to OpenMail. We check for existing email first. OpenMail never changes these settings for you; review and approve any changes with your domain provider. Changing the main mail route can affect an existing inbox.</p></div>
+            <div class="domain-list-wrap"><div class="domain-list-heading"><h3>Connected domains</h3><span id="domainCount">0 domains</span></div><div class="domain-list" id="domainList"></div><div class="domain-empty" id="domainEmpty"><span>◇</span><b>No domain connected yet.</b><p>Add your domain above to see the settings needed to bring its email to OpenMail.</p></div></div>
+            <div class="setup-footnote"><span>YOUR APPROVAL IS REQUIRED</span><p>Your domain provider needs a few mail settings so new messages know where to go. OpenMail shows you those settings and checks for existing email first. It does not change them for you. Changing where mail is delivered can affect any inbox you already use on that domain.</p></div>
           </section>
           <section class="ai-panel" id="aiPanel" hidden aria-labelledby="aiPanelTitle">
-            <div class="ai-panel-head"><button class="quiet-button" id="aiBackToInbox" type="button">← Back to inbox</button><span class="eyebrow">OPENMAIL / AI REPRESENTATIVE SETUP</span></div>
-            <div class="ai-panel-title"><div><p class="eyebrow">MY AI / PHASE 1</p><h2 id="aiPanelTitle">Teach your<br /><span>AI representative.</span></h2></div><p>Give your representative approved company facts and documents. Keep replies as editable drafts, or separately opt in to automatic replies for one verified mailbox. Uncertain messages go to Needs human.</p></div>
-            <div class="ai-safety-notice" role="status"><span class="notice-mark">i</span><div><b id="aiSafetyTitle">Groq status is loading…</b><p id="aiSafetyCopy">Your email content goes to Groq only when an enabled AI representative processes it. Automatic replies are off by default and can be enabled for each mailbox separately.</p></div></div>
-            <p class="ai-data-disclosure">When drafting or processing an automatic reply, OpenMail can send eligible email subject/body text and your approved profile, notes, and extracted document text to Groq. Email attachments and original uploaded files are not sent. Groq says inference inputs and outputs are not retained by default, but may be retained up to 30 days for reliability or abuse investigations. <a href="https://console.groq.com/docs/your-data" target="_blank" rel="noopener noreferrer">Review Groq data controls ↗</a> Do not add passwords or unnecessary sensitive customer data.</p>
+            <div class="ai-panel-head"><button class="quiet-button" id="aiBackToInbox" type="button">← Back to inbox</button><span class="eyebrow">YOUR AI WORKSPACE</span></div>
+            <div class="ai-panel-title"><div><p class="eyebrow">MY AI / YOUR BUSINESS</p><h2 id="aiPanelTitle">Your AI.<br /><span>On your terms.</span></h2></div><p>Share what your business does, tell your AI what it can answer, and choose when it should ask you. Start with drafts, or turn on checked automatic replies for a mailbox.</p></div>
+            <nav class="ai-setup-nav" aria-label="My AI sections"><a href="#aiCompanyTitle">Company basics</a><a href="#aiKnowledgeTitle">What your AI knows</a><a href="#aiAutoReplyTitle">AI replies</a><a href="#aiToolsTitle" data-ai-open="training">Test your AI</a><a href="#aiToolsTitle" data-ai-open="representatives">Your AI team</a><a href="#aiToolsTitle" data-ai-open="workflows">Mail rules</a><a href="#aiToolsTitle" data-ai-open="trust">Results</a></nav>
+            <div class="ai-safety-notice" role="status"><span class="notice-mark">i</span><div><b id="aiSafetyTitle">Checking your AI connection…</b><p id="aiSafetyCopy">Your AI uses Groq to write and check replies. It starts with automatic sending off. You choose which mailboxes, if any, may reply on their own.</p></div></div>
+            <p class="ai-data-disclosure">When your AI works on a reply, it can share the email’s subject and text, your company facts, and text from saved documents with Groq. It does not share email attachments or the original document files. Groq says it does not keep these inputs and replies by default, but may keep them for up to 30 days for reliability or abuse investigations. <a href="https://console.groq.com/docs/your-data" target="_blank" rel="noopener noreferrer">How Groq handles data ↗</a> Do not add passwords or unnecessary sensitive customer data.</p>
             <div class="ai-workspace">
               <section class="ai-card" aria-labelledby="aiCompanyTitle">
-                <div class="domain-card-heading"><span class="domain-icon">⌂</span><div><b id="aiCompanyTitle">Company profile</b><small>The approved facts your AI can rely on later.</small></div></div>
+                <div class="domain-card-heading"><span class="domain-icon">⌂</span><div><b id="aiCompanyTitle">Company basics</b><small>Tell your AI what your business does and what customers should know.</small></div></div>
                 <form id="aiProfileForm" class="ai-form" method="post">
                   <label>COMPANY NAME<input id="aiCompanyName" name="companyName" type="text" maxlength="120" placeholder="Example Studio" required /></label>
                   <label>WHAT YOUR COMPANY DOES<textarea id="aiCompanyDescription" name="companyDescription" rows="3" maxlength="4000" placeholder="Describe your company in a few clear sentences."></textarea></label>
                   <label>PRODUCTS AND SERVICES<textarea id="aiProductsServices" name="productsServices" rows="4" maxlength="6000" placeholder="List your services, what each includes, and any important limits."></textarea></label>
                   <label>PRICING<textarea id="aiPricing" name="pricing" rows="3" maxlength="4000" placeholder="Add confirmed prices, currencies, and conditions. Leave blank if pricing needs a human quote."></textarea></label>
                   <label>BUSINESS HOURS<textarea id="aiBusinessHours" name="businessHours" rows="2" maxlength="1200" placeholder="Include timezone and days of operation."></textarea></label>
-                  <label>PRIVATE AI INSTRUCTIONS / ESCALATION<textarea id="aiPolicies" name="policies" rows="4" maxlength="5000" placeholder="Tell the AI when to route a request to a person. Do not put customer-facing policies or prices here."></textarea><small>These notes guide routing and are never cited or shown to customers. Add customer-facing policy and pricing facts to approved Knowledge Notes instead.</small></label>
-                  <label class="ai-consent-toggle"><input id="aiEnableDrafts" name="enabled" type="checkbox" /><span><b>Enable the AI representative</b><small>When enabled, selected inbound emails and approved knowledge can be sent to Groq to create drafts or, only for mailboxes you separately opt in, automatic replies. Email attachments are never sent to Groq.</small></span></label>
-                  <div class="ai-form-footer"><span id="aiProfileStatus" role="status" aria-live="polite"></span><button class="button button-solid" type="submit">Save company profile <span>↗</span></button></div>
+                  <label>WHEN TO ASK A PERSON<textarea id="aiPolicies" name="policies" rows="4" maxlength="5000" placeholder="Describe questions or decisions your team should handle. Add customer-facing policies and prices to your knowledge notes instead."></textarea><small>These private notes guide when your AI asks for help. They are not used as source text in customer replies.</small></label>
+                  <label class="ai-consent-toggle"><input id="aiEnableDrafts" name="enabled" type="checkbox" /><span><b>Turn on your AI</b><small>Allow Groq to use selected email text and your saved company knowledge to prepare replies. Sending automatically is a separate choice below. Email attachments are not shared with Groq.</small></span></label>
+                  <div class="ai-form-footer"><span id="aiProfileStatus" role="status" aria-live="polite"></span><button class="button button-solid" type="submit">Save company basics <span>↗</span></button></div>
                 </form>
               </section>
               <section class="ai-card ai-knowledge-card" aria-labelledby="aiKnowledgeTitle">
-                  <div class="domain-card-heading"><span class="domain-icon">⌘</span><div><b id="aiKnowledgeTitle">Knowledge notes</b><small>Replies use your approved notes and newest document text, within a fixed context limit.</small></div></div>
+                  <div class="domain-card-heading"><span class="domain-icon">⌘</span><div><b id="aiKnowledgeTitle">What your AI knows</b><small>Add clear answers your AI can quote. Each reply uses a limited amount of your saved information, so keep notes focused.</small></div></div>
                 <form id="aiKnowledgeForm" class="ai-form" method="post">
                   <label>NOTE TITLE<input id="aiKnowledgeTitleInput" name="title" type="text" maxlength="120" placeholder="Website development pricing" required /></label>
                   <label>TYPE<select id="aiKnowledgeType" name="type"><option value="faq">FAQ / answer</option><option value="service">Service</option><option value="pricing">Pricing</option><option value="policy">Policy</option></select></label>
-                  <label>KNOWLEDGE SCOPE<select id="aiKnowledgeRepresentative"><option value="">Shared with all representatives</option></select></label>
-                  <label>APPROVED INFORMATION<textarea id="aiKnowledgeContent" name="content" rows="5" maxlength="8000" placeholder="Write facts the representative may use. Do not include passwords, payment details, or private customer data." required></textarea></label>
-                  <div class="ai-form-footer"><span id="aiKnowledgeStatus" role="status" aria-live="polite"></span><button class="button button-outline" type="submit">Add knowledge <span>＋</span></button></div>
+                  <label>WHO CAN USE THIS<select id="aiKnowledgeRepresentative"><option value="">Shared with all representatives</option></select></label>
+                  <label>INFORMATION YOUR AI MAY SHARE<textarea id="aiKnowledgeContent" name="content" rows="5" maxlength="8000" placeholder="Write facts the representative may use. Do not include passwords, payment details, or private customer data." required></textarea></label>
+                  <div class="ai-form-footer"><span id="aiKnowledgeStatus" role="status" aria-live="polite"></span><button class="button button-outline" type="submit">Save note <span>＋</span></button></div>
                 </form>
                 <div class="ai-knowledge-list" id="aiKnowledgeList" aria-live="polite"><p class="ai-empty-note">Loading your saved knowledge…</p></div>
                 <section class="ai-documents-section" aria-labelledby="aiDocumentsTitle">
-                  <div class="ai-documents-heading"><div><b id="aiDocumentsTitle">Company documents</b><small>PDF, DOCX, TXT, Markdown or CSV · 10 files · 40,000 text characters each</small></div></div>
-                  <p class="ai-document-privacy">Files are read in this browser. OpenMail stores extracted text in your account; the original file is not uploaded. Text can be sent to Groq while your AI representative is enabled.</p>
-                  <form id="aiDocumentForm" class="ai-document-form" method="post"><label class="ai-field">KNOWLEDGE SCOPE<select id="aiDocumentRepresentative"><option value="">Shared with all representatives</option></select></label><input id="aiDocumentFile" type="file" accept=".pdf,.docx,.txt,.md,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/csv" required /><button class="button button-outline" type="submit">Add document <span>＋</span></button><span id="aiDocumentStatus" role="status" aria-live="polite"></span></form>
+                  <div class="ai-documents-heading"><div><b id="aiDocumentsTitle">Your documents</b><small>PDF, Word, TXT, Markdown or CSV · Up to 10 files, with 40,000 characters of text per file</small></div></div>
+                  <p class="ai-document-privacy">OpenMail reads the file in your browser and saves only its text to your account. The original file is not uploaded. Your AI may share the saved text with Groq when it works on a reply.</p>
+                  <form id="aiDocumentForm" class="ai-document-form" method="post"><label class="ai-field">WHO CAN USE THIS<select id="aiDocumentRepresentative"><option value="">Shared with all representatives</option></select></label><input id="aiDocumentFile" type="file" accept=".pdf,.docx,.txt,.md,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/csv" required /><button class="button button-outline" type="submit">Add document <span>＋</span></button><span id="aiDocumentStatus" role="status" aria-live="polite"></span></form>
                   <div id="aiDocumentList" class="ai-document-list" aria-live="polite"><p class="ai-empty-note">Loading your documents…</p></div>
                 </section>
               </section>
             </div>
             <section class="ai-card ai-automation-card" aria-labelledby="aiAutoReplyTitle">
-              <div class="domain-card-heading"><span class="domain-icon">↗</span><div><b id="aiAutoReplyTitle">Automatic replies</b><small>Enable separately for one mailbox at a time.</small></div></div>
-              <p class="ai-auto-mailbox" id="aiAutoMailboxLabel">Choose a mailbox to configure automatic replies.</p>
-              <label class="ai-consent-toggle ai-auto-toggle"><input id="aiAutomaticReplies" type="checkbox" /><span><b>Allow automatic replies for this mailbox</b><small>OpenMail sends only when it can cite exact approved company text and passes safety checks. Requests about refunds, payments, appointments, legal matters, complaints, account access, security, attachments or anything uncertain are sent to Needs human without an AI reply. Automatic replies are capped by the account's daily AI and email limits.</small></span></label>
-              <div class="ai-form-footer"><span id="aiAutoReplyStatus" role="status" aria-live="polite"></span><button class="button button-solid" id="saveAIReplyMode" type="button">Save mailbox setting <span>↗</span></button></div>
+              <div class="domain-card-heading"><span class="domain-icon">↗</span><div><b id="aiAutoReplyTitle">AI replies</b><small>You decide which mailbox may reply on its own.</small></div></div>
+              <p class="ai-auto-mailbox" id="aiAutoMailboxLabel">Choose a mailbox to set up AI replies.</p>
+              <label class="ai-consent-toggle ai-auto-toggle"><input id="aiAutomaticReplies" type="checkbox" /><span><b>Let this mailbox reply automatically</b><small>Your AI replies only when saved company information supports the answer and the checks pass. Refunds, payments, appointment requests, legal matters, complaints, account access, security issues, attachments, and uncertain questions go to Needs your help. Your daily AI and email limits still apply.</small></span></label>
+              <div class="ai-form-footer"><span id="aiAutoReplyStatus" role="status" aria-live="polite"></span><button class="button button-solid" id="saveAIReplyMode" type="button">Save reply setting <span>↗</span></button></div>
             </section>
-            <nav class="ai-feature-tabs" aria-label="AI representative tools">
-              <button class="ai-feature-tab active" type="button" data-ai-tab="training">Training simulator <span>02</span></button>
-              <button class="ai-feature-tab" type="button" data-ai-tab="representatives">Representatives <span>03</span></button>
-              <button class="ai-feature-tab" type="button" data-ai-tab="workflows">Workflows <span>04</span></button>
-              <button class="ai-feature-tab" type="button" data-ai-tab="trust">Trust dashboard <span>05</span></button>
+            <nav class="ai-feature-tabs" id="aiToolsTitle" aria-label="More AI tools">
+              <button class="ai-feature-tab active" type="button" data-ai-tab="training">Test your AI <span>TRY</span></button>
+              <button class="ai-feature-tab" type="button" data-ai-tab="representatives">Your AI team <span>PEOPLE</span></button>
+              <button class="ai-feature-tab" type="button" data-ai-tab="workflows">Mail rules <span>ACTIONS</span></button>
+              <button class="ai-feature-tab" type="button" data-ai-tab="trust">Results <span>REVIEW</span></button>
             </nav>
             <section class="ai-feature-view" data-ai-view="training" aria-labelledby="aiTrainingTitle">
-              <div class="ai-feature-title"><div><p class="eyebrow">PHASE 02 / TRAIN BEFORE LIVE</p><h3 id="aiTrainingTitle">AI training simulator</h3></div><p>Run a synthetic email through the same grounded decision checks. The simulator never sends email and does not save the test message text.</p></div>
+              <div class="ai-feature-title"><div><p class="eyebrow">TRY A QUESTION / CHECK THE ANSWER</p><h3 id="aiTrainingTitle">Test your AI</h3></div><p>Try a made-up customer question and see how your AI handles it. Tests use your saved knowledge, share the question with Groq, and never send an email. The test message text is not saved.</p></div>
               <div class="ai-feature-grid">
                 <section class="ai-card">
                   <form id="aiSimulatorForm" class="ai-form" method="post">
                     <label>TEST NAME<input id="aiSimulatorName" maxlength="100" placeholder="Known pricing question" required /></label>
                     <label>REPRESENTATIVE<select id="aiSimulatorRepresentative" required></select></label>
                     <label>SUBJECT<input id="aiSimulatorSubject" maxlength="200" required /></label>
-                    <label>TEST EMAIL<textarea id="aiSimulatorEmail" rows="5" maxlength="8000" placeholder="Use synthetic test text. This is sent to Groq only when you run the test." required></textarea></label>
-                    <label>EXPECTED RESULT<select id="aiSimulatorExpected"><option value="auto_reply">Answer from approved facts</option><option value="human_review">Send to human review</option></select></label>
+                    <label>TEST EMAIL<textarea id="aiSimulatorEmail" rows="5" maxlength="8000" placeholder="Write a made-up customer question. Groq receives this text when you run the test." required></textarea></label>
+                    <label>WHAT SHOULD HAPPEN?<select id="aiSimulatorExpected"><option value="auto_reply">Answer from approved facts</option><option value="human_review">Ask a person</option></select></label>
                     <div class="ai-form-footer"><span id="aiSimulatorStatus" role="status" aria-live="polite"></span><button class="button button-solid" type="submit">Run test <span>↗</span></button></div>
                   </form>
                 </section>
-                <section class="ai-card ai-result-card" id="aiSimulatorResult" aria-live="polite"><p class="ai-empty-note">Your evaluation, confidence check, and source citations will appear here.</p></section>
+                <section class="ai-card ai-result-card" id="aiSimulatorResult" aria-live="polite"><p class="ai-empty-note">See the reply, the information it used, and whether it should ask a person.</p></section>
               </div>
               <section class="ai-card"><div class="domain-card-heading"><div><b>Recent tests</b><small>Only test labels and results are saved; message text is discarded.</small></div></div><div id="aiSimulatorHistory" class="ai-metrics-list" aria-live="polite"></div></section>
             </section>
             <section class="ai-feature-view" data-ai-view="representatives" hidden aria-labelledby="aiRepresentativesTitle">
-              <div class="ai-feature-title"><div><p class="eyebrow">PHASE 03 / SEPARATE TEAMS</p><h3 id="aiRepresentativesTitle">AI representatives</h3></div><p>Give support, sales, billing, and careers different names, availability, knowledge, and mailbox assignments. Payments, refunds, security, and employment decisions still go to a person.</p></div>
+              <div class="ai-feature-title"><div><p class="eyebrow">A CLEAR ROLE FOR EVERY QUESTION</p><h3 id="aiRepresentativesTitle">Your AI team</h3></div><p>Choose names and knowledge for support, sales, billing, and careers. Assign the right AI to each mailbox. Payments, refunds, security issues, and hiring decisions stay with a person.</p></div>
               <section class="ai-card"><div id="aiRepresentativesList" class="ai-representative-list" aria-live="polite"><p class="ai-empty-note">Loading representatives…</p></div></section>
-              <section class="ai-card"><div class="domain-card-heading"><div><b>Mailbox assignment</b><small>Choose which representative handles this mailbox’s drafts and eligible replies.</small></div></div><label class="ai-field">CURRENT MAILBOX<select id="aiMailboxRepresentative"></select></label><div class="ai-form-footer"><span id="aiRepresentativeStatus" role="status" aria-live="polite"></span><button class="button button-solid" id="saveMailboxRepresentative" type="button">Save assignment <span>↗</span></button></div></section>
+              <section class="ai-card"><div class="domain-card-heading"><div><b>Choose a mailbox’s AI</b><small>Choose who prepares drafts and checked replies for the mailbox you are using.</small></div></div><label class="ai-field">YOUR MAILBOX<select id="aiMailboxRepresentative"></select></label><div class="ai-form-footer"><span id="aiRepresentativeStatus" role="status" aria-live="polite"></span><button class="button button-solid" id="saveMailboxRepresentative" type="button">Save mailbox AI <span>↗</span></button></div></section>
             </section>
             <section class="ai-feature-view" data-ai-view="workflows" hidden aria-labelledby="aiWorkflowsTitle">
-              <div class="ai-feature-title"><div><p class="eyebrow">PHASE 04 / APPROVED MAIL TOOLS</p><h3 id="aiWorkflowsTitle">AI workflow builder</h3></div><p>Build rules for this mailbox using OpenMail’s connected mail tools: route to a representative, create an unsent draft, send only a verified reply after mailbox opt-in, or hand off to a person. No arbitrary URLs or external credentials are accepted.</p></div>
-              <div class="ai-safety-notice"><span class="notice-mark">i</span><div><b>Sending remains gated by Phase 1 approval</b><p>“Verified AI reply” cannot send unless automatic replies are separately enabled for this mailbox. If workflows are active, unmatched messages are not automatically replied to.</p></div></div>
+              <div class="ai-feature-title"><div><p class="eyebrow">SIMPLE RULES / CLEAR NEXT STEPS</p><h3 id="aiWorkflowsTitle">Mail rules</h3></div><p>Tell OpenMail what to do with new mail: choose an AI, prepare a draft, send a checked reply, or ask your team. These rules use OpenMail’s built-in mail actions.</p></div>
+              <div class="ai-safety-notice"><span class="notice-mark">i</span><div><b>You stay in control of sending</b><p>A checked AI reply can be sent only if you have turned on automatic replies for this mailbox. When rules are active, messages that do not match a rule receive no automatic reply.</p></div></div>
               <section class="ai-card"><form id="aiWorkflowForm" class="ai-form ai-workflow-form" method="post">
                 <input id="aiWorkflowId" type="hidden" />
-                <label>WORKFLOW NAME<input id="aiWorkflowName" maxlength="100" placeholder="Route invoice questions" required /></label>
+                <label>RULE NAME<input id="aiWorkflowName" maxlength="100" placeholder="Route invoice questions" required /></label>
                 <label>WHEN<select id="aiWorkflowTrigger"><option value="contains_any">Subject or message contains any phrase</option><option value="all_inbound">Every incoming message</option></select></label>
-                <label>KEYWORD PHRASES<textarea id="aiWorkflowTerms" rows="2" maxlength="720" placeholder="invoice, billing question"></textarea></label>
-                <label>THEN<select id="aiWorkflowAction"><option value="route_to_rep">Route to representative</option><option value="create_draft">Create an unsent reply draft</option><option value="verified_reply">Send only a verified AI reply</option><option value="human_review">Require human review</option></select></label>
+                <label>WORDS OR PHRASES TO LOOK FOR<textarea id="aiWorkflowTerms" rows="2" maxlength="720" placeholder="invoice, billing question"></textarea></label>
+                <label>THEN<select id="aiWorkflowAction"><option value="route_to_rep">Choose an AI</option><option value="create_draft">Prepare a draft for me</option><option value="verified_reply">Send a checked AI reply</option><option value="human_review">Ask a person</option></select></label>
                 <label id="aiWorkflowRepField">REPRESENTATIVE<select id="aiWorkflowRepresentative"></select></label>
-                <label>PRIORITY<input id="aiWorkflowPriority" type="number" min="0" max="100" value="50" /></label>
-                <label class="ai-consent-toggle"><input id="aiWorkflowEnabled" type="checkbox" /><span><b>Enable this workflow</b><small>The first matching rule runs. Unmatched messages follow the safe behavior described above.</small></span></label>
-                <div class="ai-form-footer"><span id="aiWorkflowStatus" role="status" aria-live="polite"></span><button class="button button-solid" type="submit">Save workflow <span>↗</span></button></div>
+                <label>ORDER (LOWER NUMBERS RUN FIRST)<input id="aiWorkflowPriority" type="number" min="0" max="100" value="50" /></label>
+                <label class="ai-consent-toggle"><input id="aiWorkflowEnabled" type="checkbox" /><span><b>Turn on this rule</b><small>The first matching rule runs. Messages that match no rule get no automatic reply.</small></span></label>
+                <div class="ai-form-footer"><span id="aiWorkflowStatus" role="status" aria-live="polite"></span><button class="button button-solid" type="submit">Save rule <span>↗</span></button></div>
               </form></section>
-              <section class="ai-card"><div class="domain-card-heading"><div><b>Mailbox workflows</b><small>Rules run only on new incoming messages after saving.</small></div></div><div id="aiWorkflowList" class="ai-metrics-list" aria-live="polite"></div></section>
+              <section class="ai-card"><div class="domain-card-heading"><div><b>Rules for this mailbox</b><small>Rules run only on new incoming messages after saving.</small></div></div><div id="aiWorkflowList" class="ai-metrics-list" aria-live="polite"></div></section>
             </section>
             <section class="ai-feature-view" data-ai-view="trust" hidden aria-labelledby="aiTrustTitle">
-              <div class="ai-feature-title"><div><p class="eyebrow">PHASE 05 / OUTCOMES & CORRECTIONS</p><h3 id="aiTrustTitle">AI trust dashboard</h3></div><p>Track sent replies, human handovers, owner-marked corrections, resolutions, and labeled accuracy. Accuracy stays “not enough feedback” until an owner labels results.</p></div>
-              <div class="ai-trust-controls"><label class="ai-field">PERIOD<select id="aiTrustDays"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select></label><button class="button button-outline" id="refreshAITrust" type="button">Refresh metrics</button></div>
-              <div id="aiTrustMetrics" class="ai-metric-grid" aria-live="polite"><p class="ai-empty-note">Loading trust metrics…</p></div>
-              <section class="ai-card"><div class="domain-card-heading"><div><b>Recent AI decisions</b><small>Mark whether an answer was correct, needed correction, was resolved, or required escalation.</small></div></div><div id="aiTrustRecent" class="ai-trust-recent" aria-live="polite"></div></section>
+              <div class="ai-feature-title"><div><p class="eyebrow">SEE WHAT HAPPENED / HELP YOUR AI IMPROVE</p><h3 id="aiTrustTitle">Results</h3></div><p>See sent replies, questions that need your help, and the feedback you have added. Mark answers as correct or needing a correction. Accuracy is based on your feedback, not a promise about every reply.</p></div>
+              <div class="ai-trust-controls"><label class="ai-field">PERIOD<select id="aiTrustDays"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select></label><button class="button button-outline" id="refreshAITrust" type="button">Refresh results</button></div>
+              <div id="aiTrustMetrics" class="ai-metric-grid" aria-live="polite"><p class="ai-empty-note">Loading your results…</p></div>
+              <section class="ai-card"><div class="domain-card-heading"><div><b>Recent AI decisions</b><small>Tell OpenMail whether the answer was right, needed a correction, solved the question, or needed more help.</small></div></div><div id="aiTrustRecent" class="ai-trust-recent" aria-live="polite"></div></section>
             </section>
-            <p class="ai-phase-note"><span>PHASES 02–05</span> Simulator confidence is model-reported and not calibrated probability. Workflow actions are restricted to built-in OpenMail mail operations. No third-party CRM, calendar, payment, or ticketing integration is connected yet.</p>
+            <p class="ai-phase-note"><span>GOOD TO KNOW</span> Your AI’s confidence is its own estimate, not a guarantee. Mail rules work inside OpenMail. Other business tools, calendars, payment services, and help desks are not connected.</p>
           </section>
           <footer class="mail-footer"><span>OPENMAIL / PRIVATE MAIL SPACE</span><span>Mail is stored for your account only</span></footer>
           </div>
@@ -262,6 +264,6 @@
     </dialog>
     <div class="toast" id="appToast" role="status" aria-live="polite"></div>
     <script src="vendor/mammoth.browser.min.js"></script>
-    <script type="module" src="app-ai-documents.js?v=20261105-ai-phases2-5"></script>
+    <script type="module" src="app-ai-documents.js?v=20261111-workspace"></script>
   </body>
 </html>
