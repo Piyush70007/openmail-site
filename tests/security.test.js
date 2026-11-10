@@ -3,12 +3,12 @@ const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const { Readable } = require("node:stream");
-const { json, readJson, requireSameOrigin, logSafeError } = require("../server/http");
-const { timedFetch, cookieOptions, currentUser, forwardedAuthOptions, supabaseAuth } = require("../server/services");
-const authHandler = require("../api/auth");
+const { json, readJson, requireSameOrigin, logSafeError } = require("./node_baseline/server/http");
+const { timedFetch, cookieOptions, currentUser, forwardedAuthOptions, supabaseAuth } = require("./node_baseline/server/services");
+const authHandler = require("./node_baseline/api/auth");
 const authValidation = authHandler._test;
-const authCallbackHandler = require("../api/auth/callback");
-const webhook = require("../api/webhooks/resend")._test;
+const authCallbackHandler = require("./node_baseline/api/auth/callback");
+const webhook = require("./node_baseline/api/webhooks/resend")._test;
 const vercel = require("../vercel.json");
 
 test("JSON request parsing rejects malformed and oversized bodies", async () => {

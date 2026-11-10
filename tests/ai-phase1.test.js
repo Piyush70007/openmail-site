@@ -1,10 +1,10 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
-const { AUTO_REPLY_MIN_CONFIDENCE, highRiskReason, validateAutomaticDecision, generateAutomaticDecision, messageAddress, loadReplyContext, isTestOnlyPricingMaterial, unsafeEvidenceText } = require("../server/ai");
-const { processAutomaticReply } = require("../server/ai-automation");
-const { requireSameOrigin } = require("../server/http");
-const { _test: webhook } = require("../api/webhooks/resend");
+const { AUTO_REPLY_MIN_CONFIDENCE, highRiskReason, validateAutomaticDecision, generateAutomaticDecision, messageAddress, loadReplyContext, isTestOnlyPricingMaterial, unsafeEvidenceText } = require("./node_baseline/server/ai");
+const { processAutomaticReply } = require("./node_baseline/server/ai-automation");
+const { requireSameOrigin } = require("./node_baseline/server/http");
+const { _test: webhook } = require("./node_baseline/api/webhooks/resend");
 
 const ids = {
   owner: "11111111-1111-4111-8111-111111111111",
@@ -407,7 +407,7 @@ test("mutating API origin checks reject missing or foreign origins", () => {
 });
 
 test("workflow phrase matching is case-folded and safely ignores disabled rules", () => {
-  const { workflowMatches } = require("../server/ai-platform");
+  const { workflowMatches } = require("./node_baseline/server/ai-platform");
   const message = { subject: "Invoice question", text_body: "Can you resend this?" };
   assert.equal(workflowMatches({ enabled: true, trigger_mode: "contains_any", match_terms: ["INVOICE"] }, message), true);
   assert.equal(workflowMatches({ enabled: true, trigger_mode: "contains_any", match_terms: ["refund"] }, message), false);
@@ -416,7 +416,7 @@ test("workflow phrase matching is case-folded and safely ignores disabled rules"
 });
 
 test("simulator evaluation requires a verified citation and the confidence threshold", () => {
-  const { evaluateSimulation } = require("../server/ai-platform");
+  const { evaluateSimulation } = require("./node_baseline/server/ai-platform");
   const valid = { decision: "auto_reply", evidenceValidated: true, citations: [{ source_id: "profile:pricing" }], confidence: 0.98 };
   assert.equal(evaluateSimulation("auto_reply", valid).passed, true);
   assert.equal(evaluateSimulation("human_review", valid).passed, false);
@@ -426,7 +426,7 @@ test("simulator evaluation requires a verified citation and the confidence thres
 });
 
 test("trust feedback only rates answers that were actually generated and never labels ignored mail", () => {
-  const { feedbackAllowed } = require("../server/ai-platform");
+  const { feedbackAllowed } = require("./node_baseline/server/ai-platform");
   assert.equal(feedbackAllowed("auto_sent", "correct"), true);
   assert.equal(feedbackAllowed("draft_created", "correction"), true);
   assert.equal(feedbackAllowed("human_review", "correction"), false);
@@ -435,7 +435,7 @@ test("trust feedback only rates answers that were actually generated and never l
 });
 
 test("representative lookup filters by owner and rejects a mismatched returned owner", async () => {
-  const { getOwnedRepresentative } = require("../server/ai-platform");
+  const { getOwnedRepresentative } = require("./node_baseline/server/ai-platform");
   let query = "";
   const result = await getOwnedRepresentative(ids.owner, "66666666-6666-4666-8666-666666666666", {
     db: async (path) => {
@@ -448,7 +448,7 @@ test("representative lookup filters by owner and rejects a mismatched returned o
 });
 
 test("new AI mutation endpoints reject requests without a same-origin header before touching services", async () => {
-  const { simulator, representatives, workflows, trust } = require("../server/ai-platform");
+  const { simulator, representatives, workflows, trust } = require("./node_baseline/server/ai-platform");
   async function assertForbidden(handler, methodName, query = {}) {
     const response = {
       statusCode: 200,
@@ -469,7 +469,7 @@ test("new AI mutation endpoints reject requests without a same-origin header bef
 });
 
 test("representative AI context requires an enabled representative owned by the caller and scopes both knowledge stores", async () => {
-  const { approvedContext } = require("../server/ai-platform");
+  const { approvedContext } = require("./node_baseline/server/ai-platform");
   const previousKey = process.env.GROQ_API_KEY;
   process.env.GROQ_API_KEY = "unit-test-key";
   const rep = { id: "66666666-6666-4666-8666-666666666666", owner_id: ids.owner, kind: "sales", display_name: "Sales", enabled: true };
