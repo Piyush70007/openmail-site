@@ -39,14 +39,17 @@ Two defensive corrections accompany the port: JSON request bodies must be object
 and automatic-job metadata is mapped to actual SQL column names before saving.
 The old implementation could send camelCase metadata names to PostgREST after
 a reply was accepted, then incorrectly mark that successful reply for review.
-Standard international domain names remain supported; URL-only numeric host
-coercions and emoji host labels are rejected by the Python IDNA validation.
+Standard international domain names remain supported. URL-only numeric host
+coercions are not performed, and IDNA-invalid emoji labels are rejected.
 
 ## Verification and rollout
 
 The production website is **https://freeopenmail.tech**. Its Vercel project is
 `openmail-site`; the project name and preview hostname do not replace the custom
-domain. Production remains on the existing `main` deployment during verification.
+domain. Python commit `955d605` was promoted to this domain on November 10, 2026,
+at 21:57:40 UTC. The final merge into `main` is still pending. The detailed
+[production rollout record](docs/PYTHON_ROLLOUT_2026-11-10.md) records completed
+checks and the remaining final merge/deployment confirmation.
 
 The Python tests cover HTTP routes, private data access, CSRF, session compatibility
 with Node, bounded inputs, signed webhook delivery, duplicate events, mail actions,
@@ -55,9 +58,10 @@ and Python decision helpers on the same synthetic inputs. The original 50 Node
 tests are retained as a reference under `tests/node_baseline/`; these files are
 excluded from deployment and do not run the application.
 
-Tests use synthetic data and mocked providers. They do not send real email or
-consume production AI quotas. A passing local suite does not establish that
-live provider credentials or Vercel background execution have been tested.
+Automated tests use synthetic data and mocked providers. They do not send real
+email or consume production AI quotas. Separate controlled production checks
+described below exercised real login, session renewal, mail delivery and Groq
+automation; the local tests alone do not establish those live results.
 
 Local verification on November 10, 2026: 151 Python tests and 328 subtests passed;
 all 50 original Node tests passed; the runtime dependency audit found no known
@@ -72,18 +76,33 @@ intentionally unconfigured; no production secrets were copied into Preview.
 The committed `uv.lock` pins Vercel's full dependency graph. A regression check
 confirms its runtime packages match the audited `requirements.txt` exactly.
 
-Before replacing the production backend:
+The staged Production deployment used the existing server-only Production
+configuration. A normal owner login and reload restored the mailbox. After
+promotion, the pre-existing production session also restored the same 11 messages.
+Read-only Supabase session timestamps confirmed renewal of both sessions; no
+tokens were read and no auth audit events were available for this check.
 
-1. Build the migration branch as a Vercel preview using the FastAPI preset.
-2. Check the public pages, API routing, security headers and private-file blocking.
-3. In an isolated service environment, verify login, existing-session refresh,
-   a signed inbound event and its completed automatic-reply job. ASGI background
-   work is awaited after the response, but the deployed runtime must be checked.
-4. Merge only when those checks pass. The frontend and provider configuration
-   should not need changes. Do not copy Production secrets into public previews.
+Both OpenMail mailbox tabs were closed before two controlled emails were sent.
+The supported factual question produced one automatic reply, a completed
+`auto_sent` job with confidence 0.95, and actual delivery to the owner's inbox.
+The sensitive account request produced a pending human handoff and no outbound
+reply. These results verify that the deployed Python automation continued without
+the mailbox being open in a browser. DNS, database schema, environment variables,
+company knowledge and automatic-reply settings were not changed for these tests.
 
-Rollback is the previous production deployment or reverting the migration commit.
-The schema and session format are unchanged, so rollback requires no data conversion.
+Public checks returned ready status and session responses, blocked private source
+and environment-file paths, rejected origin-less logout and unsigned webhooks,
+and included the configured security headers. Resend showed two delivery attempts
+for the positive webhook and confirmed its manual replay returned HTTP 200 and
+`{"ok":true}`. The database still showed exactly one outbound reply
+and an unchanged completed-job timestamp. The live replay check passed; the final
+merge and deployment state remain to be recorded.
+
+Rollback target: Vercel deployment `2cCQQHm8HD6KhmiUnLw2Eo652Xe7`, the previous
+Node implementation at commit `611f128`. The schema and session format are
+unchanged, so rollback requires no data conversion. Preserve automation job claims
+and provider IDs when investigating a failed or ambiguous send; restoring a
+deployment does not itself retry a job already claimed as `processing`.
 
 Vercel's [FastAPI documentation](https://vercel.com/docs/frameworks/backend/fastapi)
 describes its entry point, public asset directory and single-function deployment.
