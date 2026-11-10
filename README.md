@@ -11,7 +11,7 @@ OpenMail is a cinematic public site with a separate, server-backed mailbox app. 
 - Plain text outbound mail, inbound mail via a signed Resend webhook, plus inbox, sent, starred, drafts, archive, spam, and trash views. Drafts are stored in the signed-in user's account and can be reopened, edited, and sent.
 - Message selection supports selecting visible messages and moving them to Archive, Spam, Trash, or back to Inbox. Archiving one message is also available in its detail view.
 - Confirmed-email gating and atomic per-account limits: 30 DNS checks per hour, 2 domain registrations per day, 12 verification attempts per hour, 20 mailbox creations per day, and 10 outbound send requests per day.
-- **My AI representative, Phase 1**: company profile and approved notes, browser-side extraction of PDF/DOCX/TXT/Markdown/CSV company documents, editable AI drafts, optional per-mailbox automatic replies, an **AI Sent** view, and a **Needs human** handover queue.
+- **My AI, Phases 1–5**: grounded editable drafts and opt-in automatic replies; a synthetic email simulator with verified citations, expected-answer evaluation, and a confidence gate; separate Support, Sales, Billing, and Careers representatives with scoped knowledge; a restricted mailbox workflow builder; and an owner-only trust dashboard with corrections, escalations, resolutions, and labeled accuracy.
 - Automatic replies are off by default. An owner must explicitly enable them for each verified mailbox after enabling the AI profile; the UI asks for confirmation before saving. Candidate inbound text and approved company context may then go to Groq. Attachments and original uploaded files are never sent. Sensitive, automated, uncertain, or unsupported emails are held for review or ignored; eligible automatic replies must cite exact source passages and pass a high confidence threshold. The server constructs outbound content from those exact quotes and ignores the model's free-form reply, avoiding unsupported generated claims. Replies use the normal account send quota, have an idempotency key, and are capped at 10 AI requests per user and 25 per OpenMail project per UTC day. A 24-hour per-sender reply cooldown helps limit loops.
 - Server-side AI safeguards: Groq and Supabase secret keys never reach the browser; profile, knowledge, documents, settings, message views, and handoffs are scoped to the signed-in owner. Database tables and the document RPC are restricted to `service_role`. Uploaded documents are extracted in the browser, bounded to 5 MB/50 PDF pages/40,000 characters, and stored as text only. Human-review and failed-send cases do not appear as AI Sent.
 - The actual app lives at `/app.html`. The landing page also contains a separate fictional category interface sample.
@@ -28,7 +28,7 @@ The AI draft action and all AI setup routes reuse the existing authenticated mes
 
 ## Before using live mail
 
-The app is deployed, and its existing Supabase, authentication, and mail setup is in use. Phase 1 AI setup adds its own additive migration and Groq server key below. No service has been purchased and no DNS record has been changed.
+The site has a live deployment. The Phases 2–5 code in this repository requires its additive database migration and a successful deployment before those controls work live. This implementation does not apply the migration or change live service configuration. No service has been purchased and no DNS record has been changed.
 
 This version uses an API and webhook mail transport. OpenMail stores the inbox messages in Supabase; Resend handles email delivery and receives inbound messages. It is a web inbox, not a general-purpose IMAP/POP mailbox for Apple Mail, Outlook, or other mail clients. Attachments are recorded as metadata but cannot yet be downloaded or sent. Automated spam detection, category classification, billing, and global abuse monitoring are not implemented. Per-account limits are only a first layer of abuse protection, not a guarantee against a compromised server or coordinated account abuse.
 
@@ -46,6 +46,16 @@ This version uses an API and webhook mail transport. OpenMail stores the inbox m
 10. For AI, add the Groq key as a server-only Vercel variable and redeploy. In **My AI**, set up approved company information and enable the AI profile. Draft generation is owner-initiated. Automatic sending remains disabled until the owner separately enables and confirms it for a specific verified mailbox; automatic replies consume the same account email and AI quotas. Groq's current organization limits still apply to the shared project key.
 
 **Check existing email first.** The app checks whether the domain currently has MX records and warns before preparing setup. DNS tells other mail services where to deliver messages. Changing the main MX record can move new mail away from an existing provider. Review the complete changes with the domain administrator before applying them. OpenMail never edits DNS automatically. One-click DNS setup is not currently implemented; it requires onboarding OpenMail as a Domain Connect service and approval from supported DNS providers.
+
+### Phases 2–5 rollout
+
+For an existing Supabase project, apply the additive migration files in this order: 20261031_mailbox_drafts.sql, 20261104_ai_representative_setup.sql, 20261104_ai_representative_phase1.sql, then 20261105_ai_representatives_workflows_trust.sql. The last migration is at supabase/migrations/20261105_ai_representatives_workflows_trust.sql. Apply and verify it before deploying this code because runtime selects its new representative and workflow columns. The migration enables owner-level row security, grants access only to service_role, and keeps simulation message text out of the database.
+
+Before deploying, revoke and replace any Groq key previously exposed in this workspace. Store the replacement only as a server-side Vercel Production variable; this repository cannot rotate provider keys.
+
+Use My AI → Training simulator to run synthetic cases and inspect safe decisions and verified citations. In Representatives, name and enable the needed agents, add representative-scoped notes/documents, and assign each mailbox. Create mailbox-specific rules under Workflows. Mark outcomes in Trust dashboard; feedback is recorded for reporting and does not silently retrain the model. Tests mock database/provider calls; they do not send mail, contact Groq, or exercise a live Supabase project.
+
+Run npm test for the automated security and workflow checks.
 
 ## Run locally
 
@@ -68,7 +78,7 @@ Open [http://localhost:3000](http://localhost:3000). Webhook delivery from Resen
 - `supabase/schema.sql`, `supabase/security-quotas.sql`, `supabase/migrations/` — tables, indexes, row-level security policies, atomic per-account usage limits, and additive features.
 - `.env.example` — required server configuration names (no secrets).
 
-The Phase 1 tests use Node's built-in test runner and mock database/provider calls. They cover opt-in gating, evidence validation, high-risk handoff, quota exhaustion, duplicate webhook processing, failed delivery state, webhook signature validation, automated-message loop prevention, and same-origin write checks. Tests do not send email or call Groq.
+The Node test suite uses mocked database and provider calls. It covers opt-in gates, verified citations, confidence checks, sensitive-message handoff, representative ownership and scoping, simulator evaluations, workflow routing and draft-only actions, reply consent, trust-feedback eligibility, quotas, webhook validation, duplicate processing, and same-origin write checks. Tests do not send email, call Groq, or access a live Supabase project.
 
 ## GitHub and Vercel
 

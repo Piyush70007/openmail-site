@@ -1,6 +1,7 @@
 const { json, method, readJson, requireSameOrigin, fail } = require("./http");
 const { signedIn, requireConfirmedEmail } = require("./account");
 const { config, database, readiness } = require("./services");
+const { ensureRepresentatives, getOwnedRepresentative } = require("./ai-platform");
 
 const PROFILE_FIELDS = [
   "company_name",
@@ -77,7 +78,7 @@ async function documents(req, res) {
     if (!user) return;
 
     if (req.method === "GET") {
-      const rows = await database(`ai_knowledge_documents?select=id,file_name,mime_type,created_at&owner_id=eq.${encodeURIComponent(user.id)}&order=created_at.desc&limit=10`);
+      const rows = await database(`ai_knowledge_documents?select=id,file_name,mime_type,representative_id,created_at&owner_id=eq.${encodeURIComponent(user.id)}&order=created_at.desc&limit=10`);
       return json(res, 200, { documents: rows || [] });
     }
 
@@ -103,6 +104,9 @@ async function documents(req, res) {
     if (!extractedText || extractedText.length > 40000) {
       return json(res, 400, { error: "The document must contain readable text up to 40,000 characters." });
     }
+    const representativeId = String(body.representativeId || "");
+    const representative = representativeId ? await getOwnedRepresentative(user.id, representativeId, { requireEnabled: true }) : null;
+    if (representativeId && !representative) return json(res, 400, { error: "Choose one of your enabled AI representatives." });
     const profileRows = await database(`ai_profiles?select=enabled&owner_id=eq.${encodeURIComponent(user.id)}&limit=1`);
     if (!profileRows || !profileRows[0] || !profileRows[0].enabled) {
       return json(res, 409, { error: "Save and enable your AI representative before adding knowledge documents." });
@@ -110,9 +114,18 @@ async function documents(req, res) {
     const crypto = require("node:crypto");
     const contentHash = crypto.createHash("sha256").update(extractedText, "utf8").digest("hex");
     try {
-      const document = await database("rpc/save_openmail_ai_document", {
+      const document = await database(representative
+        ? "rpc/save_openmail_ai_document_for_rep"
+        : "rpc/save_openmail_ai_document", {
         method: "POST",
-        body: {
+        body: representative ? {
+          p_owner: user.id,
+          p_representative: representative.id,
+          p_file_name: fileName,
+          p_mime_type: mimeType,
+          p_content_hash: contentHash,
+          p_extracted_text: extractedText
+        } : {
           p_owner: user.id,
           p_file_name: fileName,
           p_mime_type: mimeType,
@@ -145,12 +158,15 @@ async function mailboxSettings(req, res) {
     const mailbox = mailboxRows && mailboxRows[0];
     if (!mailbox || mailbox.status !== "active") return json(res, 404, { error: "Active mailbox not found." });
 
-    const currentRows = await database(`ai_mailbox_settings?select=mailbox_id,auto_reply_enabled,updated_at&mailbox_id=eq.${encodeURIComponent(mailbox.id)}&owner_id=eq.${encodeURIComponent(user.id)}&limit=1`);
+    const currentRows = await database(`ai_mailbox_settings?select=mailbox_id,auto_reply_enabled,representative_id,updated_at&mailbox_id=eq.${encodeURIComponent(mailbox.id)}&owner_id=eq.${encodeURIComponent(user.id)}&limit=1`);
     if (req.method === "GET") {
       const domainRows = await database(`domains?select=status&id=eq.${encodeURIComponent(mailbox.domain_id)}&owner_id=eq.${encodeURIComponent(user.id)}&limit=1`);
+      const representatives = await ensureRepresentatives(user.id);
+      const defaultRep = representatives.find((item) => item.kind === "support");
       return json(res, 200, {
         mailbox: { id: mailbox.id, address: mailbox.address },
-        settings: currentRows && currentRows[0] || { mailbox_id: mailbox.id, auto_reply_enabled: false },
+        settings: { mailbox_id: mailbox.id, auto_reply_enabled: false, ...(currentRows && currentRows[0] || {}), representative_id: currentRows && currentRows[0] && currentRows[0].representative_id || defaultRep && defaultRep.id || null },
+        representatives,
         domainVerified: Boolean(domainRows && domainRows[0] && domainRows[0].status === "verified"),
         mailReady: readiness().mailReady,
         providerConfigured: Boolean(config().groqKey)
@@ -158,6 +174,10 @@ async function mailboxSettings(req, res) {
     }
 
     const enabled = body.enabled === true;
+    const representatives = await ensureRepresentatives(user.id);
+    const requestedRepresentativeId = String(body.representativeId || currentRows && currentRows[0] && currentRows[0].representative_id || (representatives.find((item) => item.kind === "support") || {}).id || "");
+    const representative = await getOwnedRepresentative(user.id, requestedRepresentativeId, { requireEnabled: true });
+    if (!representative) return json(res, 400, { error: "Choose one of your enabled AI representatives for this mailbox." });
     if (enabled) {
       if (body.confirmAutomaticSending !== true) return json(res, 400, { error: "Confirm that OpenMail may automatically send supported replies for this mailbox." });
       if (!config().groqKey || !readiness().mailReady) return json(res, 503, { error: "AI and mail services must be connected before automatic replies can be enabled." });
@@ -171,6 +191,7 @@ async function mailboxSettings(req, res) {
     const settings = {
       mailbox_id: mailbox.id,
       owner_id: user.id,
+      representative_id: representative.id,
       auto_reply_enabled: enabled,
       updated_at: new Date().toISOString()
     };
@@ -189,7 +210,7 @@ async function knowledge(req, res) {
     if (!user) return;
 
     if (req.method === "GET") {
-      const rows = await database(`ai_knowledge_entries?select=id,title,entry_type,content,created_at,updated_at&owner_id=eq.${encodeURIComponent(user.id)}&order=created_at.desc&limit=100`);
+      const rows = await database(`ai_knowledge_entries?select=id,title,entry_type,content,representative_id,created_at,updated_at&owner_id=eq.${encodeURIComponent(user.id)}&order=created_at.desc&limit=100`);
       return json(res, 200, { entries: rows || [] });
     }
 
@@ -209,14 +230,19 @@ async function knowledge(req, res) {
     const title = String(body.title || "").trim();
     const content = String(body.content || "").trim();
     const entryType = String(body.type || "faq");
+    const representativeId = String(body.representativeId || "");
     if (!title || title.length > 120) return json(res, 400, { error: "Enter a title up to 120 characters." });
     if (!content || content.length > 8000) return json(res, 400, { error: "Enter approved information up to 8,000 characters." });
     if (!ENTRY_TYPES.has(entryType)) return json(res, 400, { error: "Choose a supported knowledge type." });
+    const representative = representativeId ? await getOwnedRepresentative(user.id, representativeId, { requireEnabled: true }) : null;
+    if (representativeId && !representative) return json(res, 400, { error: "Choose one of your enabled AI representatives." });
 
     try {
-      const entry = await database("rpc/save_openmail_ai_knowledge", {
+      const entry = await database(representative ? "rpc/save_openmail_ai_knowledge_for_rep" : "rpc/save_openmail_ai_knowledge", {
         method: "POST",
-        body: { p_owner: user.id, p_title: title, p_entry_type: entryType, p_content: content }
+        body: representative
+          ? { p_owner: user.id, p_representative: representative.id, p_title: title, p_entry_type: entryType, p_content: content }
+          : { p_owner: user.id, p_title: title, p_entry_type: entryType, p_content: content }
       });
       return json(res, 201, { entry });
     } catch (error) {

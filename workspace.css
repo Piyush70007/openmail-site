@@ -318,11 +318,68 @@ body:has(#mailView:not([hidden])) main {
 #mailView .ai-handoff-banner p { margin: 5px 0 0; color: #b6a58c; font-size: 10px; line-height: 1.6; }
 #mailView .ai-handoff-banner .button { flex: 0 0 auto; min-height: 34px; font-size: 9px; }
 #mailView .ai-sent-banner { color: #b8d9d4; font-size: 10px; line-height: 1.6; }
+#mailView .ai-assignment-note { margin: 12px 0 0; padding: 8px 10px; border-left: 2px solid var(--cyan); background: rgba(41,115,123,.07); color: #9dc7c0; font-size: 9px; line-height: 1.5; }
+#mailView .ai-assignment-note[hidden] { display: none; }
+#mailView .message-meta .ai-assignment-label { display: inline-flex; width: fit-content; max-width: 100%; overflow: hidden; color: #9ccac1; font: 7px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
 #mailView .ai-document-form .button { min-height: 34px; font-size: 8px; }
 #mailView .ai-automation-card .ai-form-footer > span.error { color: #ff9c91; }
 #mailView .ai-form-footer .button:disabled { cursor: not-allowed; opacity: .5; }
 #mailView .ai-phase-note { margin: 20px 0 0; padding-top: 14px; border-top: 1px solid var(--line); color: #748482; font-size: 9px; line-height: 1.7; }
 #mailView .ai-phase-note span { margin-right: 12px; color: var(--cyan); font: 8px var(--mono); letter-spacing: .1em; }
+#mailView .ai-feature-tabs { display: flex; gap: 5px; margin: 22px 0 14px; padding: 5px; border: 1px solid var(--line); background: rgba(0,0,0,.2); overflow-x: auto; }
+#mailView .ai-feature-tab { flex: 1 0 auto; min-height: 38px; padding: 0 13px; border: 1px solid transparent; background: transparent; color: #899997; font: 9px var(--font); cursor: pointer; }
+#mailView .ai-feature-tab span { margin-left: 7px; color: #64716f; font: 7px var(--mono); }
+#mailView .ai-feature-tab:hover, #mailView .ai-feature-tab.active { border-color: rgba(164,245,230,.18); background: rgba(164,245,230,.07); color: #cae5df; }
+#mailView .ai-feature-view[hidden] { display: none; }
+#mailView .ai-feature-title { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding: 17px 0 18px; }
+#mailView .ai-feature-title h3 { margin: 7px 0 0; color: #e3ecea; font-size: clamp(22px, 2.8vw, 34px); font-weight: 500; letter-spacing: -.055em; }
+#mailView .ai-feature-title > p { max-width: 560px; margin: 0; color: #8b9a98; font-size: 10px; line-height: 1.7; }
+#mailView .ai-feature-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 14px; margin-bottom: 14px; }
+#mailView .ai-feature-grid .ai-card { align-self: start; }
+#mailView .ai-result-card { display: grid; gap: 12px; }
+#mailView .ai-result-pass { color: #a4f5e6; }
+#mailView .ai-result-review { color: #f0cb94; }
+#mailView .ai-result-card > b { font-size: 12px; }
+#mailView .ai-result-card > p { margin: 0; color: #a4b2af; font-size: 10px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+#mailView .ai-result-card > small { color: #748482; font-size: 8px; line-height: 1.6; }
+#mailView .ai-simulation-answer { padding: 12px; border: 1px solid rgba(164,245,230,.16); background: rgba(41,115,123,.06); }
+#mailView .ai-result-card blockquote { margin: 0; padding: 10px 12px; border-left: 2px solid var(--cyan); background: rgba(0,0,0,.16); }
+#mailView .ai-result-card blockquote b { color: #c8d8d5; font-size: 9px; }
+#mailView .ai-result-card blockquote p { margin: 5px 0 0; color: #9cadaa; font-size: 9px; line-height: 1.6; white-space: pre-wrap; }
+#mailView .ai-metrics-list, #mailView .ai-trust-recent, #mailView .ai-representative-list { display: grid; gap: 8px; }
+#mailView .ai-metric-row, #mailView .ai-workflow-row, #mailView .ai-trust-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 11px 12px; border: 1px solid var(--line); background: rgba(0,0,0,.13); }
+#mailView .ai-metric-row > *, #mailView .ai-workflow-row > div:first-child, #mailView .ai-trust-row > div:first-child { min-width: 0; }
+#mailView .ai-metric-row b, #mailView .ai-workflow-row b, #mailView .ai-trust-row b { display: block; color: #d9e4e1; font-size: 9px; }
+#mailView .ai-metric-row small, #mailView .ai-workflow-row small, #mailView .ai-trust-row small { display: block; margin-top: 4px; color: #7f908e; font-size: 8px; line-height: 1.55; }
+#mailView .ai-metric-row > span { flex: 0 0 auto; font: 7px var(--mono); }
+#mailView .ai-row-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; justify-content: end; gap: 4px; }
+#mailView .ai-row-actions .quiet-button { min-height: 26px; }
+#mailView .ai-workflow-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#mailView .ai-workflow-form > label:nth-child(3), #mailView .ai-workflow-form > .ai-form-footer { grid-column: 1 / -1; }
+#mailView .ai-workflow-form .ai-consent-toggle { display: flex; align-items: flex-start; gap: 10px; }
+#mailView .ai-workflow-form .ai-consent-toggle input { flex: 0 0 auto; width: 15px; height: 15px; margin: 0; accent-color: #a4f5e6; }
+#mailView .ai-workflow-form .ai-consent-toggle span { display: grid; gap: 5px; }
+#mailView .ai-workflow-form .ai-consent-toggle b { color: #d7ece9; font: 10px var(--font); letter-spacing: 0; }
+#mailView .ai-workflow-form .ai-consent-toggle small { color: #899997; font: 8px/1.5 var(--font); letter-spacing: 0; }
+#mailView .ai-workflow-form .ai-form-footer { display: flex; align-items: center; justify-content: space-between; }
+#mailView .ai-representative-row { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(140px, 1fr) auto auto; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); background: rgba(0,0,0,.13); }
+#mailView .ai-representative-copy { display: grid; gap: 4px; }
+#mailView .ai-representative-copy b { color: #d9e4e1; font-size: 10px; }
+#mailView .ai-representative-copy small { color: #7f908e; font-size: 8px; }
+#mailView .ai-representative-row > input[type="text"] { min-width: 0; width: 100%; border: 1px solid rgba(182,211,216,.15); border-radius: 4px; background: #091013; color: #e9f0ef; padding: 9px; font: 10px var(--font); }
+#mailView .ai-representative-enabled { display: flex; align-items: center; gap: 6px; color: #91a09f; font-size: 8px; white-space: nowrap; }
+#mailView .ai-representative-enabled input { accent-color: #a4f5e6; }
+#mailView .ai-trust-controls { display: flex; align-items: end; gap: 10px; margin: 0 0 12px; }
+#mailView .ai-trust-controls .ai-field { min-width: 160px; }
+#mailView .ai-trust-controls .button { min-height: 34px; font-size: 8px; }
+#mailView .ai-metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+#mailView .ai-metric-card { display: grid; gap: 8px; min-height: 76px; align-content: center; padding: 12px; border: 1px solid var(--line); background: linear-gradient(145deg,rgba(17,26,30,.72),rgba(10,15,18,.82)); }
+#mailView .ai-metric-card b { color: #d9ece8; font-size: 19px; font-weight: 500; letter-spacing: -.04em; }
+#mailView .ai-metric-card small { color: #81918f; font: 7px var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+#mailView .ai-trust-row { align-items: start; }
+#mailView .ai-trust-row .ai-row-actions { max-width: 310px; }
+#mailView .ai-trust-row .quiet-button:disabled { color: #6a7775; cursor: default; }
+#mailView .ai-phase-note { margin-top: 16px; }
 #mailView .ai-nav-link b { color: var(--cyan); font: 7px var(--mono); letter-spacing: .07em; }
 #mailView .domains-ai-link { margin-left: auto; margin-right: auto; }
 #mailView #mobileMyAIButton.active { border-color: rgba(164,245,230,.2); color: var(--cyan); background: rgba(164,245,230,.07); }
@@ -330,6 +387,10 @@ body:has(#mailView:not([hidden])) main {
 @media (max-width: 900px) {
   #mailView .ai-workspace { grid-template-columns: minmax(0, 1fr); }
   #mailView .ai-panel-title { align-items: start; }
+  #mailView .ai-feature-title { align-items: start; flex-direction: column; gap: 9px; }
+  #mailView .ai-feature-title > p { max-width: 100%; }
+  #mailView .ai-feature-grid { grid-template-columns: minmax(0, 1fr); }
+  #mailView .ai-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 720px) {
   #mailView .ai-panel { padding-top: 15px; }
@@ -343,4 +404,13 @@ body:has(#mailView:not([hidden])) main {
   #mailView .ai-document-form .button { justify-self: start; }
   #mailView #aiDocumentStatus { grid-column: 1; }
   #mailView .ai-handoff-banner { align-items: start; flex-direction: column; }
+  #mailView .ai-feature-tabs { margin-top: 16px; }
+  #mailView .ai-feature-tab { padding-inline: 9px; font-size: 8px; }
+  #mailView .ai-workflow-form { grid-template-columns: minmax(0, 1fr); }
+  #mailView .ai-workflow-form > * { grid-column: 1 !important; }
+  #mailView .ai-representative-row { grid-template-columns: minmax(0, 1fr) auto; }
+  #mailView .ai-representative-copy { grid-column: 1 / -1; }
+  #mailView .ai-trust-row, #mailView .ai-workflow-row, #mailView .ai-metric-row { align-items: start; flex-direction: column; }
+  #mailView .ai-row-actions { justify-content: start; }
+  #mailView .ai-trust-controls { align-items: start; flex-direction: column; }
 }

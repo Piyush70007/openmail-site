@@ -3,7 +3,11 @@
     { "source": "/api/ai/profile", "destination": "/api/messages?aiResource=profile" },
     { "source": "/api/ai/knowledge", "destination": "/api/messages?aiResource=knowledge" },
     { "source": "/api/ai/documents", "destination": "/api/messages?aiResource=documents" },
-    { "source": "/api/ai/mailbox-settings", "destination": "/api/messages?aiResource=mailbox-settings" }
+    { "source": "/api/ai/mailbox-settings", "destination": "/api/messages?aiResource=mailbox-settings" },
+    { "source": "/api/ai/simulator", "destination": "/api/messages?aiResource=simulator" },
+    { "source": "/api/ai/representatives", "destination": "/api/messages?aiResource=representatives" },
+    { "source": "/api/ai/workflows", "destination": "/api/messages?aiResource=workflows" },
+    { "source": "/api/ai/trust", "destination": "/api/messages?aiResource=trust" }
   ],
   "functions": {
     "api/webhooks/resend.js": { "maxDuration": 60 },

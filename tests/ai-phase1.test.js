@@ -14,7 +14,7 @@ const ids = {
   outbound: "55555555-5555-4555-8555-555555555555"
 };
 
-function mockAutomation({ enabled = true, riskMessage = {}, decision, decisionError, quota = true, sendError } = {}) {
+function mockAutomation({ enabled = true, riskMessage = {}, decision, decisionError, quota = true, sendError, workflows = [] } = {}) {
   const state = {
     jobInserted: false,
     inbound: {
@@ -39,12 +39,17 @@ function mockAutomation({ enabled = true, riskMessage = {}, decision, decisionEr
     jobUpdates: null,
     sendCount: 0,
     aiCalls: 0,
-    quotaCalls: 0
+    draftCalls: 0,
+    quotaCalls: 0,
+    workflows,
+    trustEvents: []
   };
 
   async function database(path, options = {}) {
     if (path.startsWith("messages?select=id,owner_id,")) return [state.inbound];
     if (path.startsWith("ai_mailbox_settings?")) return [{ auto_reply_enabled: enabled }];
+    if (path.startsWith("ai_workflows?")) return state.workflows;
+    if (path.startsWith("ai_trust_events?")) { state.trustEvents.push(options.body); return []; }
     if (path.startsWith("ai_auto_reply_jobs?on_conflict=")) {
       if (state.jobInserted) return [];
       state.jobInserted = true;
@@ -86,6 +91,7 @@ function mockAutomation({ enabled = true, riskMessage = {}, decision, decisionEr
           model: "mock-model"
         };
       },
+      generateReplyDraft: async () => { state.draftCalls += 1; return { draft: "Thanks for writing. Our support hours are Monday through Friday.", model: "mock-model" }; },
       resend: async (path, options) => {
         state.sendCount += 1;
         state.sendOptions = { path, ...options };
@@ -242,6 +248,7 @@ test("high-risk inbound email enters Needs human without calling AI or Resend", 
   assert.equal(mock.state.inbound.ai_handoff_status, "pending");
   assert.match(mock.state.inbound.ai_handoff_reason, /payment|refund/i);
   assert.equal(mock.state.aiCalls, 0);
+  assert.equal(mock.state.draftCalls, 0);
   assert.equal(mock.state.sendCount, 0);
 });
 
@@ -332,4 +339,158 @@ test("mutating API origin checks reject missing or foreign origins", () => {
   const missing = response();
   assert.equal(requireSameOrigin({ headers: { host: "openmail.example", "x-forwarded-proto": "https" } }, missing), false);
   assert.equal(missing.statusCode, 403);
+});
+
+test("workflow phrase matching is case-folded and safely ignores disabled rules", () => {
+  const { workflowMatches } = require("../server/ai-platform");
+  const message = { subject: "Invoice question", text_body: "Can you resend this?" };
+  assert.equal(workflowMatches({ enabled: true, trigger_mode: "contains_any", match_terms: ["INVOICE"] }, message), true);
+  assert.equal(workflowMatches({ enabled: true, trigger_mode: "contains_any", match_terms: ["refund"] }, message), false);
+  assert.equal(workflowMatches({ enabled: true, trigger_mode: "all_inbound", match_terms: [] }, message), true);
+  assert.equal(workflowMatches({ enabled: false, trigger_mode: "all_inbound" }, message), false);
+});
+
+test("simulator evaluation requires a verified citation and the confidence threshold", () => {
+  const { evaluateSimulation } = require("../server/ai-platform");
+  const valid = { decision: "auto_reply", evidenceValidated: true, citations: [{ source_id: "profile:pricing" }], confidence: 0.98 };
+  assert.equal(evaluateSimulation("auto_reply", valid).passed, true);
+  assert.equal(evaluateSimulation("human_review", valid).passed, false);
+  assert.equal(evaluateSimulation("auto_reply", { ...valid, evidenceValidated: false }).passed, false);
+  assert.equal(evaluateSimulation("auto_reply", { ...valid, confidence: 0.1 }).passed, false);
+  assert.equal(evaluateSimulation("human_review", { decision: "unknown" }).passed, false);
+});
+
+test("trust feedback only rates answers that were actually generated and never labels ignored mail", () => {
+  const { feedbackAllowed } = require("../server/ai-platform");
+  assert.equal(feedbackAllowed("auto_sent", "correct"), true);
+  assert.equal(feedbackAllowed("draft_created", "correction"), true);
+  assert.equal(feedbackAllowed("human_review", "correction"), false);
+  assert.equal(feedbackAllowed("workflow_applied", "resolved"), true);
+  assert.equal(feedbackAllowed("ignored", "escalated"), false);
+});
+
+test("representative lookup filters by owner and rejects a mismatched returned owner", async () => {
+  const { getOwnedRepresentative } = require("../server/ai-platform");
+  let query = "";
+  const result = await getOwnedRepresentative(ids.owner, "66666666-6666-4666-8666-666666666666", {
+    db: async (path) => {
+      query = path;
+      return [{ id: "66666666-6666-4666-8666-666666666666", owner_id: ids.mailbox, enabled: true }];
+    }
+  });
+  assert.match(query, new RegExp("owner_id=eq." + ids.owner));
+  assert.equal(result, null);
+});
+
+test("new AI mutation endpoints reject requests without a same-origin header before touching services", async () => {
+  const { simulator, representatives, workflows, trust } = require("../server/ai-platform");
+  async function assertForbidden(handler, methodName, query = {}) {
+    const response = {
+      statusCode: 200,
+      headers: {},
+      payload: "",
+      setHeader(name, value) { this.headers[name] = value; },
+      end(value) { this.payload = value; }
+    };
+    await handler({ method: methodName, headers: {}, query, body: {} }, response);
+    assert.equal(response.statusCode, 403);
+    assert.equal(JSON.parse(response.payload).error, "This request did not come from OpenMail.");
+  }
+  await assertForbidden(simulator, "POST");
+  await assertForbidden(representatives, "PATCH");
+  await assertForbidden(workflows, "POST");
+  await assertForbidden(workflows, "DELETE", { mailboxId: ids.mailbox, id: ids.inbound });
+  await assertForbidden(trust, "POST");
+});
+
+test("representative AI context requires an enabled representative owned by the caller and scopes both knowledge stores", async () => {
+  const { approvedContext } = require("../server/ai-platform");
+  const previousKey = process.env.GROQ_API_KEY;
+  process.env.GROQ_API_KEY = "unit-test-key";
+  const rep = { id: "66666666-6666-4666-8666-666666666666", owner_id: ids.owner, kind: "sales", display_name: "Sales", enabled: true };
+  const profile = { company_name: "Example", company_description: "A test company", enabled: true };
+  const paths = [];
+  try {
+    const context = await approvedContext(ids.owner, rep.id, async (path) => {
+      paths.push(path);
+      if (path.startsWith("rpc/ensure_openmail_ai_representatives")) return [rep];
+      if (path.startsWith("ai_profiles?")) return [profile];
+      if (path.startsWith("ai_knowledge_entries?")) return [];
+      if (path.startsWith("ai_knowledge_documents?")) return [];
+      throw new Error("Unexpected database path: " + path);
+    });
+    assert.equal(context.representative.id, rep.id);
+    const scopedPaths = paths.filter((path) => path.startsWith("ai_knowledge_"));
+    assert.equal(scopedPaths.length, 2);
+    for (const path of scopedPaths) {
+      const params = new URLSearchParams(path.slice(path.indexOf("?") + 1));
+      assert.equal(params.get("owner_id"), "eq." + ids.owner);
+      assert.equal(params.get("or"), "(representative_id.is.null,representative_id.eq." + rep.id + ")");
+    }
+    await assert.rejects(() => approvedContext(ids.mailbox, rep.id, async (path) => {
+      if (path.startsWith("rpc/ensure_openmail_ai_representatives")) return [rep];
+      throw new Error("Mismatched owner should be rejected before reading knowledge.");
+    }), /Choose one of your AI representatives/);
+  } finally {
+    if (previousKey === undefined) delete process.env.GROQ_API_KEY;
+    else process.env.GROQ_API_KEY = previousKey;
+  }
+});
+
+test("workflow routing assigns the representative and never sends an email", async () => {
+  const workflow = { id: "workflow-1", name: "Route support", trigger_mode: "contains_any", match_terms: ["hours"], action: "route_to_rep", representative_id: "66666666-6666-4666-8666-666666666666", enabled: true };
+  const mock = mockAutomation({ enabled: true, workflows: [workflow] });
+  const result = await processAutomaticReply(ids.inbound, mock.overrides);
+  assert.equal(result.status, "workflow_routed");
+  assert.equal(mock.state.aiCalls, 0);
+  assert.equal(mock.state.sendCount, 0);
+  assert.equal(mock.state.inbound.ai_representative_id, workflow.representative_id);
+  assert.equal(mock.state.jobUpdates.status, "workflow_applied");
+});
+
+test("create-draft workflow saves an unsent draft and never invokes the provider", async () => {
+  const workflow = { id: "workflow-4", name: "Draft support answer", trigger_mode: "all_inbound", match_terms: [], action: "create_draft", representative_id: "66666666-6666-4666-8666-666666666666", enabled: true };
+  const mock = mockAutomation({ enabled: true, workflows: [workflow] });
+  const result = await processAutomaticReply(ids.inbound, mock.overrides);
+  assert.equal(result.status, "draft_created");
+  assert.equal(mock.state.sendCount, 0);
+  assert.equal(mock.state.outbound.folder, "drafts");
+  assert.equal(mock.state.outbound.status, "draft");
+  assert.equal(mock.state.outbound.ai_auto_sent, false);
+  assert.equal(mock.state.jobUpdates.status, "draft_created");
+});
+
+test("create-draft workflow sends high-risk or automated messages to human review before Groq", async () => {
+  const workflow = { id: "workflow-5", name: "Draft support answer", trigger_mode: "all_inbound", match_terms: [], action: "create_draft", representative_id: "66666666-6666-4666-8666-666666666666", enabled: true };
+  const mock = mockAutomation({
+    enabled: true,
+    workflows: [workflow],
+    riskMessage: { text_body: "I need a refund for this charge." }
+  });
+  const result = await processAutomaticReply(ids.inbound, mock.overrides);
+  assert.equal(result.status, "human_review");
+  assert.match(result.reason, /payment|refund/i);
+  assert.equal(mock.state.aiCalls, 0);
+  assert.equal(mock.state.draftCalls, 0);
+  assert.equal(mock.state.sendCount, 0);
+  assert.equal(mock.state.outbound, null);
+});
+
+test("verified-reply workflows cannot bypass the mailbox automatic-reply opt-in", async () => {
+  const workflow = { id: "workflow-2", name: "Answer only with facts", trigger_mode: "all_inbound", match_terms: [], action: "verified_reply", representative_id: "66666666-6666-4666-8666-666666666666", enabled: true };
+  const mock = mockAutomation({ enabled: false, workflows: [workflow] });
+  const result = await processAutomaticReply(ids.inbound, mock.overrides);
+  assert.equal(result.status, "human_review");
+  assert.match(result.reason, /separately enabled/i);
+  assert.equal(mock.state.aiCalls, 0);
+  assert.equal(mock.state.sendCount, 0);
+});
+
+test("active workflow sets make unmatched messages stop without sending", async () => {
+  const workflow = { id: "workflow-3", name: "Only billing", trigger_mode: "contains_any", match_terms: ["invoice"], action: "route_to_rep", representative_id: "66666666-6666-4666-8666-666666666666", enabled: true };
+  const mock = mockAutomation({ enabled: true, workflows: [workflow] });
+  const result = await processAutomaticReply(ids.inbound, mock.overrides);
+  assert.equal(result.status, "no_matching_workflow");
+  assert.equal(mock.state.aiCalls, 0);
+  assert.equal(mock.state.sendCount, 0);
 });

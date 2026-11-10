@@ -31,6 +31,9 @@ let aiProviderConfigured = false;
 let aiProfileEnabled = false;
 let aiAutomaticEnabled = false;
 let aiMailReady = false;
+let aiRepresentatives = [];
+let aiWorkflows = [];
+let selectedAITab = "training";
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -252,6 +255,11 @@ async function loadDashboard(user) {
   $("#mailMissingConfig").textContent = systemStatus.mailMissing.join(" · ");
   try {
     await loadDomainsAndMailboxes();
+    try {
+      const result = await api("/api/ai/representatives");
+      aiRepresentatives = result.representatives || [];
+      renderMessages();
+    } catch {}
   } catch (error) {
     toast(error.message);
     openDomains();
@@ -407,6 +415,13 @@ function renderAIKnowledge(entries) {
     title.textContent = entry.title;
     const type = document.createElement("span");
     type.textContent = String(entry.entry_type || "faq").replaceAll("_", " ").toUpperCase();
+    const scope = document.createElement("span");
+    if (entry.representative_id) {
+      const rep = aiRepresentatives.find((item) => item.id === entry.representative_id);
+      scope.textContent = rep ? rep.display_name.toUpperCase() : "REPRESENTATIVE ONLY";
+    } else {
+      scope.textContent = "SHARED";
+    }
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "quiet-button ai-delete-entry";
@@ -421,7 +436,7 @@ function renderAIKnowledge(entries) {
         toast("Knowledge note removed.");
       } catch (error) { toast(error.message); remove.disabled = false; }
     });
-    heading.append(title, type, remove);
+    heading.append(title, type, scope, remove);
     const content = document.createElement("p");
     content.textContent = entry.content;
     card.append(heading, content);
@@ -432,6 +447,283 @@ function renderAIKnowledge(entries) {
 async function loadAIKnowledge() {
   const result = await api("/api/ai/knowledge");
   renderAIKnowledge(result.entries || []);
+}
+
+function appendOption(select, value, label) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = label;
+  select.append(option);
+}
+
+function fillRepresentativeSelect(select, { includeShared = false, selected = "" } = {}) {
+  if (!select) return;
+  select.replaceChildren();
+  if (includeShared) appendOption(select, "", "Shared with all representatives");
+  const enabled = aiRepresentatives.filter((item) => item.enabled);
+  if (!enabled.length && !includeShared) appendOption(select, "", "No enabled representatives");
+  enabled.forEach((item) => appendOption(select, item.id, `${item.display_name} · ${item.kind}`));
+  if (selected && [...select.options].some((option) => option.value === selected)) select.value = selected;
+  else if (!includeShared && enabled.length) select.value = enabled[0].id;
+}
+
+function renderAIRepresentatives() {
+  const root = $("#aiRepresentativesList");
+  if (!root) return;
+  root.replaceChildren();
+  if (!aiRepresentatives.length) {
+    const note = document.createElement("p");
+    note.className = "ai-empty-note error";
+    note.textContent = "Representatives could not load. Apply the OpenMail AI phases 2–5 database migration, then refresh.";
+    root.append(note);
+    return;
+  }
+  const mailboxSetting = window.openmailMailboxSetting || {};
+  const mailboxRep = mailboxSetting.representative_id || "";
+  for (const rep of aiRepresentatives) {
+    const card = document.createElement("article");
+    card.className = "ai-representative-row";
+    const info = document.createElement("div");
+    info.className = "ai-representative-copy";
+    const title = document.createElement("b");
+    title.textContent = rep.kind[0].toUpperCase() + rep.kind.slice(1);
+    const description = document.createElement("small");
+    description.textContent = {
+      support: "Product questions and general help",
+      sales: "Service questions and qualified leads",
+      billing: "Billing requests routed for careful review",
+      careers: "Hiring questions routed for careful review"
+    }[rep.kind] || "Separate AI representative";
+    info.append(title, description);
+    const name = document.createElement("input");
+    name.type = "text";
+    name.maxLength = 80;
+    name.value = rep.display_name;
+    name.setAttribute("aria-label", `${title.textContent} representative display name`);
+    const enabledLabel = document.createElement("label");
+    enabledLabel.className = "ai-representative-enabled";
+    const enabled = document.createElement("input");
+    enabled.type = "checkbox";
+    enabled.checked = Boolean(rep.enabled);
+    enabled.setAttribute("aria-label", `Enable ${title.textContent} representative`);
+    const enabledText = document.createElement("span");
+    enabledText.textContent = "Enabled";
+    enabledLabel.append(enabled, enabledText);
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "button button-outline";
+    save.textContent = "Save";
+    save.addEventListener("click", async () => {
+      const displayName = name.value.trim();
+      if (!displayName) return toast("Enter a name for this representative.");
+      if (!enabled.checked && mailboxRep === rep.id && aiAutomaticEnabled) {
+        return toast("Turn off automatic replies or assign another representative before disabling this one.");
+      }
+      save.disabled = true;
+      try {
+        const result = await api("/api/ai/representatives", {
+          method: "PATCH", body: { id: rep.id, displayName, enabled: enabled.checked }
+        });
+        aiRepresentatives = aiRepresentatives.map((item) => item.id === rep.id ? result.representative : item);
+        renderAIRepresentatives();
+        refreshRepresentativeSelects(mailboxRep);
+        toast(`${title.textContent} representative saved.`);
+      } catch (error) { toast(error.message); save.disabled = false; }
+    });
+    card.append(info, name, enabledLabel, save);
+    root.append(card);
+  }
+  refreshRepresentativeSelects(mailboxRep);
+}
+
+function refreshRepresentativeSelects(mailboxRepresentativeId = "") {
+  fillRepresentativeSelect($("#aiKnowledgeRepresentative"), { includeShared: true });
+  fillRepresentativeSelect($("#aiDocumentRepresentative"), { includeShared: true });
+  fillRepresentativeSelect($("#aiSimulatorRepresentative"));
+  fillRepresentativeSelect($("#aiWorkflowRepresentative"));
+  fillRepresentativeSelect($("#aiMailboxRepresentative"), { selected: mailboxRepresentativeId });
+  $("#saveMailboxRepresentative").disabled = !selectedMailbox || !aiRepresentatives.some((item) => item.id === $("#aiMailboxRepresentative").value && item.enabled);
+}
+
+function setAIView(view) {
+  selectedAITab = view;
+  document.querySelectorAll("[data-ai-tab]").forEach((button) => {
+    const active = button.dataset.aiTab === view;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  document.querySelectorAll("[data-ai-view]").forEach((panel) => { panel.hidden = panel.dataset.aiView !== view; });
+  if (view === "workflows") loadAIWorkflows();
+  if (view === "trust") loadAITrust();
+}
+
+function renderSimulationHistory(runs) {
+  const root = $("#aiSimulatorHistory");
+  root.replaceChildren();
+  if (!runs.length) {
+    const note = document.createElement("p"); note.className = "ai-empty-note";
+    note.textContent = "No simulator runs yet."; root.append(note); return;
+  }
+  for (const run of runs) {
+    const row = document.createElement("article"); row.className = "ai-metric-row";
+    const label = document.createElement("b"); label.textContent = run.test_name;
+    const result = document.createElement("span");
+    result.className = run.passed ? "ai-result-pass" : "ai-result-review";
+    result.textContent = `${run.passed ? "PASS" : "CHECK"} · ${run.actual_decision === "auto_reply" ? "Verified answer" : "Human review"}`;
+    const date = document.createElement("small"); date.textContent = displayTime(run.created_at);
+    row.append(label, result, date); root.append(row);
+  }
+}
+
+function renderSimulationResult(result) {
+  const root = $("#aiSimulatorResult"); root.replaceChildren();
+  const heading = document.createElement("b");
+  heading.className = result.evaluation.passed ? "ai-result-pass" : "ai-result-review";
+  heading.textContent = result.evaluation.passed ? "Expected behavior matched" : "Review this test result";
+  const decision = document.createElement("p");
+  decision.textContent = `Decision: ${result.evaluation.actual === "auto_reply" ? "answer from approved information" : "human review"}. ${result.evaluation.reason || ""}`;
+  const confidence = document.createElement("p");
+  confidence.textContent = `Model confidence: ${result.evaluation.confidence == null ? "not reported" : `${Math.round(result.evaluation.confidence * 100)}%`} · ${result.evaluation.confidencePassed ? "passed threshold" : "below threshold"}.`;
+  root.append(heading, decision, confidence);
+  const note = document.createElement("small"); note.className = "ai-empty-note";
+  note.textContent = result.evaluation.modelConfidenceNote || "Confidence is a model estimate, not a calibrated probability."; root.append(note);
+  if (result.answer) {
+    const answer = document.createElement("p"); answer.className = "ai-simulation-answer"; answer.textContent = result.answer; root.append(answer);
+  }
+  const citationsTitle = document.createElement("b"); citationsTitle.textContent = "Verified source citations"; root.append(citationsTitle);
+  if (!result.citations || !result.citations.length) {
+    const none = document.createElement("p"); none.className = "ai-empty-note"; none.textContent = "No source citation was accepted. OpenMail requires human review."; root.append(none);
+  } else for (const citation of result.citations) {
+    const citationNode = document.createElement("blockquote");
+    const source = document.createElement("b"); source.textContent = citation.title;
+    const quote = document.createElement("p"); quote.textContent = citation.quote;
+    citationNode.append(source, quote); root.append(citationNode);
+  }
+}
+
+async function loadAISimulator() {
+  try {
+    const result = await api("/api/ai/simulator");
+    if (result.representatives) { aiRepresentatives = result.representatives; renderAIRepresentatives(); }
+    renderSimulationHistory(result.runs || []);
+  } catch (error) {
+    const root = $("#aiSimulatorHistory"); root.replaceChildren();
+    const note = document.createElement("p"); note.className = "ai-empty-note error"; note.textContent = error.message; root.append(note);
+  }
+}
+
+async function loadAIWorkflows() {
+  const root = $("#aiWorkflowList"); root.replaceChildren();
+  if (!selectedMailbox) { const note = document.createElement("p"); note.className = "ai-empty-note"; note.textContent = "Choose a mailbox before setting up workflows."; root.append(note); return; }
+  try {
+    const result = await api(`/api/ai/workflows?mailboxId=${encodeURIComponent(selectedMailbox.id)}`);
+    aiWorkflows = result.workflows || [];
+    if (!aiWorkflows.length) { const note = document.createElement("p"); note.className = "ai-empty-note"; note.textContent = "No workflows are configured. Existing Phase 1 mailbox reply settings continue to apply."; root.append(note); return; }
+    for (const workflow of aiWorkflows) {
+      const row = document.createElement("article"); row.className = "ai-workflow-row";
+      const details = document.createElement("div");
+      const name = document.createElement("b"); name.textContent = workflow.name;
+      const rep = aiRepresentatives.find((item) => item.id === workflow.representative_id);
+      const description = document.createElement("small");
+      description.textContent = `${workflow.enabled ? "Enabled" : "Off"} · ${workflow.trigger_mode === "all_inbound" ? "all incoming mail" : workflow.match_terms.join(", ")} · ${workflow.action.replaceAll("_", " ")}${rep ? ` · ${rep.display_name}` : ""}`;
+      details.append(name, description);
+      const actions = document.createElement("div"); actions.className = "ai-row-actions";
+      const edit = document.createElement("button"); edit.type = "button"; edit.className = "quiet-button"; edit.textContent = "Edit";
+      edit.addEventListener("click", () => {
+        $("#aiWorkflowId").value = workflow.id; $("#aiWorkflowName").value = workflow.name;
+        $("#aiWorkflowTrigger").value = workflow.trigger_mode; $("#aiWorkflowTerms").value = (workflow.match_terms || []).join(", ");
+        $("#aiWorkflowAction").value = workflow.action; $("#aiWorkflowRepresentative").value = workflow.representative_id || "";
+        $("#aiWorkflowPriority").value = workflow.priority; $("#aiWorkflowEnabled").checked = Boolean(workflow.enabled);
+        setAIWorkflowFields(); $("#aiWorkflowName").focus();
+      });
+      const toggle = document.createElement("button"); toggle.type = "button"; toggle.className = "quiet-button"; toggle.textContent = workflow.enabled ? "Turn off" : "Turn on";
+      toggle.addEventListener("click", async () => {
+        if (!workflow.enabled && workflow.action === "verified_reply" && !window.confirm("Turn on this verified-reply rule? It can send only if automatic replies are separately enabled for this mailbox; each message still must pass OpenMail’s source and safety checks.")) return;
+        toggle.disabled = true;
+        try {
+          if (workflow.enabled) await api(`/api/ai/workflows?mailboxId=${encodeURIComponent(selectedMailbox.id)}&id=${encodeURIComponent(workflow.id)}`, { method: "DELETE" });
+          else await api("/api/ai/workflows", { method: "POST", body: workflowPayload(workflow, true) });
+          await loadAIWorkflows(); toast(workflow.enabled ? "Workflow turned off." : "Workflow turned on.");
+        } catch (error) { toast(error.message); toggle.disabled = false; }
+      });
+      actions.append(edit, toggle); row.append(details, actions); root.append(row);
+    }
+  } catch (error) { const note = document.createElement("p"); note.className = "ai-empty-note error"; note.textContent = error.message; root.append(note); }
+}
+
+function workflowPayload(existing = null, enabledOverride = null) {
+  const triggerMode = existing ? existing.trigger_mode : $("#aiWorkflowTrigger").value;
+  const termsText = existing ? (existing.match_terms || []).join(", ") : $("#aiWorkflowTerms").value;
+  return {
+    ...(existing ? { id: existing.id } : {}), mailboxId: selectedMailbox && selectedMailbox.id,
+    name: existing ? existing.name : $("#aiWorkflowName").value.trim(), triggerMode,
+    matchTerms: triggerMode === "all_inbound" ? [] : [...new Set(termsText.split(/[\n,;]+/).map((item) => item.trim()).filter(Boolean))],
+    action: existing ? existing.action : $("#aiWorkflowAction").value,
+    representativeId: existing ? existing.representative_id : $("#aiWorkflowRepresentative").value,
+    priority: Number(existing ? existing.priority : $("#aiWorkflowPriority").value),
+    enabled: enabledOverride == null ? $("#aiWorkflowEnabled").checked : enabledOverride
+  };
+}
+
+function setAIWorkflowFields() {
+  const everyMessage = $("#aiWorkflowTrigger").value === "all_inbound";
+  $("#aiWorkflowTerms").disabled = everyMessage;
+  if (everyMessage) $("#aiWorkflowTerms").value = "";
+  const action = $("#aiWorkflowAction").value;
+  const needsRepresentative = action !== "human_review";
+  $("#aiWorkflowRepField").hidden = !needsRepresentative;
+}
+
+async function loadAITrust() {
+  const metrics = $("#aiTrustMetrics"); const recent = $("#aiTrustRecent");
+  metrics.replaceChildren(); recent.replaceChildren();
+  try {
+    const days = $("#aiTrustDays").value || "30";
+    const query = new URLSearchParams({ days }); if (selectedMailbox) query.set("mailboxId", selectedMailbox.id);
+    const result = await api(`/api/ai/trust?${query}`);
+    const totals = result.summary && result.summary.totals || {};
+    const cards = [
+      ["Automatic replies", totals.automaticReplies], ["Human handovers", totals.escalations],
+      ["Corrections", totals.corrections], ["Marked correct", totals.markedCorrect],
+      ["Resolved", totals.successfulResolutions], ["Labeled accuracy", totals.labeledAccuracy == null ? "Not enough feedback" : `${totals.labeledAccuracy}%`],
+      ["Workflow drafts", totals.workflowDrafts], ["Workflow routes", totals.workflowRoutes]
+    ];
+    for (const [label, value] of cards) { const card = document.createElement("article"); card.className = "ai-metric-card"; const b = document.createElement("b"); b.textContent = value == null ? "0" : String(value); const small = document.createElement("small"); small.textContent = label; card.append(b, small); metrics.append(card); }
+    for (const rep of result.summary && result.summary.byRepresentative || []) {
+      const card = document.createElement("article"); card.className = "ai-metric-card ai-representative-metric";
+      const b = document.createElement("b"); b.textContent = rep.name;
+      const small = document.createElement("small");
+      small.textContent = "Replies " + (rep.automaticReplies || 0) + " · handovers " + (rep.escalations || 0) + " · corrections " + (rep.corrections || 0) + " · resolved " + (rep.resolutions || 0);
+      card.append(b, small); metrics.append(card);
+    }
+    if (!result.recent || !result.recent.length) { const note = document.createElement("p"); note.className = "ai-empty-note"; note.textContent = "No AI decisions have been recorded for this period."; recent.append(note); return; }
+    for (const item of result.recent) {
+      const row = document.createElement("article"); row.className = "ai-trust-row";
+      const detail = document.createElement("div"); const title = document.createElement("b"); title.textContent = item.subject || "(no subject)";
+      const summary = document.createElement("small"); summary.textContent = `${item.status.replaceAll("_", " ")} · ${item.reason || "No additional reason"} · ${displayTime(item.createdAt)}`; detail.append(title, summary);
+      const feedback = document.createElement("div"); feedback.className = "ai-row-actions";
+      const existingFeedback = item.feedback && item.feedback.event_type;
+      const answerCanBeRated = ["auto_sent", "draft_created"].includes(item.status);
+      const canBeLabeled = item.status !== "ignored";
+      const choices = answerCanBeRated
+        ? [["correct", "Correct"], ["correction", "Correction"], ["resolved", "Resolved"], ["escalated", "Escalated"]]
+        : canBeLabeled ? [["resolved", "Resolved"], ["escalated", "Escalated"]] : [];
+      if (existingFeedback) {
+        const label = document.createElement("small");
+        label.textContent = "Owner marked: " + String(existingFeedback).replace("feedback_", "").replaceAll("_", " ");
+        feedback.append(label);
+      }
+      for (const [outcome, label] of choices) { const button = document.createElement("button"); button.type = "button"; button.className = "quiet-button"; button.textContent = label; button.disabled = Boolean(existingFeedback); button.setAttribute("aria-label", `${label} for ${item.subject || "this AI decision"}`);
+        button.addEventListener("click", async () => {
+          let correctionNote = "";
+          if (outcome === "correction") { correctionNote = window.prompt("Briefly describe the correction. This note is stored for this account.") || ""; if (!correctionNote.trim()) return; }
+          button.disabled = true;
+          try { await api("/api/ai/trust", { method: "POST", body: { messageId: item.messageId, outcome, correctionNote } }); await loadAITrust(); toast("Feedback saved."); }
+          catch (error) { toast(error.message); button.disabled = false; }
+        }); feedback.append(button); }
+      row.append(detail, feedback); recent.append(row);
+    }
+  } catch (error) { const note = document.createElement("p"); note.className = "ai-empty-note error"; note.textContent = error.message; metrics.append(note); }
 }
 
 async function loadAISetup() {
@@ -445,6 +737,11 @@ async function loadAISetup() {
       api("/api/ai/knowledge"),
       selectedMailbox ? api(`/api/ai/mailbox-settings?mailboxId=${encodeURIComponent(selectedMailbox.id)}`) : Promise.resolve(null)
     ]);
+    const representativeResult = await api("/api/ai/representatives" + (selectedMailbox ? "?mailboxId=" + encodeURIComponent(selectedMailbox.id) : "")).catch((error) => ({ error }));
+    aiRepresentatives = representativeResult.representatives || [];
+    window.openmailMailboxSetting = mailboxResult && mailboxResult.settings || representativeResult.mailboxSetting || null;
+    renderAIRepresentatives();
+    refreshRepresentativeSelects(window.openmailMailboxSetting && window.openmailMailboxSetting.representative_id || "");
     const profile = profileResult.profile || {};
     aiProviderConfigured = Boolean(profileResult.provider && profileResult.provider.configured);
     aiProfileEnabled = Boolean(profile.enabled);
@@ -461,7 +758,9 @@ async function loadAISetup() {
       ? `Selected mailbox: ${selectedMailbox.address}`
       : "Choose an active mailbox before configuring automatic replies.";
     $("#aiAutomaticReplies").checked = aiAutomaticEnabled;
-    const canEnableAuto = Boolean(selectedMailbox && aiProfileEnabled && aiProviderConfigured && aiMailReady && mailboxResult && mailboxResult.domainVerified);
+    const assignedRepId = mailboxResult && mailboxResult.settings && mailboxResult.settings.representative_id || "";
+    const assignedRepEnabled = aiRepresentatives.some((item) => item.id === assignedRepId && item.enabled);
+    const canEnableAuto = Boolean(selectedMailbox && aiProfileEnabled && aiProviderConfigured && aiMailReady && mailboxResult && mailboxResult.domainVerified && assignedRepEnabled);
     $("#aiAutomaticReplies").disabled = !selectedMailbox || (!canEnableAuto && !aiAutomaticEnabled);
     $("#saveAIReplyMode").disabled = !selectedMailbox;
     const autoStatus = $("#aiAutoReplyStatus");
@@ -472,11 +771,20 @@ async function loadAISetup() {
         : !aiProviderConfigured ? "Groq is not connected on this deployment."
           : !aiMailReady ? "Mail sending is not ready."
             : !mailboxResult.domainVerified ? "Verify this mailbox’s domain before enabling."
-              : !aiProfileEnabled ? "Enable and save the AI representative first."
+              : !assignedRepEnabled ? "Assign an enabled representative to this mailbox first."
+                : !aiProfileEnabled ? "Enable and save the AI representative first."
                 : "Automatic replies are off.";
     updateAISafetyNotice();
     $("#aiProfileStatus").textContent = profile.updated_at ? `Saved ${displayTime(profile.updated_at)}.` : "Not saved yet.";
     renderAIKnowledge(knowledgeResult.entries || []);
+    if (representativeResult.error) {
+      const status = $("#aiRepresentativeStatus");
+      status.textContent = "Apply the phases 2–5 database migration to enable these tools.";
+      status.classList.add("error");
+    }
+    loadAISimulator();
+    if (selectedAITab === "workflows") loadAIWorkflows();
+    if (selectedAITab === "trust") loadAITrust();
   } catch (error) {
     $("#aiProfileStatus").textContent = error.message;
     $("#aiProfileStatus").classList.add("error");
@@ -541,7 +849,7 @@ $("#saveAIReplyMode").addEventListener("click", async () => {
   try {
     const result = await api("/api/ai/mailbox-settings", {
       method: "PATCH",
-      body: { mailboxId: selectedMailbox.id, enabled, confirmAutomaticSending: enabled }
+      body: { mailboxId: selectedMailbox.id, representativeId: $("#aiMailboxRepresentative").value, enabled, confirmAutomaticSending: enabled }
     });
     aiAutomaticEnabled = Boolean(result.settings && result.settings.auto_reply_enabled);
     checkbox.checked = aiAutomaticEnabled;
@@ -569,7 +877,8 @@ $("#aiKnowledgeForm").addEventListener("submit", async (event) => {
       body: {
         title: $("#aiKnowledgeTitleInput").value,
         type: $("#aiKnowledgeType").value,
-        content: $("#aiKnowledgeContent").value
+        content: $("#aiKnowledgeContent").value,
+        representativeId: $("#aiKnowledgeRepresentative").value || null
       }
     });
     $("#aiKnowledgeForm").reset();
@@ -589,6 +898,74 @@ $("#aiBackToInbox").addEventListener("click", () => {
   if (selectedMailbox) openInbox();
   else openDomains();
 });
+
+document.querySelectorAll("[data-ai-tab]").forEach((button) => button.addEventListener("click", () => setAIView(button.dataset.aiTab)));
+
+$("#saveMailboxRepresentative").addEventListener("click", async () => {
+  if (!selectedMailbox) return toast("Choose a mailbox first.");
+  const representativeId = $("#aiMailboxRepresentative").value;
+  if (!aiRepresentatives.some((item) => item.id === representativeId && item.enabled)) return toast("Choose an enabled representative.");
+  const previousRepresentativeId = window.openmailMailboxSetting && window.openmailMailboxSetting.representative_id;
+  if (aiAutomaticEnabled && representativeId !== previousRepresentativeId && !window.confirm("Change the AI representative that handles automatically processed mail for " + selectedMailbox.address + "?")) return;
+  const button = $("#saveMailboxRepresentative");
+  button.disabled = true;
+  setStatus($("#aiRepresentativeStatus"), "Saving mailbox assignment…");
+  try {
+    const result = await api("/api/ai/mailbox-settings", {
+      method: "PATCH", body: { mailboxId: selectedMailbox.id, representativeId, enabled: aiAutomaticEnabled, confirmAutomaticSending: aiAutomaticEnabled }
+    });
+    window.openmailMailboxSetting = result.settings;
+    setStatus($("#aiRepresentativeStatus"), "Mailbox assignment saved.");
+    await loadAISetup();
+  } catch (error) { setStatus($("#aiRepresentativeStatus"), error.message, true); }
+  finally { button.disabled = !selectedMailbox || !aiRepresentatives.some((item) => item.id === $("#aiMailboxRepresentative").value && item.enabled); }
+});
+
+$("#aiSimulatorForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.submitter;
+  button.disabled = true;
+  setStatus($("#aiSimulatorStatus"), "Running the synthetic test through Groq…");
+  try {
+    const result = await api("/api/ai/simulator", { method: "POST", body: {
+      testName: $("#aiSimulatorName").value, representativeId: $("#aiSimulatorRepresentative").value,
+      subject: $("#aiSimulatorSubject").value, emailText: $("#aiSimulatorEmail").value,
+      expectedDecision: $("#aiSimulatorExpected").value
+    }});
+    renderSimulationResult(result);
+    setStatus($("#aiSimulatorStatus"), result.evaluation.passed ? "Test passed." : "Test completed; review the result and citations.");
+    await loadAISimulator();
+  } catch (error) { setStatus($("#aiSimulatorStatus"), error.message, true); }
+  finally { button.disabled = false; }
+});
+
+$("#aiWorkflowTrigger").addEventListener("change", setAIWorkflowFields);
+$("#aiWorkflowAction").addEventListener("change", setAIWorkflowFields);
+$("#aiWorkflowForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!selectedMailbox) return setStatus($("#aiWorkflowStatus"), "Choose a mailbox first.", true);
+  const action = $("#aiWorkflowAction").value;
+  const enabled = $("#aiWorkflowEnabled").checked;
+  if (enabled && action === "verified_reply" && !window.confirm("Enable this rule to attempt verified AI replies? OpenMail will still send only if automatic replies are separately enabled for this mailbox, the message is safe, and approved sources support the complete reply.")) return;
+  const button = event.submitter;
+  button.disabled = true;
+  setStatus($("#aiWorkflowStatus"), "Saving workflow…");
+  try {
+    const payload = workflowPayload();
+    payload.id = $("#aiWorkflowId").value || undefined;
+    const result = await api("/api/ai/workflows", { method: "POST", body: payload });
+    $("#aiWorkflowId").value = result.workflow.id;
+    setStatus($("#aiWorkflowStatus"), "Workflow saved.");
+    await loadAIWorkflows();
+    toast("Workflow saved.");
+  } catch (error) { setStatus($("#aiWorkflowStatus"), error.message, true); }
+  finally { button.disabled = false; }
+});
+
+$("#refreshAITrust").addEventListener("click", loadAITrust);
+$("#aiTrustDays").addEventListener("change", loadAITrust);
+$("#aiWorkflowAction").dispatchEvent(new Event("change"));
+$("#aiWorkflowTrigger").dispatchEvent(new Event("change"));
 
 function renderDomains() {
   const root = $("#domainList");
@@ -918,6 +1295,14 @@ function renderMessages() {
       : selectedView === "sent" ? "Sent"
       : inboxCategoryNames[categorizeMessage(message)] || "Inbox";
     senderWrap.append(senderName, category);
+    if (message.ai_representative_id) {
+      const representative = aiRepresentatives.find((item) => item.id === message.ai_representative_id);
+      const assignment = document.createElement("span");
+      assignment.className = "category-label ai-assignment-label";
+      assignment.textContent = representative ? "AI · " + representative.display_name : "AI assigned";
+      assignment.title = message.ai_workflow_id ? "Assigned by a mailbox workflow" : "Assigned to an AI representative";
+      senderWrap.append(assignment);
+    }
 
     const subject = document.createElement("span");
     subject.className = "message-subject";
@@ -1007,6 +1392,11 @@ async function openMessage(message) {
   $("#detailAvatar").textContent = initials(from);
   $("#detailTime").textContent = new Date(message.created_at).toLocaleString();
   $("#detailBody").textContent = message.text_body || "(This message has no plain text body.)";
+  const assignedRepresentative = aiRepresentatives.find((item) => item.id === message.ai_representative_id);
+  $("#aiAssignmentNote").hidden = !message.ai_representative_id;
+  $("#aiAssignmentNote").textContent = message.ai_representative_id
+    ? "Assigned to " + (assignedRepresentative ? assignedRepresentative.display_name : "an AI representative") + (message.ai_workflow_id ? " by a mailbox workflow." : ".")
+    : "";
   const attachments = Array.isArray(message.attachment_metadata) ? message.attachment_metadata : [];
   $("#attachmentNote").hidden = attachments.length === 0;
   $("#attachmentNote").textContent = attachments.length ? `${attachments.length} attachment${attachments.length === 1 ? "" : "s"} received. Attachment downloads are not available in this first build.` : "";

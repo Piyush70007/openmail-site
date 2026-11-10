@@ -12,8 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="workspace.css?v=20261104-groq-ai-phase1" />
-    <script defer src="app-ui.js?v=20261104-ai-phase1"></script>
+    <link rel="stylesheet" href="workspace.css?v=20261105-ai-phases2-5" />
+    <script defer src="app-ui.js?v=20261105-ai-phases2-5"></script>
   </head>
   <body>
     <div class="ambient-grid" aria-hidden="true"></div>
@@ -122,6 +122,7 @@
             <div class="detail-top"><button class="quiet-button" id="backToList" type="button">← Back to inbox</button><div class="detail-actions"><button class="quiet-button" id="detailStar" type="button">☆ Star</button><button class="quiet-button" id="detailSpam" type="button">Mark spam</button><button class="quiet-button" id="detailArchive" type="button">Archive ↗</button><button class="quiet-button" id="detailTrash" type="button">Move to trash</button></div></div>
             <h2 id="detailSubject"></h2>
             <div class="detail-sender"><span class="detail-avatar" id="detailAvatar">OM</span><div><b id="detailFrom"></b><small id="detailTo"></small></div><time id="detailTime"></time></div>
+            <p class="ai-assignment-note" id="aiAssignmentNote" hidden></p>
             <div class="detail-body" id="detailBody"></div>
             <div class="ai-handoff-banner" id="aiHandoffBanner" hidden role="status"><div><b>Human review needed</b><p id="aiHandoffReason"></p></div><button class="button button-outline" id="resolveHandoffButton" type="button">Mark reviewed</button></div>
             <div class="ai-sent-banner" id="aiSentBanner" hidden>Automatically sent by your OpenMail AI representative.</div>
@@ -172,6 +173,7 @@
                 <form id="aiKnowledgeForm" class="ai-form">
                   <label>NOTE TITLE<input id="aiKnowledgeTitleInput" name="title" type="text" maxlength="120" placeholder="Website development pricing" required /></label>
                   <label>TYPE<select id="aiKnowledgeType" name="type"><option value="faq">FAQ / answer</option><option value="service">Service</option><option value="pricing">Pricing</option><option value="policy">Policy</option></select></label>
+                  <label>KNOWLEDGE SCOPE<select id="aiKnowledgeRepresentative"><option value="">Shared with all representatives</option></select></label>
                   <label>APPROVED INFORMATION<textarea id="aiKnowledgeContent" name="content" rows="5" maxlength="8000" placeholder="Write facts the representative may use. Do not include passwords, payment details, or private customer data." required></textarea></label>
                   <div class="ai-form-footer"><span id="aiKnowledgeStatus" role="status" aria-live="polite"></span><button class="button button-outline" type="submit">Add knowledge <span>＋</span></button></div>
                 </form>
@@ -179,7 +181,7 @@
                 <section class="ai-documents-section" aria-labelledby="aiDocumentsTitle">
                   <div class="ai-documents-heading"><div><b id="aiDocumentsTitle">Company documents</b><small>PDF, DOCX, TXT, Markdown or CSV · 10 files · 40,000 text characters each</small></div></div>
                   <p class="ai-document-privacy">Files are read in this browser. OpenMail stores extracted text in your account; the original file is not uploaded. Text can be sent to Groq while your AI representative is enabled.</p>
-                  <form id="aiDocumentForm" class="ai-document-form"><input id="aiDocumentFile" type="file" accept=".pdf,.docx,.txt,.md,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/csv" required /><button class="button button-outline" type="submit">Add document <span>＋</span></button><span id="aiDocumentStatus" role="status" aria-live="polite"></span></form>
+                  <form id="aiDocumentForm" class="ai-document-form"><label class="ai-field">KNOWLEDGE SCOPE<select id="aiDocumentRepresentative"><option value="">Shared with all representatives</option></select></label><input id="aiDocumentFile" type="file" accept=".pdf,.docx,.txt,.md,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/csv" required /><button class="button button-outline" type="submit">Add document <span>＋</span></button><span id="aiDocumentStatus" role="status" aria-live="polite"></span></form>
                   <div id="aiDocumentList" class="ai-document-list" aria-live="polite"><p class="ai-empty-note">Loading your documents…</p></div>
                 </section>
               </section>
@@ -190,7 +192,57 @@
               <label class="ai-consent-toggle ai-auto-toggle"><input id="aiAutomaticReplies" type="checkbox" /><span><b>Allow automatic replies for this mailbox</b><small>OpenMail sends only when it can cite exact approved company text and passes safety checks. Requests about refunds, payments, appointments, legal matters, complaints, account access, security, attachments or anything uncertain are sent to Needs human without an AI reply. Automatic replies are capped by the account's daily AI and email limits.</small></span></label>
               <div class="ai-form-footer"><span id="aiAutoReplyStatus" role="status" aria-live="polite"></span><button class="button button-solid" id="saveAIReplyMode" type="button">Save mailbox setting <span>↗</span></button></div>
             </section>
-            <p class="ai-phase-note"><span>PHASE 1</span> AI drafts and automatic responses share a 10-request daily account limit and a 25-request daily OpenMail limit; sending also respects your mailbox send quota. Groq may apply lower limits. Automatic replies remain off until you turn them on for a specific mailbox.</p>
+            <nav class="ai-feature-tabs" aria-label="AI representative tools">
+              <button class="ai-feature-tab active" type="button" data-ai-tab="training">Training simulator <span>02</span></button>
+              <button class="ai-feature-tab" type="button" data-ai-tab="representatives">Representatives <span>03</span></button>
+              <button class="ai-feature-tab" type="button" data-ai-tab="workflows">Workflows <span>04</span></button>
+              <button class="ai-feature-tab" type="button" data-ai-tab="trust">Trust dashboard <span>05</span></button>
+            </nav>
+            <section class="ai-feature-view" data-ai-view="training" aria-labelledby="aiTrainingTitle">
+              <div class="ai-feature-title"><div><p class="eyebrow">PHASE 02 / TRAIN BEFORE LIVE</p><h3 id="aiTrainingTitle">AI training simulator</h3></div><p>Run a synthetic email through the same grounded decision checks. The simulator never sends email and does not save the test message text.</p></div>
+              <div class="ai-feature-grid">
+                <section class="ai-card">
+                  <form id="aiSimulatorForm" class="ai-form">
+                    <label>TEST NAME<input id="aiSimulatorName" maxlength="100" placeholder="Known pricing question" required /></label>
+                    <label>REPRESENTATIVE<select id="aiSimulatorRepresentative" required></select></label>
+                    <label>SUBJECT<input id="aiSimulatorSubject" maxlength="200" required /></label>
+                    <label>TEST EMAIL<textarea id="aiSimulatorEmail" rows="5" maxlength="8000" placeholder="Use synthetic test text. This is sent to Groq only when you run the test." required></textarea></label>
+                    <label>EXPECTED RESULT<select id="aiSimulatorExpected"><option value="auto_reply">Answer from approved facts</option><option value="human_review">Send to human review</option></select></label>
+                    <div class="ai-form-footer"><span id="aiSimulatorStatus" role="status" aria-live="polite"></span><button class="button button-solid" type="submit">Run test <span>↗</span></button></div>
+                  </form>
+                </section>
+                <section class="ai-card ai-result-card" id="aiSimulatorResult" aria-live="polite"><p class="ai-empty-note">Your evaluation, confidence check, and source citations will appear here.</p></section>
+              </div>
+              <section class="ai-card"><div class="domain-card-heading"><div><b>Recent tests</b><small>Only test labels and results are saved; message text is discarded.</small></div></div><div id="aiSimulatorHistory" class="ai-metrics-list" aria-live="polite"></div></section>
+            </section>
+            <section class="ai-feature-view" data-ai-view="representatives" hidden aria-labelledby="aiRepresentativesTitle">
+              <div class="ai-feature-title"><div><p class="eyebrow">PHASE 03 / SEPARATE TEAMS</p><h3 id="aiRepresentativesTitle">AI representatives</h3></div><p>Give support, sales, billing, and careers different names, availability, knowledge, and mailbox assignments. Payments, refunds, security, and employment decisions still go to a person.</p></div>
+              <section class="ai-card"><div id="aiRepresentativesList" class="ai-representative-list" aria-live="polite"><p class="ai-empty-note">Loading representatives…</p></div></section>
+              <section class="ai-card"><div class="domain-card-heading"><div><b>Mailbox assignment</b><small>Choose which representative handles this mailbox’s drafts and eligible replies.</small></div></div><label class="ai-field">CURRENT MAILBOX<select id="aiMailboxRepresentative"></select></label><div class="ai-form-footer"><span id="aiRepresentativeStatus" role="status" aria-live="polite"></span><button class="button button-solid" id="saveMailboxRepresentative" type="button">Save assignment <span>↗</span></button></div></section>
+            </section>
+            <section class="ai-feature-view" data-ai-view="workflows" hidden aria-labelledby="aiWorkflowsTitle">
+              <div class="ai-feature-title"><div><p class="eyebrow">PHASE 04 / APPROVED MAIL TOOLS</p><h3 id="aiWorkflowsTitle">AI workflow builder</h3></div><p>Build rules for this mailbox using OpenMail’s connected mail tools: route to a representative, create an unsent draft, send only a verified reply after mailbox opt-in, or hand off to a person. No arbitrary URLs or external credentials are accepted.</p></div>
+              <div class="ai-safety-notice"><span class="notice-mark">i</span><div><b>Sending remains gated by Phase 1 approval</b><p>“Verified AI reply” cannot send unless automatic replies are separately enabled for this mailbox. If workflows are active, unmatched messages are not automatically replied to.</p></div></div>
+              <section class="ai-card"><form id="aiWorkflowForm" class="ai-form ai-workflow-form">
+                <input id="aiWorkflowId" type="hidden" />
+                <label>WORKFLOW NAME<input id="aiWorkflowName" maxlength="100" placeholder="Route invoice questions" required /></label>
+                <label>WHEN<select id="aiWorkflowTrigger"><option value="contains_any">Subject or message contains any phrase</option><option value="all_inbound">Every incoming message</option></select></label>
+                <label>KEYWORD PHRASES<textarea id="aiWorkflowTerms" rows="2" maxlength="720" placeholder="invoice, billing question"></textarea></label>
+                <label>THEN<select id="aiWorkflowAction"><option value="route_to_rep">Route to representative</option><option value="create_draft">Create an unsent reply draft</option><option value="verified_reply">Send only a verified AI reply</option><option value="human_review">Require human review</option></select></label>
+                <label id="aiWorkflowRepField">REPRESENTATIVE<select id="aiWorkflowRepresentative"></select></label>
+                <label>PRIORITY<input id="aiWorkflowPriority" type="number" min="0" max="100" value="50" /></label>
+                <label class="ai-consent-toggle"><input id="aiWorkflowEnabled" type="checkbox" /><span><b>Enable this workflow</b><small>The first matching rule runs. Unmatched messages follow the safe behavior described above.</small></span></label>
+                <div class="ai-form-footer"><span id="aiWorkflowStatus" role="status" aria-live="polite"></span><button class="button button-solid" type="submit">Save workflow <span>↗</span></button></div>
+              </form></section>
+              <section class="ai-card"><div class="domain-card-heading"><div><b>Mailbox workflows</b><small>Rules run only on new incoming messages after saving.</small></div></div><div id="aiWorkflowList" class="ai-metrics-list" aria-live="polite"></div></section>
+            </section>
+            <section class="ai-feature-view" data-ai-view="trust" hidden aria-labelledby="aiTrustTitle">
+              <div class="ai-feature-title"><div><p class="eyebrow">PHASE 05 / OUTCOMES & CORRECTIONS</p><h3 id="aiTrustTitle">AI trust dashboard</h3></div><p>Track sent replies, human handovers, owner-marked corrections, resolutions, and labeled accuracy. Accuracy stays “not enough feedback” until an owner labels results.</p></div>
+              <div class="ai-trust-controls"><label class="ai-field">PERIOD<select id="aiTrustDays"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select></label><button class="button button-outline" id="refreshAITrust" type="button">Refresh metrics</button></div>
+              <div id="aiTrustMetrics" class="ai-metric-grid" aria-live="polite"><p class="ai-empty-note">Loading trust metrics…</p></div>
+              <section class="ai-card"><div class="domain-card-heading"><div><b>Recent AI decisions</b><small>Mark whether an answer was correct, needed correction, was resolved, or required escalation.</small></div></div><div id="aiTrustRecent" class="ai-trust-recent" aria-live="polite"></div></section>
+            </section>
+            <p class="ai-phase-note"><span>PHASES 02–05</span> Simulator confidence is model-reported and not calibrated probability. Workflow actions are restricted to built-in OpenMail mail operations. No third-party CRM, calendar, payment, or ticketing integration is connected yet.</p>
           </section>
           <footer class="mail-footer"><span>OPENMAIL / PRIVATE MAIL SPACE</span><span>Mail is stored for your account only</span></footer>
           </div>
@@ -210,6 +262,6 @@
     </dialog>
     <div class="toast" id="appToast" role="status" aria-live="polite"></div>
     <script src="vendor/mammoth.browser.min.js"></script>
-    <script type="module" src="app-ai-documents.js"></script>
+    <script type="module" src="app-ai-documents.js?v=20261105-ai-phases2-5"></script>
   </body>
 </html>

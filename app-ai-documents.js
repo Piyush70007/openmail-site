@@ -4,6 +4,7 @@ const form = document.querySelector("#aiDocumentForm");
 const fileInput = document.querySelector("#aiDocumentFile");
 const status = document.querySelector("#aiDocumentStatus");
 const list = document.querySelector("#aiDocumentList");
+const representativeSelect = document.querySelector("#aiDocumentRepresentative");
 const maxFileBytes = 5 * 1024 * 1024;
 const maxTextChars = 40000;
 const documentTypes = {
@@ -97,7 +98,9 @@ function renderDocuments(documents) {
     const title = document.createElement("b");
     title.textContent = item.file_name;
     const meta = document.createElement("small");
+    const scope = item.representative_id ? " · assigned to one representative" : " · shared with all representatives";
     meta.textContent = `${String(item.mime_type || "Document").replace("application/", "").replace("vnd.openxmlformats-officedocument.wordprocessingml.document", "Word")} · added ${new Date(item.created_at).toLocaleDateString()}`;
+    meta.textContent += scope;
     details.append(title, meta);
     const remove = document.createElement("button");
     remove.type = "button";
@@ -134,6 +137,28 @@ async function loadDocuments() {
   }
 }
 
+async function loadRepresentatives() {
+  try {
+    const previous = representativeSelect.value;
+    const result = await api("/api/ai/representatives");
+    representativeSelect.replaceChildren();
+    const shared = document.createElement("option");
+    shared.value = "";
+    shared.textContent = "Shared with all representatives";
+    representativeSelect.append(shared);
+    for (const item of result.representatives || []) {
+      if (!item.enabled) continue;
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.display_name + " · " + item.kind;
+      representativeSelect.append(option);
+    }
+    if ([...representativeSelect.options].some((option) => option.value === previous)) representativeSelect.value = previous;
+  } catch (error) {
+    setStatus(error.message || "Could not load representatives.", true);
+  }
+}
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const file = fileInput.files && fileInput.files[0];
@@ -150,7 +175,7 @@ form.addEventListener("submit", async (event) => {
     if (!extractedText) throw new Error("No readable text was found. Scanned-image PDFs need OCR, which is not included.");
     await api("/api/ai/documents", {
       method: "POST",
-      body: { fileName: file.name, mimeType: info.mimeType, extractedText }
+      body: { fileName: file.name, mimeType: info.mimeType, extractedText, representativeId: representativeSelect.value || null }
     });
     fileInput.value = "";
     setStatus("Extracted text saved to your OpenMail account.");
@@ -163,4 +188,7 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
-document.addEventListener("openmail:ai-panel-open", loadDocuments);
+document.addEventListener("openmail:ai-panel-open", () => {
+  loadDocuments();
+  loadRepresentatives();
+});
