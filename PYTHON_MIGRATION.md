@@ -59,7 +59,7 @@ Tests use synthetic data and mocked providers. They do not send real email or
 consume production AI quotas. A passing local suite does not establish that
 live provider credentials or Vercel background execution have been tested.
 
-Local verification on November 10, 2026: 150 Python tests and 328 subtests passed;
+Local verification on November 10, 2026: 151 Python tests and 328 subtests passed;
 all 50 original Node tests passed; the runtime dependency audit found no known
 vulnerabilities. The local Uvicorn server returned the mailbox page and session
 API successfully. Git confirmed no changes to any browser asset.
@@ -69,6 +69,8 @@ successfully as one Python 3.14 function (15.7 MB, 60-second maximum). The previ
 mailbox page and session API were checked in Chrome, and requesting backend
 source returned the expected missing-route response. Preview account services are
 intentionally unconfigured; no production secrets were copied into Preview.
+The committed `uv.lock` pins Vercel's full dependency graph. A regression check
+confirms its runtime packages match the audited `requirements.txt` exactly.
 
 Before replacing the production backend:
 
