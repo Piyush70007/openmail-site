@@ -1,0 +1,26 @@
+{
+  "cases": 40,
+  "documents": 5,
+  "rows": [
+    {
+      "share": 15,
+      "before": 15,
+      "now": 82
+    },
+    {
+      "share": 25,
+      "before": 25,
+      "now": 82
+    },
+    {
+      "share": 50,
+      "before": 55,
+      "now": 88
+    },
+    {
+      "share": 75,
+      "before": 80,
+      "now": 92
+    }
+  ]
+}

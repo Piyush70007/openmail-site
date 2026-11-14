@@ -68,7 +68,7 @@
   padding: 0 18px;
   color: #758680;
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.12em;
 }
 .demo-window-bar b {
@@ -91,7 +91,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 8px;
+  font-size: 10px;
 }
 .demo-window-preview i,
 .demo-footer > span i,
@@ -146,7 +146,7 @@
   color: #172822 !important;
   border: 1px solid #d7e8e2 !important;
   border-radius: 5px;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 650 !important;
 }
 .demo-compose-button:hover {
@@ -154,7 +154,7 @@
 }
 .demo-compose-shortcut {
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 400;
   letter-spacing: 0.04em;
   margin-left: auto;
@@ -163,14 +163,14 @@
 .demo-sidebar-label,
 .demo-eyebrow {
   font-family: "DM Mono", monospace;
-  font-size: 9px;
+  font-size: 10.5px;
   line-height: 1.5;
   letter-spacing: 0.12em;
   color: #7b928a;
 }
 .demo-sidebar-label {
   margin: 27px 11px 10px !important;
-  font-size: 8px;
+  font-size: 10px;
 }
 .demo-view-nav {
   display: flex;
@@ -185,7 +185,7 @@
   min-height: 38px;
   padding: 9px 11px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 12.5px;
   white-space: nowrap;
   color: #92a29d;
 }
@@ -205,7 +205,7 @@
 }
 .demo-view-nav button small {
   font-family: "DM Mono", monospace;
-  font-size: 9px;
+  font-size: 10.5px;
   color: #7b9d91;
   margin-left: auto;
 }
@@ -226,7 +226,7 @@
   gap: 8px;
   padding: 0 9px 18px;
   color: #6e837b;
-  font-size: 9px;
+  font-size: 10.5px;
   line-height: 1.7;
 }
 .demo-preview-disclosure svg {
@@ -244,14 +244,14 @@
 }
 .demo-company strong {
   display: block;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 500;
   color: #bbc9c3;
 }
 .demo-company > div > span {
   display: block;
   font-family: "DM Mono", monospace;
-  font-size: 7px;
+  font-size: 9.5px;
   letter-spacing: 0.1em;
   color: #718980;
   margin-top: 4px;
@@ -268,7 +268,7 @@
   height: 50px;
   padding: 0 26px;
   border-bottom: 1px solid var(--demo-line);
-  font-size: 10px;
+  font-size: 11.5px;
   color: #6d8179;
 }
 .demo-workspace-top > div {
@@ -278,7 +278,7 @@
   min-width: 0;
 }
 .demo-workspace-top strong {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 500;
   color: #c0cec7;
 }
@@ -287,7 +287,7 @@
   align-items: center;
   gap: 6px;
   color: #789187 !important;
-  font-size: 9px !important;
+  font-size: 10.5px !important;
   padding: 6px !important;
   white-space: nowrap;
 }
@@ -309,7 +309,7 @@
   border-top: 1px solid var(--demo-line);
   padding: 10px 20px;
   background: #0d1413;
-  font-size: 9px;
+  font-size: 10.5px;
   color: #7b9188;
 }
 .demo-footer > span {
@@ -321,7 +321,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 9px;
+  font-size: 10.5px;
   color: #b0cdc0;
   text-decoration: none;
 }
@@ -336,7 +336,7 @@
   height: 29px;
   width: 29px;
   border-radius: 50%;
-  font-size: 9px;
+  font-size: 10.5px;
   font-weight: 600;
   color: #e2e8e2;
   letter-spacing: -0.2px;
@@ -365,7 +365,7 @@
 .demo-avatar-small {
   width: 28px;
   height: 28px;
-  font-size: 8px;
+  font-size: 10px;
 }
 .demo-avatar-large {
   width: 48px;
@@ -376,7 +376,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 9px;
+  font-size: 10.5px;
   color: #9ecfb8;
   white-space: nowrap;
 }
@@ -397,7 +397,7 @@
 .demo-small-tag {
   display: inline-flex;
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.5;
   color: #86a396;
   border: 1px solid var(--demo-line);
@@ -422,7 +422,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px !important;
+  font-size: 11.5px !important;
   color: #91b1a1 !important;
   padding: 5px 0 !important;
 }
@@ -438,7 +438,7 @@
   min-height: 38px;
   border-radius: 4px;
   border: 1px solid var(--demo-line) !important;
-  font-size: 11px !important;
+  font-size: 12.5px !important;
   font-weight: 600 !important;
 }
 .demo-button-light {
@@ -450,7 +450,7 @@
   background: #e0f5e9 !important;
 }
 .demo-footnote {
-  font-size: 9px !important;
+  font-size: 10.5px !important;
   line-height: 1.8 !important;
   color: #7e958a !important;
 }
@@ -460,7 +460,7 @@
   gap: 7px;
   padding: 9px 0 !important;
   color: #8ebda8 !important;
-  font-size: 9px !important;
+  font-size: 10.5px !important;
   line-height: 1.6;
 }
 .demo-source-link > span {
@@ -488,7 +488,7 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
-  font-size: 10px;
+  font-size: 11.5px;
   color: #91a499;
 }
 .demo-breadcrumb > span {
@@ -524,14 +524,14 @@
   border: 0;
   outline: 0;
   color: #bdd6c8;
-  font-size: 10px;
+  font-size: 11.5px;
 }
 .demo-search input::placeholder {
   color: #6e867a;
 }
 .demo-search kbd {
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   border: 1px solid #294034;
   border-radius: 2px;
   padding: 0 4px;
@@ -555,13 +555,13 @@
   min-height: 44px;
   padding: 0;
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: 11.5px;
   color: #84998d;
   white-space: nowrap;
 }
 .demo-inbox-tabs button span {
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   color: #5b7667;
 }
 .demo-inbox-tabs button.is-active {
@@ -587,7 +587,7 @@
   gap: 10px;
   border-bottom: 1px solid var(--demo-line);
   color: #698471;
-  font-size: 9px;
+  font-size: 10.5px;
 }
 .demo-inbox-tools > div {
   display: flex;
@@ -599,7 +599,7 @@
   align-items: center;
   gap: 5px;
   padding: 5px 0;
-  font-size: 9px;
+  font-size: 10.5px;
   color: #7a9384;
 }
 .demo-inbox-tools button.is-active {
@@ -607,7 +607,7 @@
 }
 .demo-inbox-tools > span {
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
 }
 .demo-message-list {
   min-height: 350px;
@@ -650,7 +650,7 @@
   padding: 10px 0 !important;
 }
 .demo-mail-sender {
-  font-size: 10px;
+  font-size: 11.5px;
   color: #9aafa2;
   white-space: nowrap;
   overflow: hidden;
@@ -664,7 +664,7 @@
 }
 .demo-mail-copy strong {
   font-weight: 450;
-  font-size: 10px;
+  font-size: 11.5px;
   display: block;
   overflow: hidden;
   white-space: nowrap;
@@ -672,7 +672,7 @@
   color: #b1c3b8;
 }
 .demo-mail-copy > span {
-  font-size: 9px;
+  font-size: 10.5px;
   color: #6d8577;
   white-space: nowrap;
   overflow: hidden;
@@ -685,14 +685,14 @@
 }
 .demo-mail-open time {
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   color: #789383;
   white-space: nowrap;
   text-align: right;
   min-width: 45px;
 }
 .demo-mail-badge {
-  font-size: 7px;
+  font-size: 9.5px;
   line-height: 1.6;
   letter-spacing: 0.03em;
   border: 1px solid #254a38;
@@ -711,7 +711,7 @@
   gap: 8px;
   padding: 16px 0 20px;
   margin-top: auto;
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.6;
   color: #657f6e;
 }
@@ -738,7 +738,7 @@
   letter-spacing: -0.4px;
 }
 .demo-empty p {
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.7;
   color: #7e9889;
 }
@@ -777,28 +777,28 @@
 }
 .demo-message-label strong {
   display: block;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #b9d0c1;
 }
 .demo-message-label strong > span {
   font-weight: 400;
   color: #71907c;
-  font-size: 9px;
+  font-size: 10.5px;
 }
 .demo-message-label > div > span {
   display: block;
-  font-size: 9px;
+  font-size: 10.5px;
   color: #72907d;
   margin-top: 4px;
 }
 .demo-message-label > time {
   margin-left: auto;
-  font-size: 9px;
+  font-size: 10.5px;
   color: #6d8a77;
 }
 .demo-message-body {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.9;
   white-space: pre-wrap;
   color: #b5cbbb;
@@ -810,7 +810,7 @@
   background: #14231a;
 }
 .demo-inline-answer > p {
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.8;
   color: #c5dfce;
   margin-top: 11px !important;
@@ -835,18 +835,18 @@
   min-width: 0;
 }
 .demo-draft-list strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: #d2e3d7;
 }
 .demo-draft-list > article > div > span {
   display: block;
-  font-size: 9px;
+  font-size: 10.5px;
   margin: 5px 0 10px;
   color: #6f8e79;
 }
 .demo-draft-list p {
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.7;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -872,7 +872,7 @@
   margin-top: 9px !important;
 }
 .demo-description {
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.9;
   color: #859c8d;
   max-width: 510px;
@@ -892,7 +892,7 @@
 }
 .demo-case-switch button {
   padding: 7px 10px;
-  font-size: 9px;
+  font-size: 10.5px;
   border-radius: 3px;
   color: #829e8b;
   white-space: nowrap;
@@ -917,7 +917,7 @@
   background: rgba(130, 165, 143, 0.025);
   border-radius: 0 6px 6px;
   margin: 16px 0 0 39px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.8;
   color: #b5cdbd;
 }
@@ -947,21 +947,21 @@
   color: #a4d9b7;
 }
 .demo-answer-label strong {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 550;
 }
 .demo-answer-label > .demo-status {
   margin-left: auto;
-  font-size: 8px;
+  font-size: 10px;
 }
 .demo-answer > p {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.85;
   color: #c0dcc9;
   margin-top: 16px !important;
 }
 .demo-answer > p.demo-answer-signoff {
-  font-size: 10px;
+  font-size: 11.5px;
   color: #7fa78c;
   margin-top: 9px !important;
 }
@@ -970,7 +970,7 @@
   border-top: 1px solid #284630;
   width: 100%;
   padding-top: 13px !important;
-  font-size: 8px !important;
+  font-size: 10px !important;
 }
 .demo-answer-review {
   background: linear-gradient(120deg, #242316, #1b1b13);
@@ -989,7 +989,7 @@
   border-top: 1px solid #45432b;
   padding-top: 13px;
   margin-top: 17px;
-  font-size: 9px;
+  font-size: 10.5px;
   color: #9e9e77;
 }
 .demo-decision-sidebar {
@@ -1009,12 +1009,12 @@
 }
 .demo-check-stack > div > span {
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   color: #567c5e;
   margin-top: 2px;
 }
 .demo-check-stack p {
-  font-size: 10px;
+  font-size: 11.5px;
   line-height: 1.6;
   color: #96b49d;
   flex: 1;
@@ -1035,7 +1035,7 @@
   letter-spacing: -0.3px;
 }
 .demo-decision-summary p {
-  font-size: 10px;
+  font-size: 11.5px;
   line-height: 1.8;
   color: #819f89;
   margin-top: 7px !important;
@@ -1065,7 +1065,7 @@
 }
 .demo-source-list strong {
   display: block;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 550;
   line-height: 1.6;
   color: #b8cebe;
@@ -1073,7 +1073,7 @@
 .demo-source-list small {
   display: block;
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   color: #67866f;
   margin-top: 4px;
   word-break: break-word;
@@ -1091,7 +1091,7 @@
   color: #587c61;
 }
 .demo-knowledge-note p {
-  font-size: 9px;
+  font-size: 10.5px;
   line-height: 1.9;
   color: #7a9781;
 }
@@ -1105,7 +1105,7 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  font-size: 8px;
+  font-size: 10px;
   color: #728f79;
 }
 .demo-document > h4 {
@@ -1117,7 +1117,7 @@
 }
 .demo-document-byline {
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.12em;
   color: #637f69;
   margin: 9px 0 26px !important;
@@ -1126,13 +1126,13 @@
   padding: 15px 0;
 }
 .demo-document h5 {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #acc8b3;
   line-height: 1.6;
 }
 .demo-document section p {
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.9;
   color: #91ac98;
   margin-top: 6px !important;
@@ -1151,7 +1151,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 8px;
+  font-size: 10px;
   color: #7da78a;
   margin-top: 9px;
 }
@@ -1163,7 +1163,7 @@
   padding-top: 18px;
   margin-top: 20px;
   color: #66836d;
-  font-size: 8px;
+  font-size: 10px;
 }
 .demo-training-grid {
   display: grid;
@@ -1189,7 +1189,7 @@
   align-items: center;
   gap: 9px;
   width: 100%;
-  font-size: 10px;
+  font-size: 11.5px;
   color: #98b3a0;
   padding: 11px 9px;
   border-radius: 4px;
@@ -1226,7 +1226,7 @@
 }
 .demo-test-email > span {
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #65816c;
@@ -1239,7 +1239,7 @@
   margin: 10px 0 !important;
 }
 .demo-test-email p {
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.9;
   color: #97b19f;
 }
@@ -1249,7 +1249,7 @@
 .demo-training-input > .demo-footnote {
   text-align: center;
   margin-top: 9px !important;
-  font-size: 8px !important;
+  font-size: 10px !important;
 }
 .demo-training-result {
   background: linear-gradient(150deg, rgba(36, 63, 44, 0.15), transparent);
@@ -1283,7 +1283,7 @@
 }
 .demo-result-empty p {
   max-width: 240px;
-  font-size: 10px;
+  font-size: 11.5px;
   line-height: 1.9;
   color: #789582;
   margin-top: 10px !important;
@@ -1303,12 +1303,12 @@
 }
 .demo-result-heading span {
   display: block;
-  font-size: 8px;
+  font-size: 10px;
   margin-top: 5px;
   color: #6e927c;
 }
 .demo-training-result > p:not(.demo-eyebrow) {
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.9;
   color: #96b29f;
   margin-top: 20px !important;
@@ -1325,7 +1325,7 @@
   display: flex;
   align-items: flex-start;
   gap: 7px;
-  font-size: 9px;
+  font-size: 10.5px;
   line-height: 1.7;
   color: #a1bdaa;
 }
@@ -1340,7 +1340,7 @@
   background: #1a2f21;
 }
 .demo-training-result blockquote p {
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.8;
   color: #c3dccb;
 }
@@ -1352,12 +1352,12 @@
 .demo-confidence > div:first-child {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
+  font-size: 10.5px;
   color: #7d9f88;
 }
 .demo-confidence strong {
   font-family: "DM Mono", monospace;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 400;
   color: #bdd8c5;
 }
@@ -1374,7 +1374,7 @@
   background: #95c6a3;
 }
 .demo-confidence p {
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.8;
   color: #688c74;
   margin-top: 10px !important;
@@ -1392,7 +1392,7 @@
   border: 1px solid var(--demo-line);
   padding: 12px;
   border-radius: 5px;
-  font-size: 11px;
+  font-size: 12.5px;
   color: #9db7a6;
 }
 .demo-team-select > button.is-active {
@@ -1433,7 +1433,7 @@
   margin-top: 8px !important;
 }
 .demo-rep-identity > p:not(.demo-eyebrow) {
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.9;
   color: #93ad9d;
   margin-top: 13px !important;
@@ -1446,12 +1446,12 @@
 .demo-sample-question > span {
   display: block;
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   color: #648671;
 }
 .demo-sample-question q {
   display: block;
-  font-size: 11px;
+  font-size: 12.5px;
   color: #a4c1af;
   line-height: 1.7;
   margin-top: 9px;
@@ -1469,7 +1469,7 @@
   border-bottom: 1px solid var(--demo-line);
   padding: 14px 0;
   color: #a7c2b2;
-  font-size: 10px;
+  font-size: 11.5px;
 }
 .demo-rep-source > span {
   flex: 1;
@@ -1485,7 +1485,7 @@
   margin-top: 14px;
 }
 .demo-boundary p {
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.9;
   color: #aaa88e;
 }
@@ -1521,14 +1521,14 @@
 }
 .demo-rule-select strong {
   display: block;
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 500;
   color: #b6d0c0;
   line-height: 1.6;
 }
 .demo-rule-select small {
   display: block;
-  font-size: 8px;
+  font-size: 10px;
   color: #729580;
   margin-top: 4px;
 }
@@ -1576,7 +1576,7 @@
 }
 .demo-workflow-meta > span:first-child {
   font-family: "DM Mono", monospace;
-  font-size: 7px;
+  font-size: 9.5px;
   letter-spacing: 0.08em;
   color: #6c9179;
 }
@@ -1610,14 +1610,14 @@
 .demo-flow-node small {
   display: block;
   font-family: "DM Mono", monospace;
-  font-size: 7px;
+  font-size: 9.5px;
   letter-spacing: 0.09em;
   color: #6e977d;
   line-height: 1.7;
 }
 .demo-flow-node strong {
   display: block;
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.7;
   font-weight: 500;
   color: #bdd9c8;
@@ -1645,7 +1645,7 @@
   background: #1b3525;
 }
 .demo-flow-explanation {
-  font-size: 10px;
+  font-size: 11.5px;
   line-height: 1.9;
   color: #88ac94;
   background: #101c14;
@@ -1658,7 +1658,7 @@
   padding-top: 15px;
   border-top: 1px solid var(--demo-line);
   margin-top: 19px;
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.8;
   color: #719b7f;
   background: #101c14;
@@ -1676,7 +1676,7 @@
   padding-left: 20px;
 }
 .demo-metrics > div > span {
-  font-size: 9px;
+  font-size: 10.5px;
   color: #86a792;
   line-height: 1.6;
 }
@@ -1693,7 +1693,7 @@
   margin-top: 10px;
 }
 .demo-metrics strong > span {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 400;
   letter-spacing: 0;
   color: #668c75;
@@ -1723,7 +1723,7 @@
   margin-bottom: 6px;
 }
 .demo-audit-heading h4 {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: #b7d0c2;
 }
@@ -1765,20 +1765,20 @@
 }
 .demo-audit-list strong {
   display: block;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 500;
   color: #b6cebf;
   line-height: 1.7;
 }
 .demo-audit-list > article > div > span {
   display: block;
-  font-size: 8px;
+  font-size: 10px;
   color: #6e957d;
   margin-top: 3px;
 }
 .demo-audit-list time {
   font-family: "DM Mono", monospace;
-  font-size: 8px;
+  font-size: 10px;
   color: #6d8e7a;
   text-align: right;
   width: 55px;
@@ -1788,7 +1788,7 @@
   gap: 7px;
   align-items: flex-start;
   margin-top: 20px !important;
-  font-size: 8px !important;
+  font-size: 10px !important;
 }
 .demo-notice {
   position: absolute;
@@ -1809,7 +1809,7 @@
     opacity 0.2s,
     transform 0.2s;
   z-index: 4;
-  font-size: 10px;
+  font-size: 11.5px;
   max-width: calc(100% - 32px);
   box-shadow: 0 10px 30px #0004;
 }
@@ -1860,7 +1860,7 @@
   padding: 13px 0;
 }
 .demo-compose-dialog label > span {
-  font-size: 10px;
+  font-size: 11.5px;
   color: #7f9f89;
   width: 45px;
   flex-shrink: 0;
@@ -1869,7 +1869,7 @@
   border: 0;
   background: none;
   color: #d0e6d8;
-  font-size: 12px;
+  font-size: 13px;
   width: 100%;
   outline: 0;
 }
@@ -1883,7 +1883,7 @@
 .demo-compose-dialog textarea {
   min-height: 200px;
   width: 100%;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.9;
   background: none;
   border: 0;
@@ -1901,7 +1901,7 @@
   background: #14231a;
 }
 .demo-compose-footer p {
-  font-size: 9px;
+  font-size: 10.5px;
   line-height: 1.8;
   color: #86a792;
 }
@@ -1937,13 +1937,13 @@
   }
   .demo-mail-sender,
   .demo-mail-copy strong {
-    font-size: 11px;
+    font-size: 12.5px;
   }
   .demo-mail-copy > span {
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-view-nav button {
-    font-size: 12px;
+    font-size: 13px;
   }
   .demo-page {
     padding: 30px 34px;
@@ -1963,7 +1963,7 @@
     padding: 22px 10px 14px;
   }
   .demo-view-nav button {
-    font-size: 10px;
+    font-size: 11.5px;
     gap: 8px;
     padding-left: 9px;
   }
@@ -1983,7 +1983,7 @@
   .demo-mail-open > .demo-avatar {
     width: 27px;
     height: 27px;
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-page {
     padding: 24px 20px;
@@ -2035,12 +2035,12 @@
   .demo-team-select > button {
     gap: 7px;
     padding: 9px;
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-team-select .demo-avatar {
     width: 24px;
     height: 24px;
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-team-select > button > i {
     display: none;
@@ -2064,7 +2064,7 @@
     align-items: flex-start;
   }
   .demo-workflow-meta > .demo-status {
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-flow-node {
     padding: 13px;
@@ -2075,7 +2075,7 @@
     height: 28px;
   }
   .demo-flow-node strong {
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-metrics {
     gap: 12px;
@@ -2089,7 +2089,7 @@
     font-size: 30px;
   }
   .demo-metrics > div > span {
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-inbox-heading {
     gap: 12px;
@@ -2124,7 +2124,7 @@
     min-height: 32px;
     padding: 7px 11px !important;
     gap: 7px;
-    font-size: 10px !important;
+    font-size: 11.5px !important;
   }
   .demo-compose-button svg {
     width: 15px;
@@ -2153,7 +2153,7 @@
     padding: 7px 10px;
     flex-shrink: 0;
     gap: 6px;
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-view-nav button svg {
     width: 14px;
@@ -2218,10 +2218,10 @@
     width: 85px;
   }
   .demo-window-bar {
-    font-size: 7px;
+    font-size: 9.5px;
   }
   .demo-window-preview {
-    font-size: 7px;
+    font-size: 9.5px;
   }
   .demo-knowledge-layout {
     grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.3fr);
@@ -2231,12 +2231,12 @@
     align-items: baseline;
   }
   .demo-metrics strong > span {
-    font-size: 7px;
+    font-size: 9.5px;
   }
   .demo-team-select > button {
     padding: 11px;
     gap: 10px;
-    font-size: 11px;
+    font-size: 12.5px;
   }
   .demo-rep-identity h4 {
     font-size: 24px;
@@ -2245,7 +2245,7 @@
     grid-template-columns: minmax(180px, 0.85fr) minmax(0, 1.2fr);
   }
   .demo-flow-node strong {
-    font-size: 11px;
+    font-size: 12.5px;
   }
 }
 @media (max-width: 600px) {
@@ -2257,7 +2257,7 @@
     padding: 0 12px;
   }
   .demo-window-bar > span:not(.demo-window-preview) {
-    font-size: 6px;
+    font-size: 9px;
     letter-spacing: 0.08em;
   }
   .demo-window-bar b {
@@ -2300,16 +2300,16 @@
   }
   .demo-workspace-top {
     padding: 0 14px;
-    font-size: 9px;
+    font-size: 10.5px;
   }
   .demo-workspace-top strong {
-    font-size: 9px;
+    font-size: 10.5px;
   }
   .demo-workspace-top > div {
     gap: 8px;
   }
   .demo-reset {
-    font-size: 8px !important;
+    font-size: 10px !important;
   }
   .demo-inbox {
     padding: 0 13px;
@@ -2322,22 +2322,22 @@
     padding: 14px 0;
   }
   .demo-breadcrumb {
-    font-size: 9px;
+    font-size: 10.5px;
     gap: 8px;
     width: 100%;
   }
   .demo-breadcrumb > span {
     max-width: none;
     flex: 1;
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-search {
     width: 100%;
     padding: 8px;
-    font-size: 9px;
+    font-size: 10.5px;
   }
   .demo-search input {
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-search kbd {
     display: none;
@@ -2347,24 +2347,24 @@
     min-height: 42px;
   }
   .demo-inbox-tabs button {
-    font-size: 9px;
+    font-size: 10.5px;
     min-height: 42px;
   }
   .demo-inbox-tabs button span {
-    font-size: 7px;
+    font-size: 9.5px;
   }
   .demo-inbox-tools > div {
     gap: 12px;
   }
   .demo-inbox-tools button {
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-inbox-tools button svg {
     width: 12px;
     height: 12px;
   }
   .demo-inbox-tools > span {
-    font-size: 7px;
+    font-size: 9.5px;
   }
   .demo-mail-row {
     gap: 6px;
@@ -2388,12 +2388,12 @@
     grid-row: 1/3;
     width: 25px;
     height: 25px;
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-mail-sender {
     grid-column: 2;
     grid-row: 1;
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-mail-copy {
     grid-column: 2/4;
@@ -2402,17 +2402,17 @@
     padding-right: 4px;
   }
   .demo-mail-copy strong {
-    font-size: 9px;
+    font-size: 10.5px;
     font-weight: 450;
   }
   .demo-mail-copy > span {
-    font-size: 8px;
+    font-size: 10px;
     display: none;
   }
   .demo-mail-open time {
     grid-column: 3;
     grid-row: 1;
-    font-size: 7px;
+    font-size: 9.5px;
     min-width: 40px;
   }
   .demo-mail-badge {
@@ -2420,7 +2420,7 @@
   }
   .demo-inbox-bottom {
     flex-direction: column;
-    font-size: 7px;
+    font-size: 9.5px;
     padding: 14px 0;
     gap: 4px;
   }
@@ -2428,12 +2428,12 @@
     padding-left: 12px;
   }
   .demo-footer {
-    font-size: 8px;
+    font-size: 10px;
     padding: 10px 13px;
     align-items: flex-start;
   }
   .demo-footer > span {
-    font-size: 7px;
+    font-size: 9.5px;
     line-height: 1.7;
     max-width: 170px;
     gap: 6px;
@@ -2442,7 +2442,7 @@
     flex-shrink: 0;
   }
   .demo-footer a {
-    font-size: 8px;
+    font-size: 10px;
     line-height: 1.7;
     max-width: 130px;
     text-align: right;
@@ -2466,7 +2466,7 @@
     letter-spacing: -0.8px;
   }
   .demo-description {
-    font-size: 10px;
+    font-size: 11.5px;
     line-height: 1.9;
     margin-top: 10px !important;
   }
@@ -2474,10 +2474,10 @@
     display: none;
   }
   .demo-eyebrow {
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-case-switch button {
-    font-size: 8px;
+    font-size: 10px;
     padding: 7px 9px;
   }
   .demo-representative-grid {
@@ -2489,28 +2489,28 @@
   .demo-incoming-bubble {
     margin-left: 0;
     padding: 13px;
-    font-size: 11px;
+    font-size: 12.5px;
   }
   .demo-answer {
     padding: 14px;
   }
   .demo-answer-label strong {
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-answer-label > .demo-status {
     width: auto;
     margin-left: auto;
     padding-left: 0;
-    font-size: 7px;
+    font-size: 9.5px;
   }
   .demo-answer > p {
-    font-size: 11px;
+    font-size: 12.5px;
   }
   .demo-message-label > div > span {
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-message-label strong {
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-decision-sidebar {
     padding: 18px;
@@ -2529,7 +2529,7 @@
     vertical-align: top;
   }
   .demo-decision-summary p {
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-knowledge-layout {
     grid-template-columns: minmax(0, 1fr);
@@ -2555,10 +2555,10 @@
     display: none;
   }
   .demo-source-list strong {
-    font-size: 9px;
+    font-size: 10.5px;
   }
   .demo-source-list small {
-    font-size: 7px;
+    font-size: 9.5px;
   }
   .demo-knowledge-note {
     display: none;
@@ -2571,7 +2571,7 @@
     margin-top: 22px !important;
   }
   .demo-document section p {
-    font-size: 11px;
+    font-size: 12.5px;
   }
   .demo-training-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -2589,7 +2589,7 @@
     margin-top: 13px;
   }
   .demo-scenario-options > button {
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-training-result {
     min-height: 285px;
@@ -2608,7 +2608,7 @@
   .demo-team-select > button {
     padding: 10px;
     gap: 9px;
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-team-select > button > i {
     display: block;
@@ -2635,7 +2635,7 @@
     padding: 12px 10px !important;
   }
   .demo-rule-select strong {
-    font-size: 11px;
+    font-size: 12.5px;
   }
   .demo-rule-list > div {
     padding-right: 15px;
@@ -2659,7 +2659,7 @@
     height: 32px;
   }
   .demo-flow-explanation {
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .demo-metrics {
     grid-template-columns: repeat(2, 1fr);
@@ -2678,10 +2678,10 @@
     gap: 8px;
   }
   .demo-metrics > div > span {
-    font-size: 9px;
+    font-size: 10.5px;
   }
   .demo-metrics strong > span {
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-outcome-chart {
     margin: 17px 0 26px;
@@ -2690,7 +2690,7 @@
     flex-wrap: wrap;
   }
   .demo-audit-heading h4 {
-    font-size: 11px;
+    font-size: 12.5px;
   }
   .demo-audit-heading .demo-case-switch {
     margin-left: -4px;
@@ -2716,23 +2716,23 @@
   }
   .demo-audit-evidence strong {
     display: inline;
-    font-size: 8px;
+    font-size: 10px;
     margin-right: 7px;
     color: #789b87;
   }
   .demo-audit-evidence > span {
     display: inline !important;
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-audit-list time {
-    font-size: 7px;
+    font-size: 9.5px;
     width: 45px;
   }
   .demo-audit-list > article > div > span {
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-trust-note {
-    font-size: 8px !important;
+    font-size: 10px !important;
     line-height: 1.8 !important;
   }
   .demo-open-message > h3 {
@@ -2743,16 +2743,16 @@
     display: none;
   }
   .demo-message-label > time {
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-message-body {
-    font-size: 11px;
+    font-size: 12.5px;
   }
   .demo-inline-answer {
     padding: 17px;
   }
   .demo-notice {
-    font-size: 9px;
+    font-size: 10.5px;
     width: max-content;
     max-width: calc(100% - 24px);
     bottom: 62px;
@@ -2774,10 +2774,10 @@
     gap: 10px;
   }
   .demo-compose-footer p {
-    font-size: 8px;
+    font-size: 10px;
   }
   .demo-compose-footer .demo-button {
-    font-size: 10px !important;
+    font-size: 11.5px !important;
     padding: 10px !important;
   }
 }
@@ -2806,7 +2806,7 @@
 }
 .demo-insight-gauge > p {
   color: #c7d8d0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .demo-gauge-drawing {
@@ -2848,14 +2848,14 @@
 .demo-insight-gauge > strong {
   display: block;
   color: #bfd2c6;
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.7;
   margin: 10px 0 6px;
 }
 .demo-insight-gauge > small {
   display: block;
   color: #9ab1a3;
-  font-size: 10px;
+  font-size: 11.5px;
   line-height: 1.8;
   max-width: 275px;
   margin: auto;
@@ -2881,7 +2881,7 @@
 .demo-chart-title span {
   display: block;
   margin-top: 8px;
-  font-size: 10px;
+  font-size: 11.5px;
   color: #96af9e;
 }
 .demo-horizontal-bars {
@@ -2894,7 +2894,7 @@
   gap: 18px;
   justify-content: space-between;
   color: #c1d4c6;
-  font-size: 11px;
+  font-size: 12.5px;
 }
 .demo-chart-row b {
   color: #e9f4ed;
@@ -2925,7 +2925,7 @@
   background: linear-gradient(90deg, #3a687a, #94c1da);
 }
 .demo-activity-chart > p {
-  font-size: 10px;
+  font-size: 11.5px;
   line-height: 1.8;
   color: #94ad9c;
 }

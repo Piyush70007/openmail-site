@@ -9,7 +9,9 @@ from uuid import uuid4
 from .core import (APIError, config, consume_ai_draft_quota, database, encode, iso_now,
                    json_response, method, owned_row, read_json, require_confirmed_email,
                    require_same_origin, signed_in)
-from .ai import generate_automatic_decision, AUTO_REPLY_MIN_CONFIDENCE, is_test_only_pricing_material
+from .ai import (generate_automatic_decision, AUTO_REPLY_MIN_CONFIDENCE, MAX_CONTEXT_CHARS, MAX_SOURCE_CHARS,
+                 is_test_only_pricing_material)
+from .retrieval import select_sources
 
 UUID = re.compile(r'^[0-9a-f-]{36}$', re.I)
 WORKFLOW_ACTIONS = {'route_to_rep', 'create_draft', 'verified_reply', 'human_review'}
@@ -47,7 +49,7 @@ def scoped_sources_query(owner_id, representative_id):
                       'order': 'created_at.desc', 'limit': '100'})
 
 
-async def approved_context(owner_id, representative_id, db=None):
+async def approved_context(owner_id, representative_id, db=None, query=''):
     db = db or database
     settings = config()
     if not settings['groqKey']:
@@ -67,29 +69,25 @@ async def approved_context(owner_id, representative_id, db=None):
     notes, documents = await asyncio.gather(
         db(f'ai_knowledge_entries?select=id,title,entry_type,content&{scoped}'),
         db(f'ai_knowledge_documents?select=id,file_name,mime_type,extracted_text&{scoped}'))
-    sources = []
+    budget, sources, candidates = MAX_CONTEXT_CHARS, [], []
     for key in ['company_name', 'company_description', 'products_services', 'pricing', 'business_hours']:
-        text = clean(profile.get(key), 120 if key == 'company_name' else 1800)
+        text = clean(profile.get(key), min(120 if key == 'company_name' else 1800, max(budget, 0)))
         if text:
             sources.append({'id': f'profile:{key}', 'kind': 'company_profile', 'title': key.replace('_', ' '), 'text': text})
+            budget -= len(text)
     for item in notes or []:
-        text = clean(item.get('content'), 2500)
+        text = clean(item.get('content'), MAX_SOURCE_CHARS)
         if text and not is_test_only_pricing_material(item.get('title'), text):
-            sources.append({'id': f"note:{item['id']}", 'kind': clean(item.get('entry_type'), 24), 'title': clean(item.get('title'), 120), 'text': text})
+            candidates.append({'id': f"note:{item['id']}", 'kind': clean(item.get('entry_type'), 24), 'title': clean(item.get('title'), 120), 'text': text, 'cap': 2500})
     for item in documents or []:
-        text = clean(item.get('extracted_text'), 5000)
+        text = clean(item.get('extracted_text'), MAX_SOURCE_CHARS)
         if text and not is_test_only_pricing_material(item.get('file_name'), text):
-            sources.append({'id': f"document:{item['id']}", 'kind': 'approved_document', 'title': clean(item.get('file_name'), 160), 'text': text})
-    budget, bounded_sources = 22000, []
-    for source in sources:
-        if budget <= 0:
-            break
-        text = source['text'][:budget]
-        if text:
-            bounded_sources.append({**source, 'text': text})
-        budget -= len(text)
+            candidates.append({'id': f"document:{item['id']}", 'kind': 'approved_document', 'title': clean(item.get('file_name'), 160), 'text': text, 'cap': 5000})
+    # Same query-aware selection as live mail, so a simulator run tests what production would see.
+    retrieved, retrieval = select_sources(candidates, query, budget)
+    bounded_sources = sources + retrieved
     return {'settings': settings, 'profile': profile, 'representative': representative,
-            'sources': bounded_sources, 'operationalPolicies': clean(profile.get('policies'), 5000)}
+            'sources': bounded_sources, 'retrieval': retrieval, 'operationalPolicies': clean(profile.get('policies'), 5000)}
 
 
 def evaluate_simulation(expected_decision, decision):
@@ -137,7 +135,7 @@ async def simulator(request):
         return json_response(400, {'error': 'Add a test name, subject, and message up to 8,000 characters.'})
     if expected_decision not in ('auto_reply', 'human_review'):
         return json_response(400, {'error': 'Choose the expected result: answer from approved facts or send to human review.'})
-    context = await approved_context(user['id'], representative_id)
+    context = await approved_context(user['id'], representative_id, query=f'{subject}\n{email_text}')
     if not context['sources']:
         return json_response(409, {'error': 'Add approved company facts or representative-specific knowledge before testing.'})
     if not await consume_ai_draft_quota(user['id']):
@@ -165,6 +163,7 @@ async def simulator(request):
         'evaluation': {**evaluation, 'reason': clean(decision.get('reason'), 300), 'confidence': decision.get('confidence'), 'model': clean(decision.get('model'), 120)},
         'answer': decision.get('reply', '') if decision.get('decision') == 'auto_reply' else '',
         'citations': [{'sourceId': item['source_id'], 'title': clean(item.get('title'), 160), 'quote': clean(item.get('quote'), 1800)} for item in decision.get('citations', [])],
+        'retrieval': context.get('retrieval'),
     }
     await database('ai_trust_events', {'method': 'POST', 'body': {
         'owner_id': user['id'], 'representative_id': context['representative']['id'], 'event_type': 'simulation',

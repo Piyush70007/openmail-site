@@ -6,10 +6,12 @@ import re
 import unicodedata
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote, urlencode
+from .retrieval import select_sources
 from .core import APIError, config, database, consume_ai_draft_quota, timed_fetch, log_safe_error, utf16_length
 
 UUID = re.compile(r"^[0-9a-f-]{36}$", re.I)
 MAX_CONTEXT_CHARS = 22000
+MAX_SOURCE_CHARS = 40000
 AUTO_REPLY_MIN_CONFIDENCE = 0.80
 
 def slice_text(value, limit):
@@ -175,17 +177,19 @@ async def load_reply_context(owner_id, mailbox_id, message_id, db=None):
         content = clip(profile.get(key), min(120 if key == "company_name" else 1800, budget))
         if content:
             facts.append({"id": f"profile:{key}", "kind": "company_profile", "title": key.replace("_", " "), "text": content}); budget -= utf16_length(content)
+    candidates = []
     for note in notes or []:
-        if budget <= 0: break
-        text = clip(note.get("content"), min(2500, budget))
+        text = clip(note.get("content"), MAX_SOURCE_CHARS)
         if not text or is_test_only_pricing_material(note.get("title"), text): continue
-        facts.append({"id": f"note:{note['id']}", "kind": clip(note.get("entry_type"), 24), "title": clip(note.get("title"), 120), "text": text}); budget -= utf16_length(text)
+        candidates.append({"id": f"note:{note['id']}", "kind": clip(note.get("entry_type"), 24), "title": clip(note.get("title"), 120), "text": text, "cap": 2500})
     for document in documents or []:
-        if budget <= 0: break
-        text = clip(document.get("extracted_text"), min(5000, budget))
+        text = clip(document.get("extracted_text"), MAX_SOURCE_CHARS)
         if not text or is_test_only_pricing_material(document.get("file_name"), text): continue
-        facts.append({"id": f"document:{document['id']}", "kind": "approved_document", "title": clip(document.get("file_name"), 160), "text": text}); budget -= utf16_length(text)
-    return {"settings": settings, "mailbox": mailbox, "message": message, "profile": profile, "representative": representative, "emailBody": email_body, "sources": facts, "operationalPolicies": clip(profile.get("policies"), 5000)}
+        candidates.append({"id": f"document:{document['id']}", "kind": "approved_document", "title": clip(document.get("file_name"), 160), "text": text, "cap": 5000})
+    # Rank approved passages against this email so the answer is in context even when it sits deep in a long document.
+    retrieved, retrieval = select_sources(candidates, f"{message.get('subject') or ''}\n{email_body}", budget)
+    facts.extend(retrieved)
+    return {"settings": settings, "mailbox": mailbox, "message": message, "profile": profile, "representative": representative, "emailBody": email_body, "sources": facts, "retrieval": retrieval, "operationalPolicies": clip(profile.get("policies"), 5000)}
 
 def json_text(value):
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))

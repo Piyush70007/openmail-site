@@ -1,0 +1,120 @@
+{
+  "description": "Synthetic knowledge base and customer questions for a fictional company. Every question has exactly one answer sentence, spread evenly through the documents, so a selection strategy cannot score well by keeping only the start of each file.",
+  "documents": [
+    {
+      "title": "Northline service guide.pdf",
+      "sections": [
+        "Northline Studio designs and builds websites for small companies, charities and independent professionals. The team has worked remotely since 2019 and takes on a limited number of projects each quarter so that every client gets a named lead.",
+        "Project setup includes a discovery call, configuration and a handover guide. The discovery call lasts about forty-five minutes and covers goals, audience and existing material. Notes from the call are shared with the client within two working days.",
+        "A standard brochure website takes four to six weeks from signed proposal to launch. Larger builds with custom features are planned in two-week stages. The schedule is confirmed in writing before any design work starts.",
+        "Each project includes two rounds of design revisions at no extra charge. A revision round is a single consolidated list of changes from the client. Feedback sent after a round is closed is collected for the following round.",
+        "Northline writes page copy only when the copywriting add-on is included in the proposal. Without the add-on, clients supply final text before the build stage begins. Placeholder text is never published on a live website.",
+        "Every website is built to meet WCAG 2.2 level AA accessibility guidelines. Pages are checked with a screen reader and with keyboard-only navigation before launch. An accessibility statement is provided for the client to publish.",
+        "Websites are tested on the current and previous major versions of Chrome, Safari, Firefox and Edge. Mobile layouts are reviewed on both iOS and Android devices. Older browsers receive a readable layout without animation.",
+        "Clients own all design files and source code once the final invoice is paid. Northline keeps the right to show the finished work in its portfolio unless the proposal says otherwise. Third-party fonts and stock images remain under their own licences.",
+        "A recorded training session of up to ninety minutes is included at handover. The recording stays available to the client for twelve months. Extra sessions for new staff can be booked separately.",
+        "After launch, Northline fixes defects reported within thirty days free of charge. A defect is behaviour that differs from the approved design or specification. New features and content changes are quoted separately."
+      ]
+    },
+    {
+      "title": "Pricing and billing.docx",
+      "sections": [
+        "All prices are listed in euros and exclude VAT. Quotes remain valid for thirty days from the date they are issued. A signed proposal is required before a project is scheduled.",
+        "The Starter website package costs €2,400 and covers up to five pages. It includes a contact form, basic search engine setup and one language. Additional pages can be added to the package individually.",
+        "The Growth website package costs €5,800 and covers up to fifteen pages with a blog. It also includes a newsletter sign-up and analytics dashboard. Most service businesses choose this package.",
+        "Additional pages beyond a package limit are billed at €180 per page. Pages that reuse an existing layout with new content count as additional pages. Entirely new layouts are quoted as design work.",
+        "Work outside the agreed scope is billed at an hourly rate of €95. Out-of-scope requests are estimated in advance and need written approval. Time is recorded in fifteen-minute increments.",
+        "A deposit of 40 percent is due before work begins, with the balance invoiced at launch. Projects above €10,000 can be split into three instalments on request. Work pauses if a scheduled payment is more than fourteen days overdue.",
+        "Invoices are payable within fourteen days by bank transfer or card. Card payments are processed through a secure payment page linked from the invoice. Northline does not accept cheques or cash.",
+        "Registered charities receive a 15 percent discount on website packages. The discount applies to package prices and not to hosting or third-party costs. A charity registration number must be supplied with the signed proposal.",
+        "The monthly care plan costs €120 and includes software updates, backups and one hour of content changes. Unused content time does not carry over to the next month. The plan can be stopped with thirty days of written notice.",
+        "Third-party costs such as domain names, premium plugins and stock photography are billed at cost with no markup. Clients are told about each third-party cost before it is purchased. Receipts are attached to the invoice."
+      ]
+    },
+    {
+      "title": "Support handbook.md",
+      "sections": [
+        "The support desk is open Monday to Friday from 09:00 to 17:30 Central European Time. It is closed on Dutch public holidays. Messages received outside these hours are handled on the next working day.",
+        "Support requests receive a first response within one working day. Requests are answered in the order they arrive unless they are marked urgent. Every request gets a reference number in the confirmation email.",
+        "An urgent request is one where a live website is unreachable or cannot take payments. Urgent requests from care plan clients are acknowledged within two hours during support hours. Design changes are never treated as urgent.",
+        "Content changes for care plan clients are completed within three working days. Changes should be sent as a single list with the page address for each item. Large batches may be scheduled across several days.",
+        "Clients can reset a forgotten editor login from the sign-in page of their own website. Northline staff never ask for a password by email or phone. Shared logins are replaced with individual accounts during handover.",
+        "Website backups are taken every night and kept for thirty days. A restore from backup can be requested through the support desk. Restores are tested each quarter on a sample of client websites.",
+        "Planned maintenance takes place on the first Tuesday of each month between 22:00 and 23:00. Websites may be briefly unavailable during this window. Clients are reminded by email two days beforehand.",
+        "Feature requests are reviewed at the end of each month. Requests that fit an existing package are scheduled with the client. Others receive a written estimate before any work is planned.",
+        "Support is provided in English and Dutch. Replies are written in the language of the original message where possible. Technical documentation is available in English only.",
+        "Feedback about the support service can be sent to the studio manager. Each piece of feedback is read and logged. The studio publishes a short summary of improvements twice a year."
+      ]
+    },
+    {
+      "title": "Hosting and technical FAQ.txt",
+      "sections": [
+        "Managed hosting is provided from data centres located in the Netherlands and Germany. All client data stays inside the European Union. The hosting platform is powered by renewable electricity.",
+        "Managed hosting costs €25 per month for a standard website. The price includes bandwidth for typical small-business traffic. Websites with unusually high traffic are reviewed individually.",
+        "Every hosted website receives a free SSL certificate that renews automatically. Visitors are always redirected to the secure address. No action is needed from the client to keep the certificate current.",
+        "The hosting platform has a monthly uptime target of 99.9 percent. Uptime is measured by an independent monitoring service every minute. A status page shows current and past incidents.",
+        "Email mailboxes are not included with hosting. Northline can recommend a mail provider and help connect an existing domain to it. Contact forms on the website deliver to any address the client chooses.",
+        "Clients may host their website with another provider if they prefer. Northline supplies a deployment guide and a copy of the site files for self-hosting. Support for third-party servers is billed at the hourly rate.",
+        "Domain names stay registered in the client's own name. Northline can manage DNS settings on request but never takes ownership of a domain. Renewal reminders are sent sixty days before a domain expires.",
+        "The standard content management system is WordPress with a custom lightweight theme. Page builders that slow down loading are not installed. Editors receive a simplified dashboard with only the tools they need.",
+        "New websites are built to load the main content in under two seconds on a typical mobile connection. Images are compressed and served in modern formats automatically. Performance is measured again one month after launch.",
+        "Online shops are built with WooCommerce and support payments through Mollie or Stripe. The shop can show prices including or excluding VAT. Stock levels can be synchronised with a spreadsheet on request."
+      ]
+    },
+    {
+      "title": "Working at Northline.pdf",
+      "sections": [
+        "Northline Studio employs eleven people across design, development and client support. The studio is registered in Utrecht and the whole team meets in person four times a year. Staff choose their own working hours around a shared core of 10:00 to 15:00.",
+        "Open roles are listed on the careers page and stay open for at least three weeks. Applications are accepted only through the form on that page. Speculative applications are kept on file for six months.",
+        "The hiring process has three steps: a short introductory call, a paid practical exercise and a conversation with the team. Candidates hear back within five working days after each step. Feedback is offered to everyone who completes the exercise.",
+        "Internships run for five months and start in February and September. Interns receive a monthly allowance and a dedicated mentor. Applications for internships close ten weeks before the start date.",
+        "Employees receive twenty-eight days of paid holiday in addition to public holidays. Unused days can be carried into the first quarter of the following year. The studio closes between Christmas and New Year.",
+        "Each employee has an annual learning budget of €1,500. The budget can be spent on courses, books and conference tickets. Time spent on approved courses counts as working time.",
+        "Northline provides a laptop and a home-office allowance to every new employee. Equipment is replaced every four years. Staff may keep older equipment for personal use after it is replaced.",
+        "The studio does not sponsor work visas at this time. Applicants must already have the right to work in the Netherlands. This policy is reviewed each January."
+      ]
+    }
+  ],
+  "cases": [
+    {"question": "Hi, what's included in your project setup?", "quote": "Project setup includes a discovery call, configuration and a handover guide."},
+    {"question": "How long does it usually take to launch a normal brochure site?", "quote": "A standard brochure website takes four to six weeks from signed proposal to launch."},
+    {"question": "How many rounds of changes to the design do we get?", "quote": "Each project includes two rounds of design revisions at no extra charge."},
+    {"question": "Will you write the text for our pages?", "quote": "Northline writes page copy only when the copywriting add-on is included in the proposal."},
+    {"question": "Do your sites follow accessibility standards?", "quote": "Every website is built to meet WCAG 2.2 level AA accessibility guidelines."},
+    {"question": "Which browsers do you test on?", "quote": "Websites are tested on the current and previous major versions of Chrome, Safari, Firefox and Edge."},
+    {"question": "Who owns the source code and design files when we're done?", "quote": "Clients own all design files and source code once the final invoice is paid."},
+    {"question": "Is there any training for my team at the end?", "quote": "A recorded training session of up to ninety minutes is included at handover."},
+    {"question": "If we find a bug after going live, do you fix it?", "quote": "After launch, Northline fixes defects reported within thirty days free of charge."},
+    {"question": "Are your prices including VAT?", "quote": "All prices are listed in euros and exclude VAT."},
+    {"question": "What does the Starter package cost?", "quote": "The Starter website package costs €2,400 and covers up to five pages."},
+    {"question": "We need about twelve pages and a blog. Which package is that and how much?", "quote": "The Growth website package costs €5,800 and covers up to fifteen pages with a blog."},
+    {"question": "What do you charge for an extra page?", "quote": "Additional pages beyond a package limit are billed at €180 per page."},
+    {"question": "What's your hourly rate for work that isn't in scope?", "quote": "Work outside the agreed scope is billed at an hourly rate of €95."},
+    {"question": "Do I have to pay a deposit up front?", "quote": "A deposit of 40 percent is due before work begins, with the balance invoiced at launch."},
+    {"question": "Can I pay the invoice by credit card?", "quote": "Invoices are payable within fourteen days by bank transfer or card."},
+    {"question": "We are a non-profit. Is there a reduced price?", "quote": "Registered charities receive a 15 percent discount on website packages."},
+    {"question": "How much is the care plan each month and what does it cover?", "quote": "The monthly care plan costs €120 and includes software updates, backups and one hour of content changes."},
+    {"question": "Do you add a margin on stock photos or plugins?", "quote": "Third-party costs such as domain names, premium plugins and stock photography are billed at cost with no markup."},
+    {"question": "What are your support opening hours?", "quote": "The support desk is open Monday to Friday from 09:00 to 17:30 Central European Time."},
+    {"question": "How quickly will someone reply to a support request?", "quote": "Support requests receive a first response within one working day."},
+    {"question": "What counts as urgent?", "quote": "An urgent request is one where a live website is unreachable or cannot take payments."},
+    {"question": "How long do text updates take if we're on the care plan?", "quote": "Content changes for care plan clients are completed within three working days."},
+    {"question": "How often is our site backed up?", "quote": "Website backups are taken every night and kept for thirty days."},
+    {"question": "When do you do maintenance? I don't want downtime during the day.", "quote": "Planned maintenance takes place on the first Tuesday of each month between 22:00 and 23:00."},
+    {"question": "Can we write to you in Dutch?", "quote": "Support is provided in English and Dutch."},
+    {"question": "Where are your servers located?", "quote": "Managed hosting is provided from data centres located in the Netherlands and Germany."},
+    {"question": "What is the monthly fee for hosting?", "quote": "Managed hosting costs €25 per month for a standard website."},
+    {"question": "Is HTTPS included or do we buy a certificate?", "quote": "Every hosted website receives a free SSL certificate that renews automatically."},
+    {"question": "What availability do you guarantee?", "quote": "The hosting platform has a monthly uptime target of 99.9 percent."},
+    {"question": "Do we get email inboxes with the hosting?", "quote": "Email mailboxes are not included with hosting."},
+    {"question": "Could we run the site on our own server instead?", "quote": "Clients may host their website with another provider if they prefer."},
+    {"question": "Who holds the registration of our domain name?", "quote": "Domain names stay registered in the client's own name."},
+    {"question": "Which CMS do you use?", "quote": "The standard content management system is WordPress with a custom lightweight theme."},
+    {"question": "Which payment providers work with your webshops?", "quote": "Online shops are built with WooCommerce and support payments through Mollie or Stripe."},
+    {"question": "How do I apply for a job with you?", "quote": "Applications are accepted only through the form on that page."},
+    {"question": "What does your interview process look like?", "quote": "The hiring process has three steps: a short introductory call, a paid practical exercise and a conversation with the team."},
+    {"question": "When do internships start and how long are they?", "quote": "Internships run for five months and start in February and September."},
+    {"question": "How much vacation do staff get?", "quote": "Employees receive twenty-eight days of paid holiday in addition to public holidays."},
+    {"question": "Can you sponsor a visa for a developer from abroad?", "quote": "The studio does not sponsor work visas at this time."}
+  ]
+}

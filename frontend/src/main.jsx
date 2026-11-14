@@ -18,6 +18,8 @@ import {
   Check,
   ChevronDown,
   FileText,
+  Filter,
+  Gauge,
   GitBranch,
   CodeXml,
   Inbox,
@@ -25,12 +27,15 @@ import {
   Menu,
   Pause,
   Play,
+  Quote,
+  Search,
   ShieldCheck,
   Sparkles,
   Users,
   X,
 } from "lucide-react";
 import ProductDemo from "./ProductDemo.jsx";
+import retrievalEval from "./retrieval-eval.json";
 import "./landing.css";
 
 const stages = [
@@ -826,6 +831,143 @@ class PreviewBoundary extends Component {
   }
 }
 
+const REPOSITORY = "https://github.com/Piyush70007/openmail-site";
+
+const engineSteps = [
+  {
+    icon: Filter,
+    name: "Risk filter",
+    text: "Refunds, legal claims, security and complaints go straight to you. No model is called.",
+  },
+  {
+    icon: Search,
+    name: "Retrieval",
+    text: "Your documents are split into passages and ranked against the email, so the right page is in view.",
+  },
+  {
+    icon: Sparkles,
+    name: "Decision",
+    text: "The model must choose reply or hand over, and quote its sources in a fixed format.",
+  },
+  {
+    icon: Quote,
+    name: "Citation check",
+    text: "Every quote is matched word for word against your documents. No match, no reply.",
+  },
+  {
+    icon: Gauge,
+    name: "Confidence gate",
+    text: "Below 0.80 the email waits for you. The reply is built only from the checked quotes.",
+  },
+];
+
+function EngineSection() {
+  const tightest = retrievalEval.rows[0];
+  return (
+    <section
+      className="engine-section section-space"
+      id="engine"
+      aria-labelledby="engine-title"
+    >
+      <Reveal className="section-heading">
+        <div>
+          <p className="eyebrow">
+            <span className="tiny-dot" /> 05 / UNDER THE HOOD
+          </p>
+          <h2 id="engine-title">
+            Every answer
+            <br />
+            <span>has a source.</span>
+          </h2>
+        </div>
+        <p>
+          Five checks sit between an incoming email
+          <br />
+          and an automatic reply. Each one can stop it.
+        </p>
+      </Reveal>
+      <Reveal className="engine-pipeline">
+        <ol>
+          {engineSteps.map(({ icon: Icon, name, text }, index) => (
+            <li key={name}>
+              <div className="panel-ruler mono">
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <Icon size={16} />
+              </div>
+              <h3>{name}</h3>
+              <p>{text}</p>
+            </li>
+          ))}
+        </ol>
+      </Reveal>
+      <Reveal className="engine-eval">
+        <div className="engine-eval-copy">
+          <div className="panel-ruler mono">
+            <span>MEASURED / NOT ASSUMED</span>
+          </div>
+          <h3>
+            Is the answer in front
+            <br />
+            of the AI?
+          </h3>
+          <p>
+            {retrievalEval.cases} test questions over {retrievalEval.documents}{" "}
+            sample documents. When only {tightest.share}% of the knowledge
+            fits in the AI's view, ranked retrieval still finds the answer{" "}
+            <strong>{tightest.now}%</strong> of the time. Keeping just the
+            start of each file found it <strong>{tightest.before}%</strong> of
+            the time.
+          </p>
+          <a
+            className="source-link"
+            href={`${REPOSITORY}/blob/main/docs/RETRIEVAL_EVAL.md`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <FileText size={17} /> Read the evaluation{" "}
+            <ArrowUpRight size={15} />
+          </a>
+        </div>
+        <figure className="engine-chart">
+          <figcaption className="mono">
+            ANSWER FOUND, BY SHARE OF KNOWLEDGE THAT FITS
+          </figcaption>
+          <ul>
+            {retrievalEval.rows.map((row) => (
+              <li key={row.share}>
+                <span className="engine-chart-label mono">{row.share}% FITS</span>
+                <div
+                  className="engine-bars"
+                  role="img"
+                  aria-label={`${row.share}% of knowledge fits: ranked retrieval ${row.now}%, start of file ${row.before}%`}
+                >
+                  <div className="engine-bar now">
+                    <i style={{ width: `${row.now}%` }} />
+                    <b>{row.now}%</b>
+                  </div>
+                  <div className="engine-bar before">
+                    <i style={{ width: `${row.before}%` }} />
+                    <b>{row.before}%</b>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="engine-legend mono">
+            <span className="now" /> RANKED RETRIEVAL
+            <span className="before" /> START OF EACH FILE
+          </p>
+          <p className="engine-note">
+            Sample documents and questions written for this test. Retrieval
+            matches words, not meaning, so unusual phrasing can still be
+            missed.
+          </p>
+        </figure>
+      </Reveal>
+    </section>
+  );
+}
+
 function Landing() {
   const [menu, setMenu] = useState(false);
   const menuButton = useRef(null);
@@ -882,6 +1024,9 @@ function Landing() {
           </a>
           <a href="#system" onClick={() => setMenu(false)}>
             Your AI helper
+          </a>
+          <a href="#engine" onClick={() => setMenu(false)}>
+            Under the hood
           </a>
           <a
             href="https://github.com/Piyush70007/openmail-site"
@@ -1033,6 +1178,7 @@ function Landing() {
           </div>
         </section>
         <SystemSection />
+        <EngineSection />
         <section
           className="faq-section section-space"
           id="details"
@@ -1040,7 +1186,7 @@ function Landing() {
         >
           <Reveal className="faq-heading">
             <p className="eyebrow">
-              <span className="tiny-dot" /> 05 / GOOD TO KNOW
+              <span className="tiny-dot" /> 06 / GOOD TO KNOW
             </p>
             <h2 id="faq-title">
               Clear from
@@ -1105,6 +1251,14 @@ function Landing() {
       <footer className="om-footer">
         <Brand footer />
         <span className="mono">YOUR EMAIL / YOUR CHOICE</span>
+        <nav className="om-footer-links" aria-label="Footer">
+          <a href="/app.html">Mailbox</a>
+          <a href="#engine">How the AI works</a>
+          <a href="#details">Questions</a>
+          <a href={REPOSITORY} target="_blank" rel="noreferrer">
+            Source
+          </a>
+        </nav>
         <a href="#top">
           Back to top <ArrowUpRight size={14} />
         </a>
