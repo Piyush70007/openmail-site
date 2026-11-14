@@ -10,7 +10,6 @@ import {
   useTransform,
 } from "motion/react";
 import {
-  ArrowDown,
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
@@ -25,8 +24,6 @@ import {
   Inbox,
   Mail,
   Menu,
-  Pause,
-  Play,
   Quote,
   Search,
   ShieldCheck,
@@ -34,6 +31,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import AiPlayground from "./AiPlayground.jsx";
 import ProductDemo from "./ProductDemo.jsx";
 import retrievalEval from "./retrieval-eval.json";
 import "./landing.css";
@@ -85,134 +83,13 @@ function Reveal({ children, className = "" }) {
   return (
     <motion.div
       className={className}
-      initial={reduce ? false : { opacity: 0, y: 22 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={reduce ? false : { opacity: 0, y: 34, filter: "blur(8px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       viewport={{ once: true, amount: 0.12 }}
       transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
-  );
-}
-
-function SignalVisual({ paused }) {
-  return (
-    <div
-      className={`signal-visual ${paused ? "motion-paused" : ""}`}
-      aria-label="Example of an AI reply using information you provided"
-    >
-      <div className="signal-grid" aria-hidden="true" />
-      <div className="signal-coordinate mono">ONE EMAIL / AN EXAMPLE</div>
-      <svg
-        className="signal-orbit"
-        viewBox="0 0 600 590"
-        fill="none"
-        aria-hidden="true"
-      >
-        <defs>
-          <radialGradient id="orbGlow">
-            <stop stopColor="#8fe8d6" stopOpacity=".14" />
-            <stop offset="1" stopColor="#8fe8d6" stopOpacity="0" />
-          </radialGradient>
-          <linearGradient id="orbitStroke">
-            <stop stopColor="#a5e8d8" stopOpacity=".05" />
-            <stop offset=".52" stopColor="#a5e8d8" stopOpacity=".55" />
-            <stop offset="1" stopColor="#a5e8d8" stopOpacity=".05" />
-          </linearGradient>
-        </defs>
-        <circle cx="300" cy="270" r="250" fill="url(#orbGlow)" />
-        <g className="orbital-lines" stroke="url(#orbitStroke)">
-          <ellipse
-            cx="300"
-            cy="270"
-            rx="246"
-            ry="115"
-            transform="rotate(-32 300 270)"
-          />
-          <ellipse
-            cx="300"
-            cy="270"
-            rx="246"
-            ry="115"
-            transform="rotate(32 300 270)"
-          />
-          <ellipse
-            cx="300"
-            cy="270"
-            rx="246"
-            ry="115"
-            transform="rotate(90 300 270)"
-          />
-          <circle cx="300" cy="270" r="185" strokeDasharray="2 8" />
-        </g>
-        <path
-          id="orbitPath"
-          d="M 87,393 A 246,115 -32 1,1 513,147 A 246,115 -32 1,1 87,393"
-          stroke="none"
-        />
-        <g className="orbit-particle">
-          <circle cx="0" cy="0" r="4" fill="#c1ffed" />
-        </g>
-        <path
-          d="M300 44V496M68 270H533"
-          stroke="#a5e8d8"
-          strokeOpacity=".06"
-          strokeDasharray="3 7"
-        />
-        <g stroke="#9ecfc4" strokeOpacity=".5">
-          <path d="M98 80v12m-6-6h12M504 427v12m-6-6h12" />
-        </g>
-      </svg>
-      <div className="signal-card signal-incoming">
-        <span className="signal-icon">
-          <Mail size={17} />
-        </span>
-        <div>
-          <span className="mono">INCOMING / SUPPORT</span>
-          <b>“What’s included in the setup?”</b>
-        </div>
-        <span className="tiny-dot" />
-      </div>
-      <div className="signal-core">
-        <div className="core-plane plane-back" />
-        <div className="core-plane plane-middle" />
-        <div className="core-plane plane-front">
-          <img src="/favicon.svg" width="66" height="66" alt="" />
-          <span className="mono">OPENMAIL / AI</span>
-        </div>
-      </div>
-      <div className="signal-card signal-knowledge">
-        <FileText size={16} />
-        <div>
-          <span className="mono">FOUND IN YOUR GUIDE</span>
-          <b>Service guide · section 02</b>
-        </div>
-        <Check size={14} />
-      </div>
-      <div className="signal-card signal-answer">
-        <div className="answer-top">
-          <Sparkles size={16} />
-          <span className="mono">ANSWER FROM YOUR GUIDE</span>
-          <span className="signal-tag">READY</span>
-        </div>
-        <p>
-          “Setup includes a discovery call,
-          <br />
-          configuration and a handover guide.”
-        </p>
-        <div className="answer-rule">
-          <span />
-          <span />
-          <span />
-        </div>
-      </div>
-      <div className="signal-bottom mono">
-        <span>
-          <i className="tiny-dot" /> YOUR INFORMATION → A REPLY
-        </span>
-        <span>YOU STAY IN CHARGE</span>
-      </div>
-    </div>
   );
 }
 
@@ -241,7 +118,7 @@ function AddressBuilder() {
       <Reveal className="section-heading">
         <div>
           <p className="eyebrow">
-            <span className="tiny-dot" /> 01 / MAKE IT YOURS
+            <span className="tiny-dot" /> 05 / MAKE IT YOURS
           </p>
           <h2 id="address-title">
             Your domain.
@@ -571,7 +448,7 @@ function Journey() {
       <Reveal className="section-heading">
         <div>
           <p className="eyebrow">
-            <span className="tiny-dot" /> 02 / MEET YOUR AI HELPER
+            <span className="tiny-dot" /> 01 / MEET YOUR AI HELPER
           </p>
           <h2 id="journey-title">
             Your inbox gets a hand.
@@ -872,7 +749,7 @@ function EngineSection() {
       <Reveal className="section-heading">
         <div>
           <p className="eyebrow">
-            <span className="tiny-dot" /> 05 / UNDER THE HOOD
+            <span className="tiny-dot" /> 02 / UNDER THE HOOD
           </p>
           <h2 id="engine-title">
             Every answer
@@ -942,11 +819,21 @@ function EngineSection() {
                   aria-label={`${row.share}% of knowledge fits: ranked retrieval ${row.now}%, start of file ${row.before}%`}
                 >
                   <div className="engine-bar now">
-                    <i style={{ width: `${row.now}%` }} />
+                    <motion.i
+                      initial={{ width: "0%" }}
+                      whileInView={{ width: `${row.now}%` }}
+                      viewport={{ once: true, amount: 0.6 }}
+                      transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+                    />
                     <b>{row.now}%</b>
                   </div>
                   <div className="engine-bar before">
-                    <i style={{ width: `${row.before}%` }} />
+                    <motion.i
+                      initial={{ width: "0%" }}
+                      whileInView={{ width: `${row.before}%` }}
+                      viewport={{ once: true, amount: 0.6 }}
+                      transition={{ duration: 1.1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                    />
                     <b>{row.before}%</b>
                   </div>
                 </div>
@@ -968,12 +855,49 @@ function EngineSection() {
   );
 }
 
+// Entrance for hero text: rise and sharpen, one piece after another.
+const rise = (delay) => ({
+  initial: { opacity: 0, y: 26, filter: "blur(10px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+  transition: { duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const tickerItems = [
+  { question: "What does the Starter package cost?", result: "Answered from Pricing §2", sent: true },
+  { question: "I was charged twice. I want a refund.", result: "Held for you", sent: false },
+  { question: "Where are your servers located?", result: "Answered from Hosting FAQ §1", sent: true },
+  { question: "Can you book a call for Tuesday?", result: "Held for you", sent: false },
+  { question: "What's included in project setup?", result: "Answered from Service guide §2", sent: true },
+  { question: "Do you build mobile apps?", result: "Not in your documents. Held for you", sent: false },
+  { question: "Which browsers do you test on?", result: "Answered from Service guide §7", sent: true },
+];
+
+function QuestionTicker() {
+  return (
+    <div className="ticker" aria-label="Examples of emails the AI answers or hands over">
+      <div className="ticker-track">
+        {[0, 1].map((copy) => (
+          <ul key={copy} aria-hidden={copy === 1}>
+            {tickerItems.map((item) => (
+              <li key={item.question} className={item.sent ? "is-sent" : "is-held"}>
+                <span>“{item.question}”</span>
+                <b>
+                  {item.sent ? <Check size={13} /> : <ShieldCheck size={13} />}
+                  {item.result}
+                </b>
+              </li>
+            ))}
+          </ul>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Landing() {
   const [menu, setMenu] = useState(false);
   const menuButton = useRef(null);
   const [signedIn, setSignedIn] = useState(false);
-  const reduce = useReducedMotion();
-  const [paused, setPaused] = useState(false);
   const { scrollYProgress } = useScroll();
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
   useEffect(() => {
@@ -998,6 +922,19 @@ function Landing() {
       .catch(() => {});
     return () => controller.abort();
   }, []);
+  useEffect(() => {
+    // Cards light up under the pointer; CSS reads the position from --mx / --my.
+    const cards = ".capability, .engine-pipeline li, .hero-console";
+    const track = (event) => {
+      const card = event.target.closest?.(cards);
+      if (!card) return;
+      const box = card.getBoundingClientRect();
+      card.style.setProperty("--mx", `${event.clientX - box.left}px`);
+      card.style.setProperty("--my", `${event.clientY - box.top}px`);
+    };
+    document.addEventListener("pointermove", track, { passive: true });
+    return () => document.removeEventListener("pointermove", track);
+  }, []);
   const appLabel = signedIn ? "Open your mailbox" : "Open mailbox";
   return (
     <MotionConfig reducedMotion="user">
@@ -1016,17 +953,17 @@ function Landing() {
           className={menu ? "om-nav is-open" : "om-nav"}
           aria-label="Main navigation"
         >
-          <a href="#your-address" onClick={() => setMenu(false)}>
-            Your email address
+          <a href="#how-it-works" onClick={() => setMenu(false)}>
+            How it works
+          </a>
+          <a href="#engine" onClick={() => setMenu(false)}>
+            Under the hood
           </a>
           <a href="#preview" onClick={() => setMenu(false)}>
             Try the app
           </a>
-          <a href="#system" onClick={() => setMenu(false)}>
-            Your AI helper
-          </a>
-          <a href="#engine" onClick={() => setMenu(false)}>
-            Under the hood
+          <a href="#your-address" onClick={() => setMenu(false)}>
+            Your address
           </a>
           <a
             href="https://github.com/Piyush70007/openmail-site"
@@ -1055,89 +992,63 @@ function Landing() {
       </header>
       <main id="main">
         <section className="hero-shell" aria-labelledby="hero-title">
-          <div className="hero-main">
-            <div className="hero-copy">
-              <p className="eyebrow">
-                <span className="tiny-dot" /> YOUR OWN EMAIL. AI WHEN YOU WANT
-                IT.
-              </p>
-              <h1 id="hero-title">
-                Your email.
-                <br />
-                Your name.
-                <br />
-                <span>AI on hand.</span>
-              </h1>
-              <p className="hero-description">
-                Create <strong>support@yourdomain.com</strong>, sales@ or an
-                address with your own name. Keep each inbox separate, with AI
-                replies when you choose.
-              </p>
-              <div className="hero-actions">
-                <a className="om-button solid" href="/app.html">
-                  {signedIn ? "Back to your mailbox" : "Set up your email"}
-                  <ArrowUpRight size={18} />
-                </a>
-                <a className="om-button text-button" href="#your-address">
-                  Try your address
-                  <ArrowDownRight size={17} />
-                </a>
-              </div>
-              <span className="hero-note mono">
-                CHOOSE THE NAME / BRING YOUR DOMAIN
-              </span>
-            </div>
-            <div className="hero-visual-wrap">
-              <SignalVisual paused={paused || reduce} />
-              <button
-                className="motion-toggle"
-                disabled={reduce}
-                onClick={() => setPaused(!paused)}
-                aria-label={
-                  reduce
-                    ? "Animation is off to match your device settings"
-                    : paused
-                      ? "Play ambient animation"
-                      : "Pause ambient animation"
-                }
-              >
-                {paused && !reduce ? <Play size={12} /> : <Pause size={12} />}
-                <span className="mono">
-                  {reduce
-                    ? "MOTION OFF"
-                    : paused
-                      ? "PLAY MOTION"
-                      : "PAUSE MOTION"}
-                </span>
-              </button>
-            </div>
+          <div className="hero-aurora" aria-hidden="true">
+            <i />
+            <i />
+            <i />
           </div>
-          <div className="hero-bottom mono">
-            <span>
-              <span className="tiny-dot" /> EMAIL THAT FEELS LIKE YOURS
-            </span>
-            <span className="hero-bottom-center">
-              YOUR NAME <i>→</i> YOUR DOMAIN <i>→</i> YOUR INBOX
-            </span>
-            <a href="#your-address">
-              SCROLL TO EXPLORE <ArrowDown size={14} />
-            </a>
+          <div className="hero-center">
+            <motion.p className="hero-pill" {...rise(0)}>
+              <Sparkles size={14} /> AI email assistant for your own domain
+            </motion.p>
+            <h1 id="hero-title">
+              <motion.span {...rise(0.08)}>Email that</motion.span>{" "}
+              <motion.span {...rise(0.18)}>answers itself.</motion.span>
+              <br />
+              <motion.span className="hero-gradient" {...rise(0.3)}>
+                With sources.
+              </motion.span>
+            </h1>
+            <motion.p className="hero-description" {...rise(0.42)}>
+              OpenMail gives you inboxes on your own domain, like{" "}
+              <strong>support@yourcompany.com</strong>. Its AI answers routine
+              questions by quoting your documents word for word, and hands
+              everything else to you.
+            </motion.p>
+            <motion.div className="hero-actions" {...rise(0.52)}>
+              <a className="om-button solid" href="/app.html">
+                {signedIn ? "Back to your mailbox" : "Set up your email"}
+                <ArrowUpRight size={18} />
+              </a>
+              <a className="om-button text-button" href="#how-it-works">
+                See how it works
+                <ArrowDownRight size={17} />
+              </a>
+            </motion.div>
+            <motion.ul className="hero-points" {...rise(0.62)}>
+              <li>
+                <Check size={15} /> Answers only from documents you add
+              </li>
+              <li>
+                <Check size={15} /> Shows the source of every reply
+              </li>
+              <li>
+                <Check size={15} /> Off until you turn it on
+              </li>
+            </motion.ul>
           </div>
+          <motion.div
+            className="hero-console"
+            initial={{ opacity: 0, y: 48, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.9, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <AiPlayground />
+          </motion.div>
         </section>
-        <div className="intro-strip">
-          <p>
-            Mail that feels like yours.
-            <br />
-            <span>Help that knows your business.</span>
-          </p>
-          <span>Email with your own name</span>
-          <i />
-          <span>AI that uses your information</span>
-          <i />
-          <span>You stay in control</span>
-        </div>
-        <AddressBuilder />
+        <QuestionTicker />
         <Journey />
+        <EngineSection />
         <section
           className="preview-section section-space"
           id="preview"
@@ -1178,7 +1089,7 @@ function Landing() {
           </div>
         </section>
         <SystemSection />
-        <EngineSection />
+        <AddressBuilder />
         <section
           className="faq-section section-space"
           id="details"
