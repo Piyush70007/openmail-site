@@ -199,3 +199,37 @@
     transition: none;
   }
 }
+
+/* Shared sidebar-link polish for the real workspace and the homepage demo. */
+.demo-window .om-workspace-link,
+#mailView .om-workspace-link {
+  border-radius: 12px;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    transform 0.2s;
+}
+.demo-window .om-workspace-link:hover,
+#mailView .om-workspace-link:hover {
+  transform: translateX(3px);
+}
+.demo-window .om-workspace-link:is(.is-active, .active, [aria-current="page"]),
+#mailView .om-workspace-link:is(.is-active, .active, [aria-current="page"]) {
+  position: relative;
+  background: linear-gradient(100deg, #a5e8d826, #6fd6ff14 60%, #9d8cff14);
+  border-color: #a5e8d84d;
+  color: #eafff7;
+  box-shadow: 0 10px 30px -18px #6fd6ff;
+}
+.demo-window .om-workspace-link:is(.is-active, .active, [aria-current="page"])::before,
+#mailView .om-workspace-link:is(.is-active, .active, [aria-current="page"])::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(100deg, #a5e8d8 0%, #6fd6ff 45%, #9d8cff 100%);
+  box-shadow: 0 0 12px #6fd6ff;
+}

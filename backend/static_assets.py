@@ -4,7 +4,8 @@ import re
 
 
 MAILBOX_FILES = frozenset((
-    'app.html', 'styles.css', 'app.css', 'workspace.css', 'insights.css', 'workspace-navigation.css', 'app-ui.js',
+    'app.html', 'styles.css', 'app.css', 'workspace.css', 'insights.css', 'workspace-navigation.css', 'workspace-skin.css',
+    'app-ui.js',
     'app-ai-documents.js', 'favicon.svg', 'vendor/MAMMOTH-LICENSE.txt',
     'vendor/PDFJS-LICENSE.txt', 'vendor/mammoth.browser.min.js',
     'vendor/pdf.min.mjs', 'vendor/pdf.worker.min.mjs',

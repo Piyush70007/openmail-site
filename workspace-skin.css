@@ -1,0 +1,532 @@
+/* ==========================================================================
+   Mailbox skin, matching the homepage: aurora background, glass panels,
+   gradient accents, rounded controls and gentle motion. Loaded last by
+   app.html; it only overrides colours, shapes and motion, never layout grids.
+   ========================================================================== */
+@property --om-spin {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+:root {
+  --canvas: #05080a;
+  --bg: #05080a;
+  --panel: rgba(11, 18, 20, 0.72);
+  --panel-2: rgba(16, 26, 29, 0.8);
+  --panel-soft: rgba(14, 22, 24, 0.7);
+  --line: rgba(190, 235, 221, 0.13);
+  --line-soft: rgba(190, 235, 221, 0.08);
+  --line-strong: rgba(190, 235, 221, 0.24);
+  --om-mint: #a5e8d8;
+  --om-gradient: linear-gradient(100deg, #a5e8d8 0%, #6fd6ff 45%, #9d8cff 100%);
+  --om-radius: 18px;
+  background: #05080a;
+}
+body {
+  /* The page colour lives on the root so the aurora layers can sit behind the content. */
+  background: transparent;
+  position: relative;
+  isolation: isolate;
+}
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+}
+body::before {
+  inset: 0;
+  background:
+    linear-gradient(#ffffff05 1px, transparent 1px) 0 0 / 100% 64px,
+    linear-gradient(90deg, #ffffff05 1px, transparent 1px) 0 0 / 64px 100%;
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 0%, #000 20%, transparent 80%);
+}
+body::after {
+  inset: -20% -10% auto;
+  height: 90vh;
+  background:
+    radial-gradient(38% 46% at 22% 30%, #1fbf9655, transparent 70%),
+    radial-gradient(34% 44% at 78% 22%, #5b6cff55, transparent 70%),
+    radial-gradient(30% 40% at 52% 62%, #23a9e033, transparent 70%);
+  filter: blur(40px);
+  animation: om-aurora 18s ease-in-out infinite alternate;
+}
+body:has(#mailView:not([hidden]))::after {
+  opacity: 0.55;
+}
+@keyframes om-aurora {
+  to {
+    transform: translate3d(4%, 6%, 0) scale(1.12) rotate(4deg);
+  }
+}
+.ambient-grid {
+  display: none;
+}
+
+/* Top bar */
+body .app-topbar {
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  background: rgba(8, 13, 15, 0.55);
+  border-bottom: 1px solid var(--line);
+}
+body .topbar-status {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff08;
+}
+
+/* Shared controls */
+body .button,
+body .quiet-button,
+body .icon-button {
+  border-radius: 999px;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    background 0.2s,
+    border-color 0.2s;
+}
+body .button-solid {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  background: #e9fff7;
+  color: #06231b;
+  font-weight: 700;
+  box-shadow:
+    0 0 0 1px #ffffff40 inset,
+    0 12px 36px -12px #7fe6c9cc;
+}
+body .button-solid:hover:not(:disabled) {
+  background: #fff;
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px #ffffff40 inset,
+    0 16px 44px -10px #7fe6c9;
+}
+body .button-solid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, #ffffffcc 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: om-sheen 5s ease-in-out infinite;
+}
+@keyframes om-sheen {
+  0%,
+  62% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+body .button-outline,
+body .quiet-button {
+  border-color: var(--line-strong);
+  background: #ffffff08;
+}
+body .button-outline:hover:not(:disabled),
+body .quiet-button:hover:not(:disabled) {
+  border-color: #a5e8d899;
+  background: #a5e8d814;
+  transform: translateY(-1px);
+}
+body input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+body textarea,
+body select {
+  border-radius: 12px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+body input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+body textarea:focus-visible,
+body select:focus-visible {
+  outline: none;
+  border-color: var(--om-mint);
+  box-shadow: 0 0 0 4px #a5e8d822;
+}
+
+/* Sign-in page */
+body .auth-intro h1 span {
+  background: linear-gradient(100deg, #a5e8d8, #6fd6ff, #9d8cff, #a5e8d8);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: om-gradient 7s linear infinite;
+}
+@keyframes om-gradient {
+  to {
+    background-position: -300% 0;
+  }
+}
+body .auth-intro > * {
+  animation: om-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+body .auth-intro > :nth-child(2) {
+  animation-delay: 0.08s;
+}
+body .auth-intro > :nth-child(3) {
+  animation-delay: 0.16s;
+}
+body .auth-intro > :nth-child(4) {
+  animation-delay: 0.26s;
+}
+body .auth-intro > :nth-child(5) {
+  animation-delay: 0.36s;
+}
+@keyframes om-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(8px);
+  }
+}
+body .signal-card {
+  border-radius: var(--om-radius);
+  border-color: var(--line);
+  background:
+    radial-gradient(ellipse at 30% 40%, #1fbf9626, transparent 60%),
+    radial-gradient(ellipse at 80% 70%, #5b6cff26, transparent 60%), rgba(10, 16, 18, 0.6);
+  backdrop-filter: blur(10px);
+}
+body .auth-card {
+  position: relative;
+  border: 0;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(13, 21, 23, 0.92), rgba(8, 14, 16, 0.96));
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 50px 120px -50px #1fbf9688,
+    0 30px 80px -40px #5b6cff77;
+  animation: om-pop 0.9s 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* Rotating gradient outline around the sign-in card. */
+body .auth-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: conic-gradient(from var(--om-spin), #a5e8d822 0deg, #a5e8d8 70deg, #9d8cff 130deg, #a5e8d822 200deg, #6fd6ff 300deg, #a5e8d822 360deg);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: om-spin 9s linear infinite;
+}
+@keyframes om-spin {
+  to {
+    --om-spin: 360deg;
+  }
+}
+@keyframes om-pop {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.97);
+  }
+}
+body .auth-tab {
+  transition: color 0.2s;
+}
+body .auth-tab.active {
+  border-image: var(--om-gradient) 1;
+}
+body .auth-form input {
+  background: #060b0c;
+}
+body .auth-submit {
+  min-height: 50px;
+}
+body .setup-notice {
+  border-radius: 14px;
+}
+body .session-loader i {
+  background: var(--om-mint);
+}
+
+/* Signed-in workspace */
+body .mail-screen {
+  background: transparent;
+}
+#mailView .inbox-window-bar,
+#mailView .mail-main {
+  background: rgba(7, 12, 14, 0.55);
+}
+#mailView .mail-sidebar {
+  background: rgba(9, 15, 17, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+#mailView .compose-button {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #e9fff7;
+  color: #06231b;
+  box-shadow: 0 14px 40px -14px #7fe6c9;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+#mailView .compose-button:hover {
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 18px 46px -12px #7fe6c9;
+}
+#mailView .search-box {
+  border-radius: 999px;
+  background: #ffffff08;
+  border-color: var(--line);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+#mailView .search-box:focus-within {
+  border-color: var(--om-mint);
+  box-shadow: 0 0 0 4px #a5e8d81f;
+}
+#mailView .search-box input {
+  box-shadow: none;
+  border-radius: 0;
+}
+#mailView .mail-tab {
+  position: relative;
+  transition: color 0.2s;
+}
+#mailView .mail-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--om-gradient);
+  box-shadow: 0 0 12px #6fd6ffaa;
+}
+#mailView .message-row {
+  border-radius: 12px;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+#mailView .message-row:hover {
+  background: #a5e8d80d;
+  transform: translateX(2px);
+}
+#mailView .sender-avatar,
+#mailView .detail-avatar,
+#mailView .sidebar-avatar {
+  background: linear-gradient(135deg, #1fbf9655, #5b6cff55);
+  border-color: #a5e8d84d;
+}
+#mailView .empty-state {
+  animation: om-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+#mailView .ai-card,
+#mailView .domain-card,
+#mailView .domain-row,
+#mailView .message-detail,
+#mailView .ai-knowledge-entry,
+#mailView .ai-representative-row,
+#mailView .ai-workflow-row {
+  border-radius: var(--om-radius);
+  border-color: var(--line);
+}
+#mailView .ai-card,
+#mailView .domain-card {
+  background: linear-gradient(160deg, rgba(16, 27, 30, 0.78), rgba(8, 14, 16, 0.86));
+  backdrop-filter: blur(14px);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s,
+    transform 0.3s;
+  animation: om-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+#mailView .ai-card:hover,
+#mailView .domain-card:hover {
+  border-color: #a5e8d855;
+  box-shadow: 0 30px 70px -45px #1fbf96;
+}
+#mailView .ai-card:nth-child(2),
+#mailView .domain-card:nth-child(2) {
+  animation-delay: 0.08s;
+}
+#mailView .ai-card:nth-child(3) {
+  animation-delay: 0.16s;
+}
+#mailView .ai-panel-title span,
+#mailView .domains-title span,
+#mailView .ai-feature-title span {
+  background: var(--om-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+#mailView .ai-feature-tab,
+#mailView .ai-setup-nav a {
+  border-radius: 999px;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+#mailView .ai-feature-tab:is(.active, [aria-selected="true"], [aria-current]) {
+  background: linear-gradient(100deg, #a5e8d82e, #9d8cff1f);
+  border-color: #a5e8d880;
+  color: #eafff7;
+}
+#mailView .ai-handoff-banner,
+#mailView .ai-sent-banner,
+#mailView .attachment-note,
+#mailView .ai-safety-notice,
+#mailView .ai-data-disclosure,
+#mailView .ai-draft-review-note {
+  border-radius: 14px;
+}
+#mailView .ai-sent-banner {
+  border-color: #a5e8d866;
+  background: linear-gradient(100deg, #17402e99, #0f231b99);
+  box-shadow: 0 0 40px -18px #1fbf96;
+}
+#mailView .window-lights i {
+  background: #2a3b3a;
+}
+
+/* Dialogs and toasts */
+body .compose-dialog {
+  border-radius: 24px;
+  border-color: var(--line-strong);
+  background: linear-gradient(180deg, rgba(13, 21, 23, 0.97), rgba(8, 14, 16, 0.98));
+  box-shadow:
+    0 60px 140px -50px #1fbf9688,
+    0 30px 80px -40px #5b6cff88;
+}
+body .compose-dialog[open] {
+  animation: om-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+body .compose-dialog::backdrop {
+  background: rgba(3, 6, 8, 0.7);
+  backdrop-filter: blur(6px);
+}
+body .toast {
+  border-radius: 999px;
+  border-color: #a5e8d866;
+  background: rgba(12, 20, 22, 0.92);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 60px -20px #1fbf96aa;
+}
+
+/* Let the aurora show through the signed-in workspace. */
+body #mailView.inbox-panel,
+body:has(#mailView:not([hidden])) .app-topbar {
+  background: rgba(6, 10, 12, 0.42);
+}
+body:has(#mailView:not([hidden]))::after {
+  opacity: 0.9;
+}
+#mailView .mail-main {
+  background: rgba(6, 10, 12, 0.5);
+  backdrop-filter: blur(26px);
+  -webkit-backdrop-filter: blur(26px);
+}
+#mailView .mail-sidebar {
+  background: rgba(10, 17, 19, 0.5);
+  border-right-color: var(--line);
+}
+#mailView .compose-button {
+  /* !important: the shared demo/workspace rule above pins this colour the same way. */
+  background: var(--om-gradient) !important;
+  background-size: 200% 100% !important;
+  color: #05201a;
+  box-shadow: 0 16px 44px -14px #6fd6ff;
+  animation: om-shift 6s ease-in-out infinite alternate;
+}
+#mailView .compose-button:hover {
+  box-shadow: 0 20px 54px -12px #9d8cff;
+}
+#mailView .compose-button > span {
+  color: #05201a;
+}
+@keyframes om-shift {
+  to {
+    background-position: 100% 0;
+  }
+}
+#mailView .ai-panel-title h2 span,
+#mailView .domains-title h2 span,
+#mailView h2 > span,
+#mailView .ai-feature-title h3 {
+  background: var(--om-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+#mailView .mail-tab {
+  padding: 8px 14px;
+  border-radius: 999px;
+}
+#mailView .mail-tab:hover {
+  background: #ffffff0a;
+}
+#mailView .mail-tab.active {
+  background: linear-gradient(100deg, #a5e8d826, #9d8cff1a);
+  color: #eafff7;
+  box-shadow: inset 0 0 0 1px #a5e8d855;
+}
+#mailView .mail-tab.active::after {
+  display: none;
+}
+#mailView .ai-card,
+#mailView .domain-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgba(20, 34, 38, 0.62), rgba(8, 14, 16, 0.7));
+}
+/* A thin gradient highlight along the top edge of each card. */
+#mailView .ai-card::before,
+#mailView .domain-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #a5e8d8aa 30%, #9d8cffaa 70%, transparent);
+  opacity: 0.7;
+}
+#mailView .message-row {
+  border-bottom-color: var(--line-soft);
+}
+#mailView .message-row:hover .sender-avatar {
+  box-shadow: 0 0 0 3px #a5e8d822;
+}
+#mailView .domain-icon,
+#mailView .side-icon {
+  border-radius: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after,
+  body .button-solid::after,
+  #mailView .compose-button,
+  body .auth-intro h1 span,
+  body .auth-intro > *,
+  body .auth-card,
+  body .auth-card::before,
+  body .compose-dialog[open],
+  #mailView .ai-card,
+  #mailView .domain-card,
+  #mailView .empty-state {
+    animation: none;
+  }
+}
