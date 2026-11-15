@@ -3150,3 +3150,39 @@ body::before {
     overflow-x: auto;
   }
 }
+
+/* The AI console keeps one height through every sample run, measured at each
+   width, so its autoplay never pushes the rest of the page up or down. */
+.playground-body {
+  min-height: 500px;
+}
+.playground-result {
+  min-height: 170px;
+}
+@media (max-width: 1000px) {
+  .playground-body {
+    min-height: 0;
+  }
+  .playground-steps {
+    min-height: 452px;
+  }
+  .playground-result {
+    min-height: 150px;
+  }
+}
+@media (max-width: 600px) {
+  .playground-steps {
+    min-height: 500px;
+  }
+  .playground-result {
+    min-height: 190px;
+  }
+}
+@media (max-width: 360px) {
+  .playground-steps {
+    min-height: 560px;
+  }
+  .playground-result {
+    min-height: 214px;
+  }
+}

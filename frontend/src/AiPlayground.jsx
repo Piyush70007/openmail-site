@@ -57,6 +57,15 @@ export default function AiPlayground() {
   const [auto, setAuto] = useState(!reduce);
   const [typing, setTyping] = useState(null);
   const sampleIndex = useRef(0);
+  // Autoplay only runs while the console is on screen, so nothing moves once the visitor scrolls past it.
+  const root = useRef(null);
+  const [onScreen, setOnScreen] = useState(true);
+  useEffect(() => {
+    if (!root.current || typeof IntersectionObserver === "undefined") return undefined;
+    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), { threshold: 0.35 });
+    observer.observe(root.current);
+    return () => observer.disconnect();
+  }, []);
   const done = Boolean(run.outcome) && shown > run.steps.length;
 
   // Reveal the checks one at a time, then the outcome.
@@ -72,7 +81,7 @@ export default function AiPlayground() {
 
   // Autoplay: after a finished run, type the next sample.
   useEffect(() => {
-    if (!auto || !done || typing) return undefined;
+    if (!auto || !onScreen || !done || typing) return undefined;
     const timer = setTimeout(() => {
       sampleIndex.current = (sampleIndex.current + 1) % samples.length;
       setRun(EMPTY_RUN);
@@ -81,10 +90,10 @@ export default function AiPlayground() {
       setTyping({ target: samples[sampleIndex.current].text, length: 0 });
     }, AUTOPLAY_PAUSE);
     return () => clearTimeout(timer);
-  }, [auto, done, typing]);
+  }, [auto, onScreen, done, typing]);
 
   useEffect(() => {
-    if (!typing) return undefined;
+    if (!typing || !onScreen) return undefined;
     const timer = setTimeout(() => {
       if (typing.length >= typing.target.length) {
         setTyping(null);
@@ -95,7 +104,7 @@ export default function AiPlayground() {
       setTyping({ ...typing, length: typing.length + 1 });
     }, typing.length >= typing.target.length ? 380 : TYPE_DELAY);
     return () => clearTimeout(timer);
-  }, [typing]);
+  }, [typing, onScreen]);
 
   function start(question) {
     setText(question);
@@ -114,7 +123,7 @@ export default function AiPlayground() {
   };
 
   return (
-    <div className={`playground${typing ? " is-typing" : ""}`} id="playground">
+    <div className={`playground${typing ? " is-typing" : ""}`} id="playground" ref={root}>
       <div className="playground-bar mono">
         <span className="playground-dots" aria-hidden="true">
           <i />

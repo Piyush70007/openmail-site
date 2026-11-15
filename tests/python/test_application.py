@@ -115,3 +115,15 @@ def test_auto_submitted_and_html_are_handled():
     assert webhook.is_auto_submitted({'Precedence': 'bulk'})
     assert not webhook.is_auto_submitted({'Auto-Submitted': 'no'})
     assert webhook.html_to_text('<script>private()</script><p>Hi &amp; hello</p>') == 'Hi & hello'
+
+
+def test_static_files_use_content_validators_not_file_times(client):
+    """A redeploy must never look "not modified" just because size and mtime match."""
+    import hashlib as digest
+    for name in ('app.html', 'app.css', 'robots.txt'):
+        response = client.get('/' + name)
+        assert response.status_code == 200
+        expected = '"' + digest.sha256((ROOT / name).read_bytes()).hexdigest()[:32] + '"'
+        assert response.headers['etag'] == expected
+        assert 'last-modified' not in response.headers
+        assert response.headers['cache-control'] == 'no-cache'

@@ -1,10 +1,12 @@
 """FastAPI routing with the same URLs used by the existing browser app."""
+import hashlib
 import json
+import mimetypes
 import os
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 
 from . import auth, ai_platform, ai_setup, mail_routes, webhook
 from .core import fail, json_response, method, readiness
@@ -72,13 +74,33 @@ for resource, handler in AI_ROUTES.items():
     route('/api/ai/' + resource, handler)
 
 
+def static_response(source):
+    """Serve a public file with validators that change when its content changes.
+
+    The default ETag is built from the file's size and modification time. On the
+    deployed function every file has the same fixed modification time, and a
+    rebuilt index.html keeps its size, so the default ETag stayed identical
+    across releases and browsers were told "not modified" for a page whose
+    hashed asset names no longer existed.
+    """
+    content = source.read_bytes()
+    media_type = mimetypes.guess_type(source.name)[0] or 'application/octet-stream'
+    # A plain response, not FileResponse, so no file-time Last-Modified header is added.
+    response = Response(content, media_type=media_type)
+    response.headers['ETag'] = '"' + hashlib.sha256(content).hexdigest()[:32] + '"'
+    # Hashed homepage assets never change; everything else is revalidated on each visit.
+    hashed = source.parent.name == 'landing-assets'
+    response.headers['Cache-Control'] = 'public, max-age=31536000, immutable' if hashed else 'no-cache'
+    return response
+
+
 @app.api_route('/{path:path}', methods=['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'])
 async def static_or_missing(request: Request, path: str):
     name = path or 'index.html'
     if request.method in ('GET', 'HEAD') and name in PUBLIC_FILES and (source := safe_file(ROOT, name)):
-        response = FileResponse(source)
+        response = static_response(source)
     elif request.method in ('GET', 'HEAD') and (built := landing_path(LANDING_DIR, name)):
-        response = FileResponse(built)
+        response = static_response(built)
     elif name == 'index.html' and request.method in ('GET', 'HEAD'):
         response = json_response(503, {'error': 'The homepage build is not available.'})
     else:
