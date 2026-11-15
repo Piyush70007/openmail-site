@@ -426,6 +426,11 @@ body .compose-dialog::backdrop {
   background: rgba(3, 6, 8, 0.7);
   backdrop-filter: blur(6px);
 }
+/* Arrows inside buttons follow the button's own text colour. */
+body .compose-footer .button span,
+body .button-solid span {
+  color: inherit;
+}
 body .toast {
   border-radius: 999px;
   border-color: #a5e8d866;

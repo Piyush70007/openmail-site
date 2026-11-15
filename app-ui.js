@@ -1066,7 +1066,7 @@ async function loadAISetup() {
 
 $("#aiProfileForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const button = event.submitter;
+  const button = event.submitter || event.currentTarget.querySelector('[type="submit"]');
   button.disabled = true;
   $("#aiProfileStatus").classList.remove("error");
   $("#aiProfileStatus").textContent = "Saving company profile…";
@@ -1135,7 +1135,7 @@ $("#saveAIReplyMode").addEventListener("click", async () => {
 
 $("#aiKnowledgeForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const button = event.submitter;
+  const button = event.submitter || event.currentTarget.querySelector('[type="submit"]');
   button.disabled = true;
   $("#aiKnowledgeStatus").classList.remove("error");
   $("#aiKnowledgeStatus").textContent = "Saving approved information…";
@@ -1207,7 +1207,7 @@ $("#saveMailboxRepresentative").addEventListener("click", async () => {
 
 $("#aiSimulatorForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const button = event.submitter;
+  const button = event.submitter || event.currentTarget.querySelector('[type="submit"]');
   button.disabled = true;
   setStatus($("#aiSimulatorStatus"), "Running the synthetic test through Groq…");
   try {
@@ -1231,7 +1231,7 @@ $("#aiWorkflowForm").addEventListener("submit", async (event) => {
   const action = $("#aiWorkflowAction").value;
   const enabled = $("#aiWorkflowEnabled").checked;
   if (enabled && action === "verified_reply" && !window.confirm("Enable this rule to attempt verified AI replies? OpenMail will still send only if automatic replies are separately enabled for this mailbox, the message is safe, and approved sources support the complete reply.")) return;
-  const button = event.submitter;
+  const button = event.submitter || event.currentTarget.querySelector('[type="submit"]');
   button.disabled = true;
   setStatus($("#aiWorkflowStatus"), "Saving workflow…");
   try {
@@ -1367,7 +1367,7 @@ function renderMailboxChoices() {
 $("#domainForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const input = $("#domainInput");
-  const button = event.submitter;
+  const button = event.submitter || event.currentTarget.querySelector('[type="submit"]');
   button.disabled = true;
   setStatus($("#domainMessage"), "Checking whether this domain already receives email…");
   try {
@@ -1403,7 +1403,7 @@ $("#domainForm").addEventListener("submit", async (event) => {
 
 $("#mailboxForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const button = event.submitter;
+  const button = event.submitter || event.currentTarget.querySelector('[type="submit"]');
   button.disabled = true;
   setStatus($("#mailboxMessage"), "Creating mailbox…");
   try {
