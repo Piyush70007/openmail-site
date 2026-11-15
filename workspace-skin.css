@@ -129,6 +129,8 @@ body .button-outline,
 body .quiet-button {
   border-color: var(--line-strong);
   background: #ffffff08;
+  /* The base styles put dark text on a light fill; the fill is now dark glass. */
+  color: #d7e6e0;
 }
 body .button-outline:hover:not(:disabled),
 body .quiet-button:hover:not(:disabled) {
@@ -195,6 +197,10 @@ body .signal-card {
     radial-gradient(ellipse at 30% 40%, #1fbf9626, transparent 60%),
     radial-gradient(ellipse at 80% 70%, #5b6cff26, transparent 60%), rgba(10, 16, 18, 0.6);
   backdrop-filter: blur(10px);
+}
+body .signal-label small,
+body .signal-coordinate {
+  color: #8fa9a0;
 }
 body .auth-card {
   position: relative;
